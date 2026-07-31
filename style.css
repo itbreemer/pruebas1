@@ -331,6 +331,7 @@ main .btn-primary:hover { background: #163158; }
 .formulario-box { padding: 14px 18px; }
 .formulario-box h2 { text-align: center; color: var(--azul); margin: 0 0 14px; font-size: 1.2rem; }
 .formulario-box p { font-size: 0.85rem; line-height: 1.5; margin: 6px 0; }
+.formulario-box .destacado { text-decoration: underline; }
 .formulario-box ul { font-size: 0.83rem; line-height: 1.5; padding-left: 18px; margin: 8px 0; }
 
 .firmas {

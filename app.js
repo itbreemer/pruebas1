@@ -258,7 +258,7 @@ function filaActa(etiqueta, valor) {
 
 function renderActa(equipo, transaccion) {
   const declarante = transaccion.declarante || equipo.nombreEmpleado || "___________________________";
-  const accion = transaccion.accion === "Devuelvo" ? "Devuelvo" : "Recibo";
+  const accion = transaccion.accion === "Devolucion" ? "Devuelvo" : "Recibo";
 
   $("printArea").innerHTML = `
     <div class="acta">
@@ -329,9 +329,9 @@ function renderActa(equipo, transaccion) {
         <div class="formulario-derecha">
           <div class="formulario-box">
             <h2>Formulario Equipo de Cómputo</h2>
-            <p>Yo, <strong>${esc(declarante)}</strong> declaro que:</p>
+            <p>Yo, <strong class="destacado">${esc(declarante)}</strong> declaro que:</p>
             <ul>
-              <li><strong>a.</strong> ${accion} el equipo de cómputo consistente <strong>${esc(equipo.nombreRed)}</strong> en perfecto estado de funcionamiento y en buen estado de conservación, sin golpes que impidan su buen funcionamiento.</li>
+              <li><strong>a.</strong> ${accion} el equipo de cómputo consistente <strong class="destacado">${esc(equipo.nombreRed)}</strong> en perfecto estado de funcionamiento y en buen estado de conservación, sin golpes que impidan su buen funcionamiento.</li>
               <li><strong>b.</strong> Me hago responsable de darle a este equipo únicamente el uso profesional que mi puesto de trabajo requiere.</li>
               <li><strong>c.</strong> Utilizaré este equipo con el debido cuidado en su manejo, tanto en el hardware como en el software, no navegando ni descargando archivos, aplicaciones o páginas cuya naturaleza no tenga relación con el puesto laboral que desempeño.</li>
               <li><strong>d.</strong> Conozco que este equipo tiene un seguro con cobertura básica, pensada en el uso profesional y prudente del mismo en relación a mi puesto de trabajo, y por lo tanto indemnizaré personal.</li>
@@ -369,7 +369,7 @@ function imprimirDesdeEdicion() {
   FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
   const firmantes = cargarFirmantes();
   renderActa(equipo, {
-    accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devuelvo" : "Recibo",
+    accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
     declarante: equipo.nombreEmpleado,
     tecnico: firmantes.tecnico || "",
     jefe: firmantes.jefe || "",
@@ -383,7 +383,7 @@ function imprimirDesdeEdicion() {
 function abrirModalActa() {
   poblarFiltrosYDatalists();
   $("actaNombreRed").value = "";
-  $("actaAccion").value = "Recibo";
+  $("actaAccion").value = "Entrega";
   $("actaDeclarante").value = "";
   $("actaObservaciones").value = "";
   const firmantes = cargarFirmantes();
@@ -405,7 +405,7 @@ function onCambioNombreRedActa() {
     $("actaEstado").textContent = `Equipo encontrado: ${equipo.empresa || "N/A"} · ${equipo.status || "N/A"} · ${equipo.nombreEmpleado || "sin usuario asignado"}. Se autocompletarán todos los datos del acta.`;
     $("actaEstado").className = "acta-estado";
     if (!$("actaDeclarante").value) $("actaDeclarante").value = equipo.nombreEmpleado || "";
-    if ((equipo.status || "").toLowerCase().includes("devol")) $("actaAccion").value = "Devuelvo";
+    if ((equipo.status || "").toLowerCase().includes("devol")) $("actaAccion").value = "Devolucion";
   } else if ($("actaNombreRed").value.trim()) {
     $("actaEstado").textContent = "No se encontró ningún equipo con ese Nombre en Red. Puedes registrarlo primero con \"+ Nuevo equipo\", o generar el acta solo con este nombre.";
     $("actaEstado").className = "acta-estado no-encontrado";
