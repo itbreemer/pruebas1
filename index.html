@@ -72,8 +72,10 @@
         <div class="glpi-col">
           <div class="glpi-row">
             <label for="nombreRed">Nombre en Red</label>
-            <input type="text" id="nombreRed" required>
+            <input type="text" id="nombreRed" list="dl-nombreRedEquipo" required>
+            <datalist id="dl-nombreRedEquipo"></datalist>
           </div>
+          <p id="nombreRedAviso" class="acta-estado no-encontrado" style="display:none;"></p>
           <div class="glpi-row">
             <label for="ubicaciones">Ubicaciones <span class="lock">&#128274;</span></label>
             <input type="text" id="ubicaciones" list="dl-ubicaciones">

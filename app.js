@@ -71,6 +71,7 @@ function poblarFiltrosYDatalists() {
     "dl-tipoEquipo": "tipoEquipo",
     "dl-fabricante": "fabricante",
     "dl-usuarioDominio": "usuarioDominio",
+    "dl-nombreRedEquipo": "nombreRed",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
@@ -179,6 +180,7 @@ function abrirModal(equipo) {
     $("status").value = "Asignada";
     $("btnEliminarModal").style.display = "none";
   }
+  $("nombreRedAviso").style.display = "none";
   $("modalOverlay").classList.add("open");
 }
 
@@ -186,10 +188,34 @@ function cerrarModal() {
   $("modalOverlay").classList.remove("open");
 }
 
+function equipoDuplicadoPorNombreRed(nombre, idActual) {
+  const n = (nombre || "").trim().toLowerCase();
+  if (!n) return null;
+  return equipos.find((e) => e.id !== idActual && (e.nombreRed || "").trim().toLowerCase() === n) || null;
+}
+
+function onCambioNombreRedEquipo() {
+  const duplicado = equipoDuplicadoPorNombreRed($("nombreRed").value, $("id").value);
+  const aviso = $("nombreRedAviso");
+  if (duplicado) {
+    aviso.textContent = `Ya existe un equipo con este Nombre en Red (${duplicado.empresa || "N/A"} · ${duplicado.nombreEmpleado || "sin usuario"}). Usa otro nombre o edita ese registro en vez de crear uno nuevo.`;
+    aviso.style.display = "";
+  } else {
+    aviso.style.display = "none";
+    aviso.textContent = "";
+  }
+}
+
 function onSubmit(e) {
   e.preventDefault();
   const data = {};
   FIELD_IDS.forEach((f) => (data[f] = $(f).value.trim()));
+
+  if (equipoDuplicadoPorNombreRed(data.nombreRed, data.id)) {
+    alert("Ya existe otro equipo con este Nombre en Red. Cambia el nombre o busca y edita el equipo existente en vez de crear uno duplicado.");
+    return;
+  }
+
   data.ultimaModificacion = new Date().toISOString().slice(0, 16);
 
   if (data.id) {
@@ -439,6 +465,7 @@ function generarEImprimirActa() {
 }
 
 $("btnNuevo").addEventListener("click", () => abrirModal(null));
+$("nombreRed").addEventListener("input", onCambioNombreRedEquipo);
 $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);
 $("btnEliminarModal").addEventListener("click", eliminarActual);
