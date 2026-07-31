@@ -77,6 +77,13 @@ function poblarFiltrosYDatalists() {
     "dl-correo": "correo",
     "dl-dpi": "dpi",
     "dl-dominio": "dominio",
+    "dl-monitor": "monitor",
+    "dl-tamanoDisco": "tamanoDisco",
+    "dl-datosImpresora": "datosImpresora",
+    "dl-serialImpresora": "serialImpresora",
+    "dl-tipoImpresora": "tipoImpresora",
+    "dl-nombreDispositivo": "nombreDispositivo",
+    "dl-serialDispositivo": "serialDispositivo",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
