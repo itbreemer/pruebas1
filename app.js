@@ -200,10 +200,19 @@ function equipoDuplicadoPorNombreRed(nombre, idActual) {
 }
 
 function onCambioNombreRedEquipo() {
-  const duplicado = equipoDuplicadoPorNombreRed($("nombreRed").value, $("id").value);
   const aviso = $("nombreRedAviso");
-  if (duplicado) {
-    aviso.textContent = `Ya existe un equipo con este Nombre en Red (${duplicado.empresa || "N/A"} · ${duplicado.nombreEmpleado || "sin usuario"}). Usa otro nombre o edita ese registro en vez de crear uno nuevo.`;
+  const idActual = $("id").value;
+  const encontrado = equipoDuplicadoPorNombreRed($("nombreRed").value, idActual);
+
+  if (encontrado) {
+    // Ya existe ese equipo: cargamos todos sus datos y pasamos a modo edición sobre ese registro.
+    FIELD_IDS.forEach((f) => {
+      if (encontrado[f] !== undefined) $(f).value = encontrado[f];
+    });
+    $("modalTitulo").textContent = `Editar equipo — ${encontrado.nombreRed || ""}`;
+    $("btnEliminarModal").style.display = "";
+    aviso.textContent = `Se cargaron los datos del equipo existente (${encontrado.empresa || "N/A"} · ${encontrado.nombreEmpleado || "sin usuario"}). Revisa/edita lo que necesites y da clic en Guardar.`;
+    aviso.className = "acta-estado";
     aviso.style.display = "";
   } else {
     aviso.style.display = "none";
