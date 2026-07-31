@@ -442,9 +442,6 @@ $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);
 $("btnEliminarModal").addEventListener("click", eliminarActual);
 $("btnImprimirDesdeModal").addEventListener("click", imprimirDesdeEdicion);
-$("modalOverlay").addEventListener("click", (e) => {
-  if (e.target === $("modalOverlay")) cerrarModal();
-});
 $("formEquipo").addEventListener("submit", onSubmit);
 
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
@@ -452,9 +449,6 @@ $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
 $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
-$("modalActaOverlay").addEventListener("click", (e) => {
-  if (e.target === $("modalActaOverlay")) cerrarModalActa();
-});
 
 $("buscador").addEventListener("input", () => { paginaActual = 1; render(); });
 $("filtroEmpresa").addEventListener("change", () => { paginaActual = 1; render(); });
