@@ -3,205 +3,202 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Equipos de Cómputo - TI</title>
+<title>Inventario de Equipos de Cómputo - TI</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="app-header no-print">
-  <h1>Control de Equipos de Cómputo — Departamento de TI</h1>
+  <h1>Inventario de Equipos de Cómputo — TI</h1>
   <div class="header-actions">
-    <button id="btnNuevo" class="btn btn-primary">+ Nuevo registro</button>
+    <span id="contadorTotal" class="contador"></span>
+    <button id="btnNuevo" class="btn btn-primary">+ Nuevo equipo</button>
   </div>
 </header>
 
 <main class="no-print">
   <section class="toolbar">
-    <input type="text" id="buscador" placeholder="Buscar por empleado, equipo, código, serial...">
-    <select id="filtroStatus">
-      <option value="">Todos los status</option>
-      <option value="Entrega de Equipo">Entrega de Equipo</option>
-      <option value="Recepción de Equipo">Recepción de Equipo</option>
-      <option value="En Reparación">En Reparación</option>
-      <option value="De Baja">De Baja</option>
-    </select>
+    <input type="text" id="buscador" placeholder="Buscar por nombre en red, empleado, serial, inventario, modelo...">
+    <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
+    <select id="filtroStatus"><option value="">Todos los status</option></select>
+    <select id="filtroTipo"><option value="">Todos los tipos</option></select>
   </section>
 
-  <section id="listado" class="listado"></section>
+  <section class="tabla-wrap">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Nombre en Red</th>
+          <th>Status</th>
+          <th>Nombre de Empleado</th>
+          <th>Empresa</th>
+          <th>Departamento</th>
+          <th>Fabricante</th>
+          <th>Modelo</th>
+          <th>Serial</th>
+          <th>No. Inventario</th>
+          <th>Ubicación</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbodyEquipos"></tbody>
+    </table>
+  </section>
+
+  <section class="paginacion">
+    <button id="btnPrimero">&laquo;</button>
+    <button id="btnAnterior">&lsaquo;</button>
+    <span id="infoPagina"></span>
+    <button id="btnSiguiente">&rsaquo;</button>
+    <button id="btnUltimo">&raquo;</button>
+  </section>
 </main>
 
 <!-- Modal de formulario -->
 <div id="modalOverlay" class="modal-overlay no-print">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="modalTitulo">Nuevo registro de equipo</h2>
-      <button id="btnCerrarModal" class="btn-close">&times;</button>
+      <h2 id="modalTitulo">Nuevo equipo</h2>
+      <div class="modal-header-actions">
+        <button type="button" id="btnImprimirDesdeModal" class="btn btn-outline" title="Imprimir acta de entrega">Imprimir acta</button>
+        <button id="btnCerrarModal" class="btn-close">&times;</button>
+      </div>
     </div>
     <form id="formEquipo" class="modal-body">
       <input type="hidden" id="id">
 
-      <fieldset>
-        <legend>Datos generales del formulario</legend>
-        <div class="grid grid-4">
-          <label>Empresa
-            <input type="text" id="empresa" value="RIOL S.A." required>
-          </label>
-          <label>Departamento
-            <input type="text" id="departamentoTI" value="Departamento de Tecnología de Información TI" required>
-          </label>
-          <label>Fecha de Registro
-            <input type="datetime-local" id="fechaRegistro" required>
-          </label>
-          <label>No. Forma
-            <input type="text" id="numeroForma" placeholder="Forma-TI-001" required>
-          </label>
-        </div>
-        <div class="grid grid-3">
-          <label>Status de Equipo
-            <select id="statusEquipo" required>
-              <option value="Entrega de Equipo">Asignada &gt; Entrega de Equipo</option>
-              <option value="Recepción de Equipo">Recepción de Equipo</option>
-              <option value="En Reparación">En Reparación</option>
-              <option value="De Baja">De Baja</option>
-            </select>
-          </label>
-          <label>Código Empleado
-            <input type="text" id="codigoEmpleado" required>
-          </label>
-          <label>DPI / No. Pasaporte
-            <input type="text" id="dpi">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Identificación del equipo en red</legend>
-        <div class="grid grid-3">
-          <label>Nombre Equipo en Red
-            <input type="text" id="nombreEquipoRed" required>
-          </label>
-          <label>Id de Equipo
-            <input type="text" id="idEquipo">
-          </label>
-          <label>UUID
-            <input type="text" id="uuid">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Usuario asignado</legend>
-        <div class="grid grid-2">
-          <label>Usuario de Dominio
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="nombreRed">Nombre en Red</label>
+            <input type="text" id="nombreRed" required>
+          </div>
+          <div class="glpi-row">
+            <label for="ubicaciones">Ubicaciones <span class="lock">&#128274;</span></label>
+            <input type="text" id="ubicaciones" list="dl-ubicaciones">
+            <datalist id="dl-ubicaciones"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="entidad">Entidad</label>
+            <input type="text" id="entidad" value="Root Entity">
+          </div>
+          <div class="glpi-row">
+            <label for="empresa">Empresa <span class="lock">&#128274;</span></label>
+            <input type="text" id="empresa" list="dl-empresa" required>
+            <datalist id="dl-empresa"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="nombreEmpleado">Nombre de empleado <span class="lock">&#128274;</span></label>
+            <input type="text" id="nombreEmpleado">
+          </div>
+          <div class="glpi-row">
+            <label for="usuarioDominio">Usuario de Dominio <span class="lock">&#128274;</span></label>
             <input type="text" id="usuarioDominio">
-          </label>
-          <label>Nombre de Usuario
-            <input type="text" id="nombreUsuario" required>
-          </label>
-          <label>Dominio
-            <input type="text" id="dominio">
-          </label>
-          <label>Correo de Usuario
-            <input type="email" id="correoUsuario">
-          </label>
-          <label>Ubicación
-            <input type="text" id="ubicacion">
-          </label>
-          <label>Departamento
-            <input type="text" id="departamentoUsuario">
-          </label>
-          <label>Unidad de Negocio
-            <input type="text" id="unidadNegocio">
-          </label>
+          </div>
+          <div class="glpi-row">
+            <label for="departamento">Departamento <span class="lock">&#128274;</span></label>
+            <input type="text" id="departamento" list="dl-departamento">
+            <datalist id="dl-departamento"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="unidadNegocio">Unidad de Negocio</label>
+            <input type="text" id="unidadNegocio" list="dl-unidadNegocio">
+            <datalist id="dl-unidadNegocio"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="codigoEmpleado">Código de empleado</label>
+            <input type="text" id="codigoEmpleado">
+          </div>
+          <div class="glpi-row">
+            <label for="tipoUsuario">Tipo de Usuario</label>
+            <input type="text" id="tipoUsuario" placeholder="Estándar &gt; Dominio">
+          </div>
+          <div class="glpi-row glpi-row-textarea">
+            <label for="comentarios">Comentarios</label>
+            <textarea id="comentarios" rows="3"></textarea>
+          </div>
         </div>
-      </fieldset>
 
-      <fieldset>
-        <legend>Especificaciones del equipo</legend>
-        <div class="grid grid-3">
-          <label>Tipo de Equipo
-            <select id="tipoEquipo">
-              <option>Laptop</option>
-              <option>Desktop</option>
-              <option>Tablet</option>
-              <option>Otro</option>
-            </select>
-          </label>
-          <label>Marca de Equipo
-            <input type="text" id="marcaEquipo">
-          </label>
-          <label>Modelo Equipo
-            <input type="text" id="modeloEquipo">
-          </label>
-          <label>Memoria RAM (GB)
-            <input type="number" id="memoriaRam">
-          </label>
-          <label>Tamaño Disco (GB)
-            <input type="number" step="0.01" id="tamanoDisco">
-          </label>
-          <label>Service Tag
-            <input type="text" id="serviceTag">
-          </label>
-          <label>Descripción Procesador
-            <input type="text" id="procesador">
-          </label>
-          <label>Monitor
-            <input type="text" id="monitor">
-          </label>
-          <label>Activo Fijo
-            <input type="text" id="activoFijo">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Impresora / Dispositivo asignado (opcional)</legend>
-        <div class="grid grid-3">
-          <label>Datos Impresora Asig.
-            <input type="text" id="datosImpresora" placeholder="N/A">
-          </label>
-          <label>Serial Impresora Asig.
-            <input type="text" id="serialImpresora" placeholder="N/A">
-          </label>
-          <label>Tipo Impresora Asig.
-            <input type="text" id="tipoImpresora" placeholder="N/A">
-          </label>
-          <label>IP Impresora Asig.
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="status">Status <span class="lock">&#128274;</span></label>
+            <input type="text" id="status" list="dl-status">
+            <datalist id="dl-status"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="tipoEquipo">Tipos de computadores</label>
+            <input type="text" id="tipoEquipo" list="dl-tipoEquipo">
+            <datalist id="dl-tipoEquipo"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="fabricante">Fabricantes</label>
+            <input type="text" id="fabricante" list="dl-fabricante">
+            <datalist id="dl-fabricante"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="modelo">Modelo</label>
+            <input type="text" id="modelo">
+          </div>
+          <div class="glpi-row">
+            <label for="numeroSerial">Número de serial</label>
+            <input type="text" id="numeroSerial">
+          </div>
+          <div class="glpi-row">
+            <label for="numeroInventario">Número de inventario <span class="lock">&#128274;</span></label>
+            <input type="text" id="numeroInventario">
+          </div>
+          <div class="glpi-row">
+            <label for="correo">Correo</label>
+            <input type="email" id="correo">
+          </div>
+          <div class="glpi-row">
+            <label for="idEquipoUuid">ID del equipo</label>
+            <input type="text" id="idEquipoUuid">
+          </div>
+          <div class="glpi-row">
+            <label for="dpi">DPI / Pasaporte <span class="lock">&#128274;</span></label>
+            <input type="text" id="dpi">
+          </div>
+          <div class="glpi-row">
+            <label for="ip">IP del equipo</label>
+            <input type="text" id="ip">
+          </div>
+          <div class="glpi-row">
+            <label for="ipImpresora">IP de impresora</label>
             <input type="text" id="ipImpresora" placeholder="N/A">
-          </label>
-          <label>Nombre Dispositivo
-            <input type="text" id="nombreDispositivo" placeholder="N/A">
-          </label>
-          <label>Serial Dispositivo
-            <input type="text" id="serialDispositivo" placeholder="N/A">
-          </label>
+          </div>
+          <div class="glpi-row">
+            <label for="dominio">Dominio</label>
+            <input type="text" id="dominio">
+          </div>
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset>
-        <legend>Declaración y responsables</legend>
-        <div class="grid grid-2">
-          <label>Acción
-            <select id="accion">
-              <option value="Recibo">Recibo</option>
-              <option value="Devuelvo">Devuelvo</option>
-            </select>
-          </label>
-          <label>Nombre y firma de Técnico de Soporte
-            <input type="text" id="nombreTecnico">
-          </label>
-          <label>Nombre y firma de Jefe de Operaciones TI
-            <input type="text" id="nombreJefe">
-          </label>
-          <label>Observaciones
-            <input type="text" id="observaciones">
-          </label>
+      <details class="tecnico-detalle">
+        <summary>Información técnica adicional</summary>
+        <div class="glpi-grid">
+          <div class="glpi-col">
+            <div class="glpi-row"><label for="procesador">Procesador</label><input type="text" id="procesador"></div>
+            <div class="glpi-row"><label for="memoria">Memoria</label><input type="text" id="memoria"></div>
+            <div class="glpi-row"><label for="tipoDisco">Tipo de disco duro</label><input type="text" id="tipoDisco"></div>
+            <div class="glpi-row"><label for="firmwareInventario">Firmware: No. inventario</label><input type="text" id="firmwareInventario"></div>
+          </div>
+          <div class="glpi-col">
+            <div class="glpi-row"><label for="soVersion">Sistema operativo - Versión</label><input type="text" id="soVersion"></div>
+            <div class="glpi-row"><label for="soNucleo">SO - Versión del núcleo</label><input type="text" id="soNucleo"></div>
+            <div class="glpi-row"><label for="soSerial">SO - Número de serial</label><input type="text" id="soSerial"></div>
+            <div class="glpi-row"><label for="subentidades">Subentidades</label><input type="text" id="subentidades"></div>
+            <div class="glpi-row"><label for="proyecto">Proyecto</label><input type="text" id="proyecto"></div>
+          </div>
         </div>
-      </fieldset>
+      </details>
 
       <div class="modal-actions">
-        <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" id="btnEliminarModal" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
       </div>
     </form>
   </div>
@@ -210,6 +207,7 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
+<script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
