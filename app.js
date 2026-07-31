@@ -1,4 +1,6 @@
 const STORAGE_KEY = "equiposTI_v2";
+const FIRMANTES_KEY = "actaFirmantes_v1";
+const CONTADOR_KEY = "actaContador_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -8,10 +10,12 @@ const FIELD_IDS = [
   "usuarioDominio", "departamento", "unidadNegocio", "codigoEmpleado",
   "tipoUsuario", "comentarios",
   "status", "tipoEquipo", "fabricante", "modelo", "numeroSerial",
-  "numeroInventario", "correo", "idEquipoUuid", "dpi", "ip", "ipImpresora",
+  "numeroInventario", "correo", "idGlpi", "uuid", "dpi", "ip", "ipImpresora",
   "dominio",
   "procesador", "memoria", "tipoDisco", "firmwareInventario",
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
+  "monitor", "tamanoDisco", "datosImpresora", "serialImpresora",
+  "tipoImpresora", "nombreDispositivo", "serialDispositivo",
 ];
 
 let equipos = [];
@@ -76,6 +80,14 @@ function poblarFiltrosYDatalists() {
       dl.appendChild(opt);
     });
   });
+
+  const dlNombreRed = $("dl-nombreRedActa");
+  dlNombreRed.innerHTML = "";
+  valoresUnicos("nombreRed").forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    dlNombreRed.appendChild(opt);
+  });
 }
 
 function esc(v) {
@@ -87,7 +99,7 @@ function coincideTexto(e, texto) {
   const campos = [
     "nombreRed", "nombreEmpleado", "correo", "empresa", "departamento",
     "modelo", "numeroSerial", "numeroInventario", "ubicaciones",
-    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idEquipoUuid",
+    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idGlpi", "uuid",
   ];
   const haystack = campos.map((c) => e[c] || "").join(" ").toLowerCase();
   return haystack.includes(texto);
@@ -214,53 +226,105 @@ function formatearFecha(iso) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(h12)}:${pad(d.getMinutes())} ${ampm}`;
 }
 
-function fila(etiqueta, valor) {
-  return `<div class="fila"><div class="etiqueta">${etiqueta}</div><div class="valor">${esc(valor)}</div></div>`;
+function siguienteNumeroForma() {
+  const n = parseInt(localStorage.getItem(CONTADOR_KEY) || "0", 10) + 1;
+  localStorage.setItem(CONTADOR_KEY, String(n));
+  return `Forma-TI-${String(n).padStart(3, "0")}`;
 }
 
-function imprimir() {
-  const equipo = {};
-  FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
-  const declarante = equipo.nombreEmpleado || "___________________________";
-  const accion = (equipo.status || "").toLowerCase().includes("devol") ? "Devuelvo" : "Recibo";
+function cargarFirmantes() {
+  try {
+    return JSON.parse(localStorage.getItem(FIRMANTES_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function guardarFirmantes(tecnico, jefe) {
+  localStorage.setItem(FIRMANTES_KEY, JSON.stringify({ tecnico, jefe }));
+}
+
+function buscarEquipoPorNombreRed(nombre) {
+  const n = (nombre || "").trim().toLowerCase();
+  if (!n) return null;
+  return equipos.find((e) => (e.nombreRed || "").trim().toLowerCase() === n) || null;
+}
+
+/* ---------- Generación del Acta impresa (Forma-TI-001) ---------- */
+
+function filaActa(etiqueta, valor) {
+  return `<div class="acta-fila"><div class="etiqueta">${etiqueta}</div><div class="valor">${esc(valor)}</div></div>`;
+}
+
+function renderActa(equipo, transaccion) {
+  const declarante = transaccion.declarante || equipo.nombreEmpleado || "___________________________";
+  const accion = transaccion.accion === "Devuelvo" ? "Devuelvo" : "Recibo";
 
   $("printArea").innerHTML = `
-    <div class="hoja">
-      <div class="hoja-top">
+    <div class="acta">
+      <div class="acta-header">
         <div>
           <div class="empresa-label">Empresa:</div>
           <div class="empresa-nombre">${esc(equipo.empresa)}</div>
         </div>
-        <div><div class="depto">Departamento de Tecnología de Información TI</div></div>
+        <div><div class="depto-nombre">Departamento de Tecnología de Información TI</div></div>
         <div>
-          <div class="fecha">${formatearFecha(new Date().toISOString())}</div>
-          <div>Fecha de Registro</div>
+          <div class="fecha-valor">${formatearFecha(new Date().toISOString())}</div>
+          <div class="fecha-label">Fecha de Registro</div>
         </div>
-        <div><div class="forma">Forma-TI-001</div></div>
+        <div><div class="forma-valor">${transaccion.numeroForma}</div></div>
+        <div><span class="logo">&#128269; Data Analytics TI</span></div>
       </div>
 
-      <div class="hoja-content">
-        <div class="datos-izq">
-          ${fila("Status de Equipo", equipo.status)}
-          ${fila("Código Empleado", equipo.codigoEmpleado)}
-          ${fila("DPI/No. Pasaporte", equipo.dpi)}
-          ${fila("Nombre Equipo en Red", equipo.nombreRed)}
-          ${fila("ID de Equipo", equipo.idEquipoUuid)}
-          ${fila("Usuario de Dominio", equipo.usuarioDominio)}
-          ${fila("Nombre de Usuario", equipo.nombreEmpleado)}
-          ${fila("Dominio", equipo.dominio)}
-          ${fila("Correo de Usuario", equipo.correo)}
-          ${fila("Ubicación", equipo.ubicaciones)}
-          ${fila("Departamento", equipo.departamento)}
-          ${fila("Unidad de Negocio", equipo.unidadNegocio)}
-          ${fila("Tipo de Equipo", equipo.tipoEquipo)}
-          ${fila("Marca de Equipo", equipo.fabricante)}
-          ${fila("Modelo Equipo", equipo.modelo)}
-          ${fila("Memoria", equipo.memoria)}
-          ${fila("Descripción Procesador", equipo.procesador)}
-          ${fila("Service Tag / Serial", equipo.numeroSerial)}
-          ${fila("Activo Fijo / No. Inventario", equipo.numeroInventario)}
-          ${fila("IP de impresora", equipo.ipImpresora)}
+      <div class="acta-top3">
+        <div class="etiqueta">Status de Equipo:</div>
+        <div class="valor">${esc(equipo.status)}</div>
+        <div class="etiqueta">Datos Impresora Asig:</div>
+        <div class="valor">${esc(equipo.datosImpresora)}</div>
+        <div class="etiqueta">Ip Impresora Asig:</div>
+        <div class="valor">${esc(equipo.ipImpresora)}</div>
+
+        <div class="etiqueta">Código Empleado:</div>
+        <div class="valor">${esc(equipo.codigoEmpleado)}</div>
+        <div class="etiqueta">Serial Impresora Asig:</div>
+        <div class="valor">${esc(equipo.serialImpresora)}</div>
+        <div class="etiqueta">Tipo Impresora Asig:</div>
+        <div class="valor">${esc(equipo.tipoImpresora)}</div>
+
+        <div class="etiqueta">DPI/No. Pasaporte:</div>
+        <div class="valor">${esc(equipo.dpi)}</div>
+        <div class="etiqueta">Nombre Dispositivo:</div>
+        <div class="valor">${esc(equipo.nombreDispositivo)}</div>
+        <div class="etiqueta">Serial Dispositivo:</div>
+        <div class="valor">${esc(equipo.serialDispositivo)}</div>
+      </div>
+
+      <div class="acta-content">
+        <div class="acta-datos">
+          ${filaActa("Nombre Equipo en Red:", equipo.nombreRed)}
+          <div class="acta-fila combo">
+            <div class="etiqueta">Id de Equipo:</div>
+            <div class="valor">${esc(equipo.idGlpi)}</div>
+            <div class="etiqueta">uuid:</div>
+            <div class="valor">${esc(equipo.uuid)}</div>
+          </div>
+          ${filaActa("Usuario de Dominio:", equipo.usuarioDominio)}
+          ${filaActa("Nombre de Usuario:", equipo.nombreEmpleado)}
+          ${filaActa("Dominio:", equipo.dominio)}
+          ${filaActa("Correo de Usuario:", equipo.correo)}
+          ${filaActa("Ubicación:", equipo.ubicaciones)}
+          ${filaActa("Departamento:", equipo.departamento)}
+          ${filaActa("Unidad de Negocio:", equipo.unidadNegocio)}
+          ${filaActa("Empresa:", equipo.empresa)}
+          ${filaActa("Tipo de Equipo:", equipo.tipoEquipo)}
+          ${filaActa("Marca de Equipo:", equipo.fabricante)}
+          ${filaActa("Modelo Equipo:", equipo.modelo)}
+          ${filaActa("Memoria Ram (GB):", equipo.memoria)}
+          ${filaActa("Tamaño Disco (GB):", equipo.tamanoDisco)}
+          ${filaActa("Service Tag:", equipo.numeroSerial)}
+          ${filaActa("Descripción Procesador:", equipo.procesador)}
+          ${filaActa("Monitor:", equipo.monitor)}
+          ${filaActa("Activo Fijo:", equipo.numeroInventario)}
         </div>
         <div class="formulario-derecha">
           <div class="formulario-box">
@@ -272,15 +336,15 @@ function imprimir() {
               <li><strong>c.</strong> Utilizaré este equipo con el debido cuidado en su manejo, tanto en el hardware como en el software, no navegando ni descargando archivos, aplicaciones o páginas cuya naturaleza no tenga relación con el puesto laboral que desempeño.</li>
               <li><strong>d.</strong> Conozco que este equipo tiene un seguro con cobertura básica, pensada en el uso profesional y prudente del mismo en relación a mi puesto de trabajo, y por lo tanto indemnizaré personal.</li>
             </ul>
-            ${equipo.comentarios ? `<p><strong>Comentarios:</strong> ${equipo.comentarios}</p>` : ""}
+            ${transaccion.observaciones ? `<p><strong>Observaciones:</strong> ${transaccion.observaciones}</p>` : ""}
 
             <div class="firmas">
-              <div><div class="firma-linea">Nombre y firma de Técnico de Soporte</div></div>
+              <div><div class="firma-linea">${esc(transaccion.tecnico)}<br>Nombre y firma de Técnico de Soporte</div></div>
               <div><div class="firma-linea">Nombre y firma de Usuario</div></div>
             </div>
             <div class="firmas">
               <div></div>
-              <div><div class="firma-linea">Nombre y firma de Jefe de Operaciones TI</div></div>
+              <div><div class="firma-linea">${esc(transaccion.jefe)}<br>Nombre y firma de Jefe de Operaciones TI</div></div>
             </div>
           </div>
           <div class="clausula">
@@ -300,15 +364,97 @@ function imprimir() {
   window.print();
 }
 
+function imprimirDesdeEdicion() {
+  const equipo = {};
+  FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
+  const firmantes = cargarFirmantes();
+  renderActa(equipo, {
+    accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devuelvo" : "Recibo",
+    declarante: equipo.nombreEmpleado,
+    tecnico: firmantes.tecnico || "",
+    jefe: firmantes.jefe || "",
+    observaciones: equipo.comentarios || "",
+    numeroForma: siguienteNumeroForma(),
+  });
+}
+
+/* ---------- Modal "Generar Acta" ---------- */
+
+function abrirModalActa() {
+  poblarFiltrosYDatalists();
+  $("actaNombreRed").value = "";
+  $("actaAccion").value = "Recibo";
+  $("actaDeclarante").value = "";
+  $("actaObservaciones").value = "";
+  const firmantes = cargarFirmantes();
+  $("actaTecnico").value = firmantes.tecnico || "";
+  $("actaJefe").value = firmantes.jefe || "";
+  $("actaEstado").textContent = "Escribe o selecciona el Nombre en Red de un equipo ya registrado para autocompletar el acta.";
+  $("actaEstado").className = "acta-estado";
+  $("modalActaOverlay").classList.add("open");
+  $("actaNombreRed").focus();
+}
+
+function cerrarModalActa() {
+  $("modalActaOverlay").classList.remove("open");
+}
+
+function onCambioNombreRedActa() {
+  const equipo = buscarEquipoPorNombreRed($("actaNombreRed").value);
+  if (equipo) {
+    $("actaEstado").textContent = `Equipo encontrado: ${equipo.empresa || "N/A"} · ${equipo.status || "N/A"} · ${equipo.nombreEmpleado || "sin usuario asignado"}. Se autocompletarán todos los datos del acta.`;
+    $("actaEstado").className = "acta-estado";
+    if (!$("actaDeclarante").value) $("actaDeclarante").value = equipo.nombreEmpleado || "";
+    if ((equipo.status || "").toLowerCase().includes("devol")) $("actaAccion").value = "Devuelvo";
+  } else if ($("actaNombreRed").value.trim()) {
+    $("actaEstado").textContent = "No se encontró ningún equipo con ese Nombre en Red. Puedes registrarlo primero con \"+ Nuevo equipo\", o generar el acta solo con este nombre.";
+    $("actaEstado").className = "acta-estado no-encontrado";
+  } else {
+    $("actaEstado").textContent = "Escribe o selecciona el Nombre en Red de un equipo ya registrado para autocompletar el acta.";
+    $("actaEstado").className = "acta-estado";
+  }
+}
+
+function generarEImprimirActa() {
+  const nombreRed = $("actaNombreRed").value.trim();
+  if (!nombreRed) {
+    alert("Escribe el Nombre en Red del equipo.");
+    return;
+  }
+  const equipo = buscarEquipoPorNombreRed(nombreRed) || { nombreRed };
+  const tecnico = $("actaTecnico").value.trim();
+  const jefe = $("actaJefe").value.trim();
+  guardarFirmantes(tecnico, jefe);
+
+  renderActa(equipo, {
+    accion: $("actaAccion").value,
+    declarante: $("actaDeclarante").value.trim(),
+    tecnico,
+    jefe,
+    observaciones: $("actaObservaciones").value.trim(),
+    numeroForma: siguienteNumeroForma(),
+  });
+  cerrarModalActa();
+}
+
 $("btnNuevo").addEventListener("click", () => abrirModal(null));
 $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);
 $("btnEliminarModal").addEventListener("click", eliminarActual);
-$("btnImprimirDesdeModal").addEventListener("click", imprimir);
+$("btnImprimirDesdeModal").addEventListener("click", imprimirDesdeEdicion);
 $("modalOverlay").addEventListener("click", (e) => {
   if (e.target === $("modalOverlay")) cerrarModal();
 });
 $("formEquipo").addEventListener("submit", onSubmit);
+
+$("btnGenerarActa").addEventListener("click", abrirModalActa);
+$("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
+$("btnCancelarActa").addEventListener("click", cerrarModalActa);
+$("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
+$("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
+$("modalActaOverlay").addEventListener("click", (e) => {
+  if (e.target === $("modalActaOverlay")) cerrarModalActa();
+});
 
 $("buscador").addEventListener("input", () => { paginaActual = 1; render(); });
 $("filtroEmpresa").addEventListener("change", () => { paginaActual = 1; render(); });

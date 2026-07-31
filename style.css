@@ -240,51 +240,98 @@ main .btn-primary:hover { background: #163158; }
 }
 .modal-actions-right { display: flex; gap: 10px; }
 
-/* Print template (built dynamically into #printArea) */
+.btn-outline-header { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
+.btn-outline-header:hover { background: rgba(255,255,255,0.15); }
+
+.modal-acta .modal-body { padding-top: 20px; }
+.glpi-row-ancho { grid-template-columns: 220px 1fr; margin-bottom: 4px; }
+.acta-estado {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--azul-claro);
+  color: var(--azul);
+}
+.acta-estado.no-encontrado { background: #fdecec; color: #b91c1c; }
+
+/* ============ Plantilla imprimible (Acta Forma-TI-001) ============ */
 .print-only { display: none; }
 
-.hoja {
+.acta {
   border: 2px solid var(--azul);
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #111827;
 }
-.hoja-top {
+
+/* Encabezado: Empresa | Departamento | Fecha | Forma | Logo */
+.acta-header {
   display: grid;
-  grid-template-columns: 1.2fr 2fr 1.3fr 1fr;
+  grid-template-columns: 1.1fr 2.1fr 1.4fr 1fr 1.3fr;
   border-bottom: 2px solid var(--azul);
 }
-.hoja-top > div {
+.acta-header > div {
   border-right: 1px solid var(--azul);
-  padding: 10px;
+  padding: 8px 10px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-.hoja-top > div:last-child { border-right: none; }
-.hoja-top .empresa-label { font-size: 0.75rem; }
-.hoja-top .empresa-nombre { font-weight: 700; font-size: 1rem; }
-.hoja-top .depto { font-weight: 700; font-size: 0.95rem; }
-.hoja-top .fecha { font-weight: 700; }
-.hoja-top .forma { font-weight: 700; }
+.acta-header > div:last-child { border-right: none; }
+.acta-header .empresa-label { font-size: 0.72rem; }
+.acta-header .empresa-nombre { font-weight: 700; font-size: 1rem; }
+.acta-header .depto-nombre { font-weight: 700; font-size: 0.95rem; line-height: 1.25; color: #111827; }
+.acta-header .fecha-valor { font-weight: 700; font-size: 0.85rem; }
+.acta-header .fecha-label { font-weight: 700; font-size: 0.95rem; color: #111827; }
+.acta-header .forma-valor { font-weight: 700; font-size: 1.05rem; color: #111827; }
+.acta-header .logo { font-weight: 700; font-style: italic; color: var(--azul); font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
 
-.hoja-content { display: grid; grid-template-columns: 1fr 1.5fr; }
-.datos-izq { border-right: 1px solid var(--azul); }
-.fila {
+/* Franja superior de 3 filas x 3 pares label/valor */
+.acta-top3 {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 1.15fr 0.75fr 1fr 1fr;
+  border-bottom: 2px solid var(--azul);
+  font-size: 0.8rem;
+}
+.acta-top3 > div {
+  border-right: 1px solid var(--azul);
+  border-bottom: 1px solid #d5deeb;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+}
+.acta-top3 > div:nth-child(6n) { border-right: none; }
+.acta-top3 > div:nth-last-child(-n+6) { border-bottom: none; }
+.acta-top3 .etiqueta { font-weight: 700; }
+.acta-top3 .valor { }
+
+/* Cuerpo: columna de datos a la izquierda + formulario/firma a la derecha */
+.acta-content { display: grid; grid-template-columns: 1fr 1.45fr; }
+.acta-datos { border-right: 1px solid var(--azul); }
+.acta-fila {
   display: grid;
   grid-template-columns: 1fr 1.3fr;
   border-bottom: 1px solid #d5deeb;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
-.fila .etiqueta {
+.acta-fila .etiqueta {
   background: var(--azul-claro);
   font-weight: 700;
   padding: 6px 8px;
   color: var(--azul);
 }
-.fila .valor { padding: 6px 8px; }
+.acta-fila .valor { padding: 6px 8px; }
+.acta-fila.combo { grid-template-columns: 0.55fr 0.75fr 0.4fr 0.9fr; }
+.acta-fila.combo .etiqueta:nth-child(3) { border-left: 1px solid #d5deeb; }
 
 .formulario-box { padding: 14px 18px; }
 .formulario-box h2 { text-align: center; color: var(--azul); margin: 0 0 14px; font-size: 1.2rem; }
 .formulario-box p { font-size: 0.85rem; line-height: 1.5; margin: 6px 0; }
-.formulario-box ul { font-size: 0.83rem; line-height: 1.5; padding-left: 18px; }
+.formulario-box ul { font-size: 0.83rem; line-height: 1.5; padding-left: 18px; margin: 8px 0; }
 
 .firmas {
   display: grid;

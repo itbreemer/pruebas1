@@ -12,6 +12,7 @@
   <h1>Inventario de Equipos de Cómputo — TI</h1>
   <div class="header-actions">
     <span id="contadorTotal" class="contador"></span>
+    <button id="btnGenerarActa" class="btn btn-outline-header">🖶 Generar Acta</button>
     <button id="btnNuevo" class="btn btn-primary">+ Nuevo equipo</button>
   </div>
 </header>
@@ -152,8 +153,12 @@
             <input type="email" id="correo">
           </div>
           <div class="glpi-row">
-            <label for="idEquipoUuid">ID del equipo</label>
-            <input type="text" id="idEquipoUuid">
+            <label for="idGlpi">Id de Equipo</label>
+            <input type="text" id="idGlpi">
+          </div>
+          <div class="glpi-row">
+            <label for="uuid">UUID</label>
+            <input type="text" id="uuid">
           </div>
           <div class="glpi-row">
             <label for="dpi">DPI / Pasaporte <span class="lock">&#128274;</span></label>
@@ -193,6 +198,23 @@
         </div>
       </details>
 
+      <details class="tecnico-detalle" open>
+        <summary>Monitor, disco e impresora/dispositivo asignado (para el Acta)</summary>
+        <div class="glpi-grid">
+          <div class="glpi-col">
+            <div class="glpi-row"><label for="monitor">Monitor</label><input type="text" id="monitor" placeholder="N/A"></div>
+            <div class="glpi-row"><label for="tamanoDisco">Tamaño Disco (GB)</label><input type="text" id="tamanoDisco" placeholder="N/A"></div>
+            <div class="glpi-row"><label for="datosImpresora">Datos Impresora Asig.</label><input type="text" id="datosImpresora" placeholder="N/A"></div>
+            <div class="glpi-row"><label for="serialImpresora">Serial Impresora Asig.</label><input type="text" id="serialImpresora" placeholder="N/A"></div>
+          </div>
+          <div class="glpi-col">
+            <div class="glpi-row"><label for="tipoImpresora">Tipo Impresora Asig.</label><input type="text" id="tipoImpresora" placeholder="N/A"></div>
+            <div class="glpi-row"><label for="nombreDispositivo">Nombre Dispositivo</label><input type="text" id="nombreDispositivo" placeholder="N/A"></div>
+            <div class="glpi-row"><label for="serialDispositivo">Serial Dispositivo</label><input type="text" id="serialDispositivo" placeholder="N/A"></div>
+          </div>
+        </div>
+      </details>
+
       <div class="modal-actions">
         <button type="button" id="btnEliminarModal" class="btn btn-danger">Eliminar</button>
         <div class="modal-actions-right">
@@ -201,6 +223,62 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de generación rápida de Acta -->
+<div id="modalActaOverlay" class="modal-overlay no-print">
+  <div class="modal modal-acta">
+    <div class="modal-header">
+      <h2>Generar Acta de Entrega/Devolución</h2>
+      <button id="btnCerrarModalActa" class="btn-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="glpi-row glpi-row-ancho">
+        <label for="actaNombreRed">Nombre en Red del equipo</label>
+        <input type="text" id="actaNombreRed" list="dl-nombreRedActa" placeholder="Escribe o selecciona el nombre en red...">
+        <datalist id="dl-nombreRedActa"></datalist>
+      </div>
+      <p id="actaEstado" class="acta-estado"></p>
+
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="actaAccion">Acción</label>
+            <select id="actaAccion">
+              <option value="Recibo">Recibo</option>
+              <option value="Devuelvo">Devuelvo</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="actaDeclarante">Nombre de quien recibe/entrega</label>
+            <input type="text" id="actaDeclarante">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="actaTecnico">Técnico de Soporte</label>
+            <input type="text" id="actaTecnico">
+          </div>
+          <div class="glpi-row">
+            <label for="actaJefe">Jefe de Operaciones TI</label>
+            <input type="text" id="actaJefe">
+          </div>
+        </div>
+      </div>
+      <div class="glpi-row glpi-row-ancho glpi-row-textarea">
+        <label for="actaObservaciones">Observaciones</label>
+        <textarea id="actaObservaciones" rows="2"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <span></span>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarActa" class="btn btn-secondary">Cancelar</button>
+          <button type="button" id="btnGenerarEImprimir" class="btn btn-primary">Generar e Imprimir</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
