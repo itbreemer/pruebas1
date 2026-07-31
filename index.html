@@ -151,7 +151,8 @@
           </div>
           <div class="glpi-row">
             <label for="numeroInventario">Número de inventario <span class="lock">&#128274;</span></label>
-            <input type="text" id="numeroInventario">
+            <input type="text" id="numeroInventario" list="dl-numeroInventario">
+            <datalist id="dl-numeroInventario"></datalist>
           </div>
           <div class="glpi-row">
             <label for="correo">Correo</label>
@@ -191,17 +192,17 @@
         <summary>Información técnica adicional</summary>
         <div class="glpi-grid">
           <div class="glpi-col">
-            <div class="glpi-row"><label for="procesador">Procesador</label><input type="text" id="procesador"></div>
-            <div class="glpi-row"><label for="memoria">Memoria</label><input type="text" id="memoria"></div>
-            <div class="glpi-row"><label for="tipoDisco">Tipo de disco duro</label><input type="text" id="tipoDisco"></div>
-            <div class="glpi-row"><label for="firmwareInventario">Firmware: No. inventario</label><input type="text" id="firmwareInventario"></div>
+            <div class="glpi-row"><label for="procesador">Procesador</label><input type="text" id="procesador" list="dl-procesador"><datalist id="dl-procesador"></datalist></div>
+            <div class="glpi-row"><label for="memoria">Memoria</label><input type="text" id="memoria" list="dl-memoria"><datalist id="dl-memoria"></datalist></div>
+            <div class="glpi-row"><label for="tipoDisco">Tipo de disco duro</label><input type="text" id="tipoDisco" list="dl-tipoDisco"><datalist id="dl-tipoDisco"></datalist></div>
+            <div class="glpi-row"><label for="firmwareInventario">Firmware: No. inventario</label><input type="text" id="firmwareInventario" list="dl-firmwareInventario"><datalist id="dl-firmwareInventario"></datalist></div>
           </div>
           <div class="glpi-col">
-            <div class="glpi-row"><label for="soVersion">Sistema operativo - Versión</label><input type="text" id="soVersion"></div>
-            <div class="glpi-row"><label for="soNucleo">SO - Versión del núcleo</label><input type="text" id="soNucleo"></div>
-            <div class="glpi-row"><label for="soSerial">SO - Número de serial</label><input type="text" id="soSerial"></div>
-            <div class="glpi-row"><label for="subentidades">Subentidades</label><input type="text" id="subentidades"></div>
-            <div class="glpi-row"><label for="proyecto">Proyecto</label><input type="text" id="proyecto"></div>
+            <div class="glpi-row"><label for="soVersion">Sistema operativo - Versión</label><input type="text" id="soVersion" list="dl-soVersion"><datalist id="dl-soVersion"></datalist></div>
+            <div class="glpi-row"><label for="soNucleo">SO - Versión del núcleo</label><input type="text" id="soNucleo" list="dl-soNucleo"><datalist id="dl-soNucleo"></datalist></div>
+            <div class="glpi-row"><label for="soSerial">SO - Número de serial</label><input type="text" id="soSerial" list="dl-soSerial"><datalist id="dl-soSerial"></datalist></div>
+            <div class="glpi-row"><label for="subentidades">Subentidades</label><input type="text" id="subentidades" list="dl-subentidades"><datalist id="dl-subentidades"></datalist></div>
+            <div class="glpi-row"><label for="proyecto">Proyecto</label><input type="text" id="proyecto" list="dl-proyecto"><datalist id="dl-proyecto"></datalist></div>
           </div>
         </div>
       </details>

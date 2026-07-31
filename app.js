@@ -84,6 +84,16 @@ function poblarFiltrosYDatalists() {
     "dl-tipoImpresora": "tipoImpresora",
     "dl-nombreDispositivo": "nombreDispositivo",
     "dl-serialDispositivo": "serialDispositivo",
+    "dl-numeroInventario": "numeroInventario",
+    "dl-procesador": "procesador",
+    "dl-memoria": "memoria",
+    "dl-tipoDisco": "tipoDisco",
+    "dl-firmwareInventario": "firmwareInventario",
+    "dl-soVersion": "soVersion",
+    "dl-soNucleo": "soNucleo",
+    "dl-soSerial": "soSerial",
+    "dl-subentidades": "subentidades",
+    "dl-proyecto": "proyecto",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
