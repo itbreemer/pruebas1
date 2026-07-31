@@ -397,12 +397,18 @@ function renderActa(equipo, transaccion) {
             ${transaccion.observaciones ? `<p><strong>Observaciones:</strong> ${transaccion.observaciones}</p>` : ""}
 
             <div class="firmas">
-              <div><div class="firma-linea">${esc(transaccion.tecnico)}<br>Nombre y firma de Técnico de Soporte</div></div>
+              <div class="firma-bloque">
+                ${typeof FIRMA_TECNICO_B64 !== "undefined" ? `<img class="firma-img" src="${FIRMA_TECNICO_B64}" alt="Firma técnico">` : ""}
+                <div class="firma-linea">${esc(transaccion.tecnico)}<br>Nombre y firma de Técnico de Soporte</div>
+              </div>
               <div><div class="firma-linea">Nombre y firma de Usuario</div></div>
             </div>
             <div class="firmas">
               <div></div>
-              <div><div class="firma-linea">${esc(transaccion.jefe)}<br>Nombre y firma de Jefe de Operaciones TI</div></div>
+              <div class="firma-bloque">
+                ${typeof FIRMA_JEFE_B64 !== "undefined" ? `<img class="firma-img" src="${FIRMA_JEFE_B64}" alt="Firma jefe de operaciones">` : ""}
+                <div class="firma-linea">${esc(transaccion.jefe)}<br>Nombre y firma de Jefe de Operaciones TI</div>
+              </div>
             </div>
           </div>
           <div class="clausula">

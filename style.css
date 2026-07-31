@@ -347,6 +347,16 @@ main .btn-primary:hover { background: #163158; }
   padding-top: 4px;
   font-size: 0.8rem;
 }
+.firma-bloque { position: relative; }
+.firma-img {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  max-height: 55px;
+  max-width: 90%;
+  pointer-events: none;
+}
 
 .clausula {
   border-top: 1px solid var(--azul);
