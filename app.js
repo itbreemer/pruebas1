@@ -70,6 +70,7 @@ function poblarFiltrosYDatalists() {
     "dl-status": "status",
     "dl-tipoEquipo": "tipoEquipo",
     "dl-fabricante": "fabricante",
+    "dl-usuarioDominio": "usuarioDominio",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
