@@ -72,6 +72,11 @@ function poblarFiltrosYDatalists() {
     "dl-fabricante": "fabricante",
     "dl-usuarioDominio": "usuarioDominio",
     "dl-nombreRedEquipo": "nombreRed",
+    "dl-modelo": "modelo",
+    "dl-numeroSerial": "numeroSerial",
+    "dl-correo": "correo",
+    "dl-dpi": "dpi",
+    "dl-dominio": "dominio",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
