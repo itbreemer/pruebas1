@@ -203,7 +203,7 @@ main .btn-primary:hover { background: #163158; }
   text-align: right;
 }
 .lock { opacity: 0.55; font-size: 0.75rem; }
-.glpi-row input, .glpi-row textarea {
+.glpi-row input, .glpi-row select, .glpi-row textarea {
   padding: 6px 9px;
   border: 1px solid var(--borde);
   border-radius: 5px;
@@ -211,6 +211,7 @@ main .btn-primary:hover { background: #163158; }
   width: 100%;
 }
 .glpi-row textarea { resize: vertical; }
+.glpi-row input[readonly] { background: #f3f4f6; color: #4b5563; }
 
 @media (max-width: 760px) {
   .glpi-grid { grid-template-columns: 1fr; }

@@ -1,5 +1,4 @@
 const STORAGE_KEY = "equiposTI_v2";
-const FIRMANTES_KEY = "actaFirmantes_v1";
 const CONTADOR_KEY = "actaContador_v1";
 const PAGE_SIZE = 50;
 
@@ -290,18 +289,6 @@ function siguienteNumeroForma() {
   return `Forma-TI-${String(n).padStart(3, "0")}`;
 }
 
-function cargarFirmantes() {
-  try {
-    return JSON.parse(localStorage.getItem(FIRMANTES_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-function guardarFirmantes(tecnico, jefe) {
-  localStorage.setItem(FIRMANTES_KEY, JSON.stringify({ tecnico, jefe }));
-}
-
 function buscarEquipoPorNombreRed(nombre) {
   const n = (nombre || "").trim().toLowerCase();
   if (!n) return null;
@@ -398,7 +385,7 @@ function renderActa(equipo, transaccion) {
 
             <div class="firmas">
               <div class="firma-bloque">
-                ${typeof FIRMA_TECNICO_B64 !== "undefined" ? `<img class="firma-img" src="${FIRMA_TECNICO_B64}" alt="Firma técnico">` : ""}
+                ${typeof FIRMA_TECNICO_B64 !== "undefined" && (transaccion.tecnico || "").trim().toLowerCase() === "victor morales" ? `<img class="firma-img" src="${FIRMA_TECNICO_B64}" alt="Firma técnico">` : ""}
                 <div class="firma-linea">${esc(transaccion.tecnico)}<br>Nombre y firma de Técnico de Soporte</div>
               </div>
               <div><div class="firma-linea">Nombre y firma de Usuario</div></div>
@@ -431,12 +418,11 @@ function renderActa(equipo, transaccion) {
 function imprimirDesdeEdicion() {
   const equipo = {};
   FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
-  const firmantes = cargarFirmantes();
   renderActa(equipo, {
     accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
     declarante: equipo.nombreEmpleado,
-    tecnico: firmantes.tecnico || "",
-    jefe: firmantes.jefe || "",
+    tecnico: "Victor Morales",
+    jefe: "Gustavo Garcia",
     observaciones: equipo.comentarios || "",
     numeroForma: siguienteNumeroForma(),
   });
@@ -450,9 +436,8 @@ function abrirModalActa() {
   $("actaAccion").value = "Entrega";
   $("actaDeclarante").value = "";
   $("actaObservaciones").value = "";
-  const firmantes = cargarFirmantes();
-  $("actaTecnico").value = firmantes.tecnico || "";
-  $("actaJefe").value = firmantes.jefe || "";
+  $("actaTecnico").value = "Victor Morales";
+  $("actaJefe").value = "Gustavo Garcia";
   $("actaEstado").textContent = "Escribe o selecciona el Nombre en Red de un equipo ya registrado para autocompletar el acta.";
   $("actaEstado").className = "acta-estado";
   $("modalActaOverlay").classList.add("open");
@@ -488,7 +473,6 @@ function generarEImprimirActa() {
   const equipo = buscarEquipoPorNombreRed(nombreRed) || { nombreRed };
   const tecnico = $("actaTecnico").value.trim();
   const jefe = $("actaJefe").value.trim();
-  guardarFirmantes(tecnico, jefe);
 
   renderActa(equipo, {
     accion: $("actaAccion").value,
