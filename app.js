@@ -4,6 +4,11 @@ const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
 
+let TECNICO_ACTUAL = "";
+window.establecerTecnicoActual = (nombre) => {
+  TECNICO_ACTUAL = nombre || "";
+};
+
 const FIELD_IDS = [
   "id", "nombreRed", "ubicaciones", "entidad", "empresa", "nombreEmpleado",
   "usuarioDominio", "departamento", "unidadNegocio", "codigoEmpleado",
@@ -438,7 +443,7 @@ function imprimirDesdeEdicion() {
   renderActa(equipo, {
     accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
     declarante: equipo.nombreEmpleado,
-    tecnico: "Victor Morales",
+    tecnico: TECNICO_ACTUAL || "Sin identificar",
     jefe: "Gustavo Garcia",
     observaciones: equipo.comentarios || "",
     numeroForma: siguienteNumeroForma(),
@@ -453,7 +458,7 @@ function abrirModalActa() {
   $("actaAccion").value = "Entrega";
   $("actaDeclarante").value = "";
   $("actaObservaciones").value = "";
-  $("actaTecnico").value = "Victor Morales";
+  $("actaTecnico").value = TECNICO_ACTUAL || "Sin identificar";
   $("actaJefe").value = "Gustavo Garcia";
   $("actaEstado").textContent = "Escribe o selecciona el Nombre en Red de un equipo ya registrado para autocompletar el acta.";
   $("actaEstado").className = "acta-estado";
