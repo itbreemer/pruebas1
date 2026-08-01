@@ -117,6 +117,10 @@ function esc(v) {
   return v && String(v).trim() !== "" ? v : "N/A";
 }
 
+function nonEmpty(v) {
+  return v && String(v).trim() !== "" && String(v).trim().toUpperCase() !== "N/A";
+}
+
 function coincideTexto(e, texto) {
   if (!texto) return true;
   const campos = [
@@ -177,7 +181,9 @@ function render() {
     });
   }
 
-  $("contadorTotal").textContent = `${filtrados.length} equipo(s)`;
+  if ($("vista-computadoras").classList.contains("vista-active")) {
+    $("contadorTotal").textContent = `${filtrados.length} equipo(s)`;
+  }
   $("infoPagina").textContent = `Página ${paginaActual} de ${totalPaginas}`;
   $("btnPrimero").disabled = paginaActual === 1;
   $("btnAnterior").disabled = paginaActual === 1;
@@ -259,6 +265,7 @@ function onSubmit(e) {
   cerrarModal();
   poblarFiltrosYDatalists();
   render();
+  refrescarVistasSecundarias();
 }
 
 function eliminarActual() {
@@ -270,6 +277,7 @@ function eliminarActual() {
   cerrarModal();
   poblarFiltrosYDatalists();
   render();
+  refrescarVistasSecundarias();
 }
 
 function formatearFecha(iso) {
@@ -485,6 +493,268 @@ function generarEImprimirActa() {
   cerrarModalActa();
 }
 
+/* ---------- Navegación de vistas (sidebar) ---------- */
+
+function refrescarVistasSecundarias() {
+  renderTablero();
+  vistaUsuarios.render();
+  vistaMonitores.render();
+  vistaImpresoras.render();
+  vistaDispositivos.render();
+}
+
+function cambiarVista(nombre) {
+  document.querySelectorAll(".vista").forEach((v) => v.classList.remove("vista-active"));
+  const destino = $(`vista-${nombre}`);
+  if (destino) destino.classList.add("vista-active");
+
+  document.querySelectorAll(".nav-item").forEach((b) => b.classList.remove("active"));
+  const boton = document.querySelector(`.nav-item[data-vista="${nombre}"]`);
+  if (boton) {
+    boton.classList.add("active");
+    $("breadcrumbActual").textContent = boton.dataset.titulo || nombre;
+  }
+
+  if (nombre === "tablero") renderTablero();
+  else if (nombre === "computadoras") render();
+  else if (nombre === "usuarios") vistaUsuarios.render();
+  else if (nombre === "monitores") vistaMonitores.render();
+  else if (nombre === "impresoras") vistaImpresoras.render();
+  else if (nombre === "dispositivos") vistaDispositivos.render();
+}
+
+document.querySelectorAll(".nav-item").forEach((btn) => {
+  btn.addEventListener("click", () => cambiarVista(btn.dataset.vista));
+});
+
+/* ---------- Tablero ---------- */
+
+function contarPor(campo) {
+  const conteo = {};
+  equipos.forEach((e) => {
+    const v = (e[campo] || "").trim() || "Sin dato";
+    conteo[v] = (conteo[v] || 0) + 1;
+  });
+  return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+}
+
+function renderTablero() {
+  const totalUsuarios = new Set(
+    equipos
+      .filter((e) => nonEmpty(e.nombreEmpleado) || nonEmpty(e.usuarioDominio))
+      .map((e) => `${(e.nombreEmpleado || "").toLowerCase()}|${(e.usuarioDominio || "").toLowerCase()}`)
+  ).size;
+  const totalEmpresas = new Set(equipos.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
+  const asignados = equipos.filter((e) => (e.status || "").toLowerCase().startsWith("asignada")).length;
+
+  if ($("vista-tablero").classList.contains("vista-active")) {
+    $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
+  }
+
+  $("statCards").innerHTML = `
+    <div class="stat-card"><div class="numero">${equipos.length}</div><div class="etiqueta">Equipos totales</div></div>
+    <div class="stat-card"><div class="numero">${asignados}</div><div class="etiqueta">Asignados</div></div>
+    <div class="stat-card"><div class="numero">${totalUsuarios}</div><div class="etiqueta">Usuarios distintos</div></div>
+    <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
+  `;
+
+  const filaHtml = (nombre, cantidad) =>
+    `<div class="tablero-fila"><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
+
+  $("tableroStatus").innerHTML =
+    contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+  $("tableroEmpresa").innerHTML =
+    contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+  $("tableroTipo").innerHTML =
+    contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+}
+
+/* ---------- Vistas de listas derivadas (Usuarios / Monitores / Impresoras / Dispositivos) ---------- */
+
+function crearVistaLista({ prefix, columnas, obtenerFilas, filtrar, alClicFila }) {
+  let pagina = 1;
+  function render() {
+    const texto = $(`buscador_${prefix}`).value.trim().toLowerCase();
+    const todas = obtenerFilas();
+    const filtradas = texto ? todas.filter((f) => filtrar(f, texto)) : todas;
+    const totalPag = Math.max(1, Math.ceil(filtradas.length / PAGE_SIZE));
+    if (pagina > totalPag) pagina = totalPag;
+    if (pagina < 1) pagina = 1;
+    const inicio = (pagina - 1) * PAGE_SIZE;
+    const pageItems = filtradas.slice(inicio, inicio + PAGE_SIZE);
+
+    const tbody = $(`tbody_${prefix}`);
+    tbody.innerHTML = "";
+    if (pageItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="${columnas}" class="empty-state">Sin resultados. Estos datos se completan al capturarlos en cada equipo.</td></tr>`;
+    } else {
+      pageItems.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = item.celdas;
+        if (alClicFila) tr.addEventListener("click", () => alClicFila(item));
+        tbody.appendChild(tr);
+      });
+    }
+
+    $(`infoPagina_${prefix}`).textContent = `Página ${pagina} de ${totalPag} — ${filtradas.length} registro(s)`;
+    if ($(`vista-${prefix}`).classList.contains("vista-active")) {
+      $("contadorTotal").textContent = `${filtradas.length} registro(s)`;
+    }
+    $(`btnPrimero_${prefix}`).disabled = pagina === 1;
+    $(`btnAnterior_${prefix}`).disabled = pagina === 1;
+    $(`btnSiguiente_${prefix}`).disabled = pagina === totalPag;
+    $(`btnUltimo_${prefix}`).disabled = pagina === totalPag;
+  }
+
+  $(`buscador_${prefix}`).addEventListener("input", () => {
+    pagina = 1;
+    render();
+  });
+  $(`btnPrimero_${prefix}`).addEventListener("click", () => {
+    pagina = 1;
+    render();
+  });
+  $(`btnAnterior_${prefix}`).addEventListener("click", () => {
+    pagina--;
+    render();
+  });
+  $(`btnSiguiente_${prefix}`).addEventListener("click", () => {
+    pagina++;
+    render();
+  });
+  $(`btnUltimo_${prefix}`).addEventListener("click", () => {
+    pagina = Math.max(1, Math.ceil(obtenerFilas().length / PAGE_SIZE));
+    render();
+  });
+
+  return { render };
+}
+
+function obtenerUsuarios() {
+  const mapa = new Map();
+  equipos.forEach((e) => {
+    if (!nonEmpty(e.nombreEmpleado) && !nonEmpty(e.usuarioDominio)) return;
+    const clave = `${(e.nombreEmpleado || "").trim().toLowerCase()}|${(e.usuarioDominio || "").trim().toLowerCase()}`;
+    if (!mapa.has(clave)) {
+      mapa.set(clave, {
+        nombreEmpleado: e.nombreEmpleado,
+        usuarioDominio: e.usuarioDominio,
+        correo: e.correo,
+        empresa: e.empresa,
+        departamento: e.departamento,
+        equipos: [],
+      });
+    }
+    mapa.get(clave).equipos.push(e.nombreRed);
+  });
+  return [...mapa.values()]
+    .map((u) => ({
+      ...u,
+      celdas: `
+        <td>${esc(u.nombreEmpleado)}</td>
+        <td>${esc(u.usuarioDominio)}</td>
+        <td>${esc(u.correo)}</td>
+        <td>${esc(u.empresa)}</td>
+        <td>${esc(u.departamento)}</td>
+        <td>${u.equipos.filter(Boolean).join(", ") || "N/A"}</td>
+      `,
+    }))
+    .sort((a, b) =>
+      (a.nombreEmpleado || a.usuarioDominio || "").localeCompare(b.nombreEmpleado || b.usuarioDominio || "", "es")
+    );
+}
+
+const vistaUsuarios = crearVistaLista({
+  prefix: "usuarios",
+  columnas: 6,
+  obtenerFilas: obtenerUsuarios,
+  filtrar: (u, t) =>
+    [u.nombreEmpleado, u.usuarioDominio, u.correo, u.departamento, u.empresa].join(" ").toLowerCase().includes(t),
+  alClicFila: (u) => {
+    cambiarVista("computadoras");
+    $("buscador").value = u.nombreEmpleado || u.usuarioDominio || "";
+    paginaActual = 1;
+    render();
+  },
+});
+
+function obtenerMonitores() {
+  return equipos
+    .filter((e) => nonEmpty(e.monitor))
+    .map((e) => ({
+      equipo: e,
+      celdas: `
+        <td>${esc(e.monitor)}</td>
+        <td>${esc(e.nombreRed)}</td>
+        <td>${esc(e.nombreEmpleado)}</td>
+        <td>${esc(e.empresa)}</td>
+        <td>${esc(e.ubicaciones)}</td>
+      `,
+    }));
+}
+
+const vistaMonitores = crearVistaLista({
+  prefix: "monitores",
+  columnas: 5,
+  obtenerFilas: obtenerMonitores,
+  filtrar: (r, t) =>
+    [r.equipo.monitor, r.equipo.nombreRed, r.equipo.nombreEmpleado, r.equipo.empresa].join(" ").toLowerCase().includes(t),
+  alClicFila: (r) => abrirModal(r.equipo),
+});
+
+function obtenerImpresoras() {
+  return equipos
+    .filter(
+      (e) => nonEmpty(e.datosImpresora) || nonEmpty(e.serialImpresora) || nonEmpty(e.tipoImpresora) || nonEmpty(e.ipImpresora)
+    )
+    .map((e) => ({
+      equipo: e,
+      celdas: `
+        <td>${esc(e.datosImpresora)}</td>
+        <td>${esc(e.serialImpresora)}</td>
+        <td>${esc(e.tipoImpresora)}</td>
+        <td>${esc(e.ipImpresora)}</td>
+        <td>${esc(e.nombreRed)}</td>
+        <td>${esc(e.nombreEmpleado)}</td>
+      `,
+    }));
+}
+
+const vistaImpresoras = crearVistaLista({
+  prefix: "impresoras",
+  columnas: 6,
+  obtenerFilas: obtenerImpresoras,
+  filtrar: (r, t) =>
+    [r.equipo.datosImpresora, r.equipo.serialImpresora, r.equipo.tipoImpresora, r.equipo.ipImpresora, r.equipo.nombreRed]
+      .join(" ")
+      .toLowerCase()
+      .includes(t),
+  alClicFila: (r) => abrirModal(r.equipo),
+});
+
+function obtenerDispositivos() {
+  return equipos
+    .filter((e) => nonEmpty(e.nombreDispositivo) || nonEmpty(e.serialDispositivo))
+    .map((e) => ({
+      equipo: e,
+      celdas: `
+        <td>${esc(e.nombreDispositivo)}</td>
+        <td>${esc(e.serialDispositivo)}</td>
+        <td>${esc(e.nombreRed)}</td>
+        <td>${esc(e.nombreEmpleado)}</td>
+        <td>${esc(e.empresa)}</td>
+      `,
+    }));
+}
+
+const vistaDispositivos = crearVistaLista({
+  prefix: "dispositivos",
+  columnas: 5,
+  obtenerFilas: obtenerDispositivos,
+  filtrar: (r, t) => [r.equipo.nombreDispositivo, r.equipo.serialDispositivo, r.equipo.nombreRed].join(" ").toLowerCase().includes(t),
+  alClicFila: (r) => abrirModal(r.equipo),
+});
+
 $("btnNuevo").addEventListener("click", () => abrirModal(null));
 $("nombreRed").addEventListener("input", onCambioNombreRedEquipo);
 $("btnCerrarModal").addEventListener("click", cerrarModal);
@@ -515,3 +785,4 @@ $("btnUltimo").addEventListener("click", () => {
 cargarDatos();
 poblarFiltrosYDatalists();
 render();
+renderTablero();

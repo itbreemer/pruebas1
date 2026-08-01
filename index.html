@@ -8,52 +8,205 @@
 </head>
 <body>
 
-<header class="app-header no-print">
-  <h1>Inventario de Equipos de Cómputo — TI</h1>
-  <div class="header-actions">
-    <span id="contadorTotal" class="contador"></span>
-    <button id="btnGenerarActa" class="btn btn-outline-header">🖶 Generar Acta</button>
-    <button id="btnNuevo" class="btn btn-primary">+ Nuevo equipo</button>
+<div class="app-shell">
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">🖥️ Inventario TI</div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">Activos</div>
+      <button type="button" class="nav-item active" data-vista="tablero" data-titulo="Tablero">📊 Tablero</button>
+      <button type="button" class="nav-item" data-vista="computadoras" data-titulo="Computadoras">💻 Computadoras</button>
+      <button type="button" class="nav-item" data-vista="usuarios" data-titulo="Usuarios">👤 Usuarios</button>
+      <button type="button" class="nav-item" data-vista="monitores" data-titulo="Monitores">🖥️ Monitores</button>
+      <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
+      <button type="button" class="nav-item" data-vista="dispositivos" data-titulo="Dispositivos">📶 Dispositivos</button>
+    </nav>
+  </aside>
+
+  <div class="app-content">
+    <header class="app-header no-print">
+      <div class="breadcrumb">🏠 Inicio / Activos / <span id="breadcrumbActual">Tablero</span></div>
+      <div class="header-actions">
+        <span id="contadorTotal" class="contador"></span>
+        <button id="btnGenerarActa" class="btn btn-outline-header">🖶 Generar Acta</button>
+        <button id="btnNuevo" class="btn btn-primary">+ Nuevo equipo</button>
+      </div>
+    </header>
+
+    <main class="no-print">
+      <!-- Tablero -->
+      <section id="vista-tablero" class="vista vista-active">
+        <div class="stat-cards" id="statCards"></div>
+        <div class="tablero-grid">
+          <div class="tablero-panel">
+            <h3>Por Status</h3>
+            <div id="tableroStatus" class="tablero-lista"></div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Por Empresa (top 8)</h3>
+            <div id="tableroEmpresa" class="tablero-lista"></div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Por Tipo de Equipo</h3>
+            <div id="tableroTipo" class="tablero-lista"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Computadoras -->
+      <section id="vista-computadoras" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador" placeholder="Buscar por nombre en red, empleado, serial, inventario, modelo...">
+          <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
+          <select id="filtroStatus"><option value="">Todos los status</option></select>
+          <select id="filtroTipo"><option value="">Todos los tipos</option></select>
+        </section>
+
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Nombre en Red</th>
+                <th>Status</th>
+                <th>Nombre de Empleado</th>
+                <th>Empresa</th>
+                <th>Departamento</th>
+                <th>Fabricante</th>
+                <th>Modelo</th>
+                <th>Serial</th>
+                <th>No. Inventario</th>
+                <th>Ubicación</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyEquipos"></tbody>
+          </table>
+        </section>
+
+        <section class="paginacion">
+          <button id="btnPrimero">&laquo;</button>
+          <button id="btnAnterior">&lsaquo;</button>
+          <span id="infoPagina"></span>
+          <button id="btnSiguiente">&rsaquo;</button>
+          <button id="btnUltimo">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Usuarios -->
+      <section id="vista-usuarios" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_usuarios" placeholder="Buscar por nombre, usuario de dominio, correo, departamento...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Nombre de Usuario</th>
+                <th>Usuario de Dominio</th>
+                <th>Correo</th>
+                <th>Empresa</th>
+                <th>Departamento</th>
+                <th>Equipos asignados</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_usuarios"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_usuarios">&laquo;</button>
+          <button id="btnAnterior_usuarios">&lsaquo;</button>
+          <span id="infoPagina_usuarios"></span>
+          <button id="btnSiguiente_usuarios">&rsaquo;</button>
+          <button id="btnUltimo_usuarios">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Monitores -->
+      <section id="vista-monitores" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_monitores" placeholder="Buscar por monitor, equipo, usuario...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Monitor</th>
+                <th>Equipo Asociado</th>
+                <th>Usuario</th>
+                <th>Empresa</th>
+                <th>Ubicación</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_monitores"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_monitores">&laquo;</button>
+          <button id="btnAnterior_monitores">&lsaquo;</button>
+          <span id="infoPagina_monitores"></span>
+          <button id="btnSiguiente_monitores">&rsaquo;</button>
+          <button id="btnUltimo_monitores">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Impresoras -->
+      <section id="vista-impresoras" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_impresoras" placeholder="Buscar por datos, serial, tipo, IP de impresora...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Datos Impresora</th>
+                <th>Serial</th>
+                <th>Tipo</th>
+                <th>IP</th>
+                <th>Equipo Asociado</th>
+                <th>Usuario</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_impresoras"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_impresoras">&laquo;</button>
+          <button id="btnAnterior_impresoras">&lsaquo;</button>
+          <span id="infoPagina_impresoras"></span>
+          <button id="btnSiguiente_impresoras">&rsaquo;</button>
+          <button id="btnUltimo_impresoras">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Dispositivos -->
+      <section id="vista-dispositivos" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_dispositivos" placeholder="Buscar por nombre o serial de dispositivo, equipo, usuario...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Nombre Dispositivo</th>
+                <th>Serial Dispositivo</th>
+                <th>Equipo Asociado</th>
+                <th>Usuario</th>
+                <th>Empresa</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_dispositivos"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_dispositivos">&laquo;</button>
+          <button id="btnAnterior_dispositivos">&lsaquo;</button>
+          <span id="infoPagina_dispositivos"></span>
+          <button id="btnSiguiente_dispositivos">&rsaquo;</button>
+          <button id="btnUltimo_dispositivos">&raquo;</button>
+        </section>
+      </section>
+    </main>
   </div>
-</header>
-
-<main class="no-print">
-  <section class="toolbar">
-    <input type="text" id="buscador" placeholder="Buscar por nombre en red, empleado, serial, inventario, modelo...">
-    <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
-    <select id="filtroStatus"><option value="">Todos los status</option></select>
-    <select id="filtroTipo"><option value="">Todos los tipos</option></select>
-  </section>
-
-  <section class="tabla-wrap">
-    <table class="tabla">
-      <thead>
-        <tr>
-          <th>Nombre en Red</th>
-          <th>Status</th>
-          <th>Nombre de Empleado</th>
-          <th>Empresa</th>
-          <th>Departamento</th>
-          <th>Fabricante</th>
-          <th>Modelo</th>
-          <th>Serial</th>
-          <th>No. Inventario</th>
-          <th>Ubicación</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="tbodyEquipos"></tbody>
-    </table>
-  </section>
-
-  <section class="paginacion">
-    <button id="btnPrimero">&laquo;</button>
-    <button id="btnAnterior">&lsaquo;</button>
-    <span id="infoPagina"></span>
-    <button id="btnSiguiente">&rsaquo;</button>
-    <button id="btnUltimo">&raquo;</button>
-  </section>
-</main>
+</div>
 
 <!-- Modal de formulario -->
 <div id="modalOverlay" class="modal-overlay no-print">
