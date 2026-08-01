@@ -205,6 +205,7 @@ function abrirModal(equipo) {
     $("id").value = "";
     $("entidad").value = "Root Entity";
     $("status").value = "Asignada";
+    $("idGlpi").value = siguienteIdGlpi();
     $("btnEliminarModal").style.display = "none";
   }
   $("nombreRedAviso").style.display = "none";
@@ -295,6 +296,14 @@ function siguienteNumeroForma() {
   const n = parseInt(localStorage.getItem(CONTADOR_KEY) || "0", 10) + 1;
   localStorage.setItem(CONTADOR_KEY, String(n));
   return `Forma-TI-${String(n).padStart(3, "0")}`;
+}
+
+function siguienteIdGlpi() {
+  const max = equipos.reduce((acc, e) => {
+    const n = parseInt((e.idGlpi || "").trim(), 10);
+    return Number.isFinite(n) && n > acc ? n : acc;
+  }, 0);
+  return String(max + 1);
 }
 
 function buscarEquipoPorNombreRed(nombre) {
