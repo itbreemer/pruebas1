@@ -21,6 +21,7 @@ const firebaseConfig = {
 const TECNICOS_POR_CORREO = {
   "victor@inventario-ti.local": "Victor Morales",
   "eder@inventario-ti.local": "Eder Rosales",
+  "gustavo@inventario-ti.local": "Gustavo Garcia",
 };
 
 const app = initializeApp(firebaseConfig);
