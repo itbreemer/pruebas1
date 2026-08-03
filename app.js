@@ -323,6 +323,13 @@ function filaActa(etiqueta, valor) {
   return `<div class="acta-fila"><div class="etiqueta">${etiqueta}</div><div class="valor">${esc(valor)}</div></div>`;
 }
 
+function firmaTecnicoPara(nombre) {
+  const n = (nombre || "").trim().toLowerCase();
+  if (n === "victor morales" && typeof FIRMA_TECNICO_B64 !== "undefined") return FIRMA_TECNICO_B64;
+  if (n === "eder rosales" && typeof FIRMA_EDER_B64 !== "undefined") return FIRMA_EDER_B64;
+  return "";
+}
+
 function renderActa(equipo, transaccion) {
   const declarante = transaccion.declarante || equipo.nombreEmpleado || "___________________________";
   const accion = transaccion.accion === "Devolucion" ? "Devuelvo" : "Recibo";
@@ -407,7 +414,7 @@ function renderActa(equipo, transaccion) {
 
             <div class="firmas">
               <div class="firma-bloque">
-                ${typeof FIRMA_TECNICO_B64 !== "undefined" && (transaccion.tecnico || "").trim().toLowerCase() === "victor morales" ? `<img class="firma-img" src="${FIRMA_TECNICO_B64}" alt="Firma técnico">` : ""}
+                ${firmaTecnicoPara(transaccion.tecnico) ? `<img class="firma-img" src="${firmaTecnicoPara(transaccion.tecnico)}" alt="Firma técnico">` : ""}
                 <div class="firma-linea">${esc(transaccion.tecnico)}<br>Nombre y firma de Técnico de Soporte</div>
               </div>
               <div><div class="firma-linea">Nombre y firma de Usuario</div></div>
