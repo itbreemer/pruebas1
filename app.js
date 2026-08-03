@@ -67,7 +67,28 @@ function fusionarContratosDesdeSeed() {
     }
   });
 
+  if (limpiarPendientesDuplicados()) cambio = true;
+
   if (cambio) guardarDatos();
+}
+
+function limpiarPendientesDuplicados() {
+  // Un "PENDIENTE-<serie>" que se agregó automáticamente puede resultar ser el
+  // mismo equipo físico que un registro real que el usuario ya tenía capturado
+  // con nombre propio (por ejemplo, un equipo dado de alta antes de importar
+  // contratos). Si comparten número de serial, nos quedamos con el real.
+  const seriesReales = new Set(
+    equipos
+      .filter((e) => nonEmpty(e.numeroSerial) && !(e.nombreRed || "").startsWith("PENDIENTE-"))
+      .map((e) => e.numeroSerial.trim().toUpperCase())
+  );
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => {
+    const esPendiente = (e.nombreRed || "").startsWith("PENDIENTE-");
+    const serial = (e.numeroSerial || "").trim().toUpperCase();
+    return !(esPendiente && serial && seriesReales.has(serial));
+  });
+  return equipos.length !== antes;
 }
 
 function guardarDatos() {
