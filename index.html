@@ -314,6 +314,11 @@
             <label for="tipoUsuario">Tipo de Usuario</label>
             <input type="text" id="tipoUsuario" placeholder="Estándar &gt; Dominio">
           </div>
+          <div class="glpi-row">
+            <label for="contratos">Contratos</label>
+            <input type="text" id="contratos" list="dl-contratos">
+            <datalist id="dl-contratos"></datalist>
+          </div>
           <div class="glpi-row glpi-row-textarea">
             <label for="comentarios">Comentarios</label>
             <textarea id="comentarios" rows="3"></textarea>
@@ -364,9 +369,8 @@
             </div>
           </div>
           <div class="glpi-row">
-            <label for="contratos">Contratos</label>
-            <input type="text" id="contratos" list="dl-contratos">
-            <datalist id="dl-contratos"></datalist>
+            <label for="uuid">UUID</label>
+            <input type="text" id="uuid">
           </div>
           <div class="glpi-row">
             <label for="dpi">DPI / Pasaporte <span class="lock">&#128274;</span></label>

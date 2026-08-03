@@ -14,7 +14,7 @@ const FIELD_IDS = [
   "usuarioDominio", "departamento", "unidadNegocio", "codigoEmpleado",
   "tipoUsuario", "comentarios",
   "status", "tipoEquipo", "fabricante", "modelo", "numeroSerial",
-  "numeroInventario", "correo", "idGlpi", "contratos", "dpi", "ip", "ipImpresora",
+  "numeroInventario", "correo", "idGlpi", "uuid", "contratos", "dpi", "ip", "ipImpresora",
   "dominio",
   "procesador", "memoria", "tipoDisco", "firmwareInventario",
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
@@ -30,7 +30,6 @@ function cargarDatos() {
   if (raw) {
     try {
       equipos = JSON.parse(raw);
-      migrarUuidAContratos();
       return;
     } catch {
       equipos = [];
@@ -38,22 +37,6 @@ function cargarDatos() {
   }
   equipos = typeof SEED_DATA !== "undefined" && Array.isArray(SEED_DATA) ? SEED_DATA.slice() : [];
   guardarDatos();
-}
-
-function migrarUuidAContratos() {
-  // El campo "uuid" se renombró a "contratos"; conservamos cualquier valor que ya se hubiera capturado.
-  let cambio = false;
-  equipos.forEach((e) => {
-    if (e.uuid && !e.contratos) {
-      e.contratos = e.uuid;
-      cambio = true;
-    }
-    if (e.uuid !== undefined) {
-      delete e.uuid;
-      cambio = true;
-    }
-  });
-  if (cambio) guardarDatos();
 }
 
 function guardarDatos() {
@@ -149,7 +132,7 @@ function coincideTexto(e, texto) {
   const campos = [
     "nombreRed", "nombreEmpleado", "correo", "empresa", "departamento",
     "modelo", "numeroSerial", "numeroInventario", "ubicaciones",
-    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idGlpi", "contratos",
+    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idGlpi", "uuid", "contratos",
   ];
   const haystack = campos.map((c) => e[c] || "").join(" ").toLowerCase();
   return haystack.includes(texto);
@@ -403,13 +386,14 @@ function renderActa(equipo, transaccion) {
           <div class="acta-fila combo">
             <div class="etiqueta">Id de Equipo:</div>
             <div class="valor">${esc(equipo.idGlpi)}</div>
-            <div class="etiqueta">Contratos:</div>
-            <div class="valor">${esc(equipo.contratos)}</div>
+            <div class="etiqueta">uuid:</div>
+            <div class="valor">${esc(equipo.uuid)}</div>
           </div>
           ${filaActa("Usuario de Dominio:", equipo.usuarioDominio)}
           ${filaActa("Nombre de Usuario:", equipo.nombreEmpleado)}
           ${filaActa("Dominio:", equipo.dominio)}
           ${filaActa("Correo de Usuario:", equipo.correo)}
+          ${filaActa("Contratos:", equipo.contratos)}
           ${filaActa("Ubicación:", equipo.ubicaciones)}
           ${filaActa("Departamento:", equipo.departamento)}
           ${filaActa("Unidad de Negocio:", equipo.unidadNegocio)}
