@@ -204,6 +204,9 @@ function abrirModal(equipo) {
     FIELD_IDS.forEach((f) => {
       if (equipo[f] !== undefined) $(f).value = equipo[f];
     });
+    if (!$("idGlpi").value.trim()) {
+      $("idGlpi").value = siguienteIdGlpi();
+    }
     $("btnEliminarModal").style.display = "";
   } else {
     $("modalTitulo").textContent = "Nuevo equipo";
@@ -237,6 +240,9 @@ function onCambioNombreRedEquipo() {
     FIELD_IDS.forEach((f) => {
       if (encontrado[f] !== undefined) $(f).value = encontrado[f];
     });
+    if (!$("idGlpi").value.trim()) {
+      $("idGlpi").value = siguienteIdGlpi();
+    }
     $("modalTitulo").textContent = `Editar equipo — ${encontrado.nombreRed || ""}`;
     $("btnEliminarModal").style.display = "";
     aviso.textContent = `Se cargaron los datos del equipo existente (${encontrado.empresa || "N/A"} · ${encontrado.nombreEmpleado || "sin usuario"}). Revisa/edita lo que necesites y da clic en Guardar.`;
