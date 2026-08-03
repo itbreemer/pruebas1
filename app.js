@@ -68,6 +68,7 @@ function fusionarContratosDesdeSeed() {
   });
 
   if (limpiarPendientesDuplicados()) cambio = true;
+  if (corregirFechaContrato8030028059()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -89,6 +90,22 @@ function limpiarPendientesDuplicados() {
     return !(esPendiente && serial && seriesReales.has(serial));
   });
   return equipos.length !== antes;
+}
+
+function corregirFechaContrato8030028059() {
+  // El contrato 8030028059 se guardó una vez con una fecha de vencimiento
+  // equivocada (30/10/2029) antes de corregirla a la real (01/01/2027).
+  // Forzamos la corrección aunque el campo ya tenga un valor guardado.
+  const VIEJO = "8030028059 (vence 30/10/2029)";
+  const NUEVO = "8030028059 (vence 01/01/2027)";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if ((e.contratos || "").trim() === VIEJO) {
+      e.contratos = NUEVO;
+      cambio = true;
+    }
+  });
+  return cambio;
 }
 
 function guardarDatos() {
