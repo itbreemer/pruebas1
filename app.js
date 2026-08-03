@@ -30,6 +30,7 @@ function cargarDatos() {
   if (raw) {
     try {
       equipos = JSON.parse(raw);
+      fusionarContratosDesdeSeed();
       return;
     } catch {
       equipos = [];
@@ -37,6 +38,24 @@ function cargarDatos() {
   }
   equipos = typeof SEED_DATA !== "undefined" && Array.isArray(SEED_DATA) ? SEED_DATA.slice() : [];
   guardarDatos();
+}
+
+function fusionarContratosDesdeSeed() {
+  // Trae datos de "contratos" agregados a SEED_DATA después de que este navegador
+  // ya había guardado su propia copia en localStorage, sin pisar nada que el
+  // usuario haya capturado manualmente.
+  if (typeof SEED_DATA === "undefined" || !Array.isArray(SEED_DATA)) return;
+  const seedPorId = new Map(SEED_DATA.map((s) => [s.id, s]));
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (nonEmpty(e.contratos)) return;
+    const seed = seedPorId.get(e.id);
+    if (seed && nonEmpty(seed.contratos)) {
+      e.contratos = seed.contratos;
+      cambio = true;
+    }
+  });
+  if (cambio) guardarDatos();
 }
 
 function guardarDatos() {
