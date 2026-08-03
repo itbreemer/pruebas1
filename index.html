@@ -33,6 +33,7 @@
       <button type="button" class="nav-item" data-vista="monitores" data-titulo="Monitores">🖥️ Monitores</button>
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
       <button type="button" class="nav-item" data-vista="dispositivos" data-titulo="Dispositivos">📶 Dispositivos</button>
+      <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
     </nav>
   </aside>
 
@@ -220,6 +221,33 @@
           <button id="btnUltimo_dispositivos">&raquo;</button>
         </section>
       </section>
+
+      <!-- Contratos -->
+      <section id="vista-contratos" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_contratos" placeholder="Buscar por contrato, equipo, usuario, empresa...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Contrato</th>
+                <th>Equipo Asociado</th>
+                <th>Usuario</th>
+                <th>Empresa</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_contratos"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_contratos">&laquo;</button>
+          <button id="btnAnterior_contratos">&lsaquo;</button>
+          <span id="infoPagina_contratos"></span>
+          <button id="btnSiguiente_contratos">&rsaquo;</button>
+          <button id="btnUltimo_contratos">&raquo;</button>
+        </section>
+      </section>
     </main>
   </div>
 </div>
@@ -336,8 +364,9 @@
             </div>
           </div>
           <div class="glpi-row">
-            <label for="uuid">UUID</label>
-            <input type="text" id="uuid">
+            <label for="contratos">Contratos</label>
+            <input type="text" id="contratos" list="dl-contratos">
+            <datalist id="dl-contratos"></datalist>
           </div>
           <div class="glpi-row">
             <label for="dpi">DPI / Pasaporte <span class="lock">&#128274;</span></label>

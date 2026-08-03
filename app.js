@@ -14,7 +14,7 @@ const FIELD_IDS = [
   "usuarioDominio", "departamento", "unidadNegocio", "codigoEmpleado",
   "tipoUsuario", "comentarios",
   "status", "tipoEquipo", "fabricante", "modelo", "numeroSerial",
-  "numeroInventario", "correo", "idGlpi", "uuid", "dpi", "ip", "ipImpresora",
+  "numeroInventario", "correo", "idGlpi", "contratos", "dpi", "ip", "ipImpresora",
   "dominio",
   "procesador", "memoria", "tipoDisco", "firmwareInventario",
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
@@ -30,6 +30,7 @@ function cargarDatos() {
   if (raw) {
     try {
       equipos = JSON.parse(raw);
+      migrarUuidAContratos();
       return;
     } catch {
       equipos = [];
@@ -37,6 +38,22 @@ function cargarDatos() {
   }
   equipos = typeof SEED_DATA !== "undefined" && Array.isArray(SEED_DATA) ? SEED_DATA.slice() : [];
   guardarDatos();
+}
+
+function migrarUuidAContratos() {
+  // El campo "uuid" se renombró a "contratos"; conservamos cualquier valor que ya se hubiera capturado.
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (e.uuid && !e.contratos) {
+      e.contratos = e.uuid;
+      cambio = true;
+    }
+    if (e.uuid !== undefined) {
+      delete e.uuid;
+      cambio = true;
+    }
+  });
+  if (cambio) guardarDatos();
 }
 
 function guardarDatos() {
@@ -88,6 +105,7 @@ function poblarFiltrosYDatalists() {
     "dl-tipoImpresora": "tipoImpresora",
     "dl-nombreDispositivo": "nombreDispositivo",
     "dl-serialDispositivo": "serialDispositivo",
+    "dl-contratos": "contratos",
     "dl-numeroInventario": "numeroInventario",
     "dl-procesador": "procesador",
     "dl-memoria": "memoria",
@@ -131,7 +149,7 @@ function coincideTexto(e, texto) {
   const campos = [
     "nombreRed", "nombreEmpleado", "correo", "empresa", "departamento",
     "modelo", "numeroSerial", "numeroInventario", "ubicaciones",
-    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idGlpi", "uuid",
+    "fabricante", "usuarioDominio", "codigoEmpleado", "dpi", "idGlpi", "contratos",
   ];
   const haystack = campos.map((c) => e[c] || "").join(" ").toLowerCase();
   return haystack.includes(texto);
@@ -385,8 +403,8 @@ function renderActa(equipo, transaccion) {
           <div class="acta-fila combo">
             <div class="etiqueta">Id de Equipo:</div>
             <div class="valor">${esc(equipo.idGlpi)}</div>
-            <div class="etiqueta">uuid:</div>
-            <div class="valor">${esc(equipo.uuid)}</div>
+            <div class="etiqueta">Contratos:</div>
+            <div class="valor">${esc(equipo.contratos)}</div>
           </div>
           ${filaActa("Usuario de Dominio:", equipo.usuarioDominio)}
           ${filaActa("Nombre de Usuario:", equipo.nombreEmpleado)}
@@ -528,6 +546,7 @@ function refrescarVistasSecundarias() {
   vistaMonitores.render();
   vistaImpresoras.render();
   vistaDispositivos.render();
+  vistaContratos.render();
 }
 
 function cambiarVista(nombre) {
@@ -548,6 +567,7 @@ function cambiarVista(nombre) {
   else if (nombre === "monitores") vistaMonitores.render();
   else if (nombre === "impresoras") vistaImpresoras.render();
   else if (nombre === "dispositivos") vistaDispositivos.render();
+  else if (nombre === "contratos") vistaContratos.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -779,6 +799,28 @@ const vistaDispositivos = crearVistaLista({
   columnas: 5,
   obtenerFilas: obtenerDispositivos,
   filtrar: (r, t) => [r.equipo.nombreDispositivo, r.equipo.serialDispositivo, r.equipo.nombreRed].join(" ").toLowerCase().includes(t),
+  alClicFila: (r) => abrirModal(r.equipo),
+});
+
+function obtenerContratos() {
+  return equipos
+    .filter((e) => nonEmpty(e.contratos))
+    .map((e) => ({
+      equipo: e,
+      celdas: `
+        <td>${esc(e.contratos)}</td>
+        <td>${esc(e.nombreRed)}</td>
+        <td>${esc(e.nombreEmpleado)}</td>
+        <td>${esc(e.empresa)}</td>
+      `,
+    }));
+}
+
+const vistaContratos = crearVistaLista({
+  prefix: "contratos",
+  columnas: 4,
+  obtenerFilas: obtenerContratos,
+  filtrar: (r, t) => [r.equipo.contratos, r.equipo.nombreRed, r.equipo.nombreEmpleado, r.equipo.empresa].join(" ").toLowerCase().includes(t),
   alClicFila: (r) => abrirModal(r.equipo),
 });
 
