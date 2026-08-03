@@ -307,6 +307,22 @@ main .btn-primary:hover { background: #163158; }
 .glpi-row textarea { resize: vertical; }
 .glpi-row input[readonly] { background: #f3f4f6; color: #4b5563; }
 
+.campo-con-boton { display: flex; gap: 6px; width: 100%; }
+.campo-con-boton input { flex: 1; }
+.btn-mini {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 5px;
+  background: var(--azul-claro);
+  color: var(--azul);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-mini:hover { background: #d5e1f7; }
+
 @media (max-width: 760px) {
   .glpi-grid { grid-template-columns: 1fr; }
   .glpi-row { grid-template-columns: 120px 1fr; }

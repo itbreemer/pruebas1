@@ -777,6 +777,9 @@ const vistaDispositivos = crearVistaLista({
 });
 
 $("btnNuevo").addEventListener("click", () => abrirModal(null));
+$("btnSugerirIdGlpi").addEventListener("click", () => {
+  $("idGlpi").value = siguienteIdGlpi();
+});
 $("nombreRed").addEventListener("input", onCambioNombreRedEquipo);
 $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);
