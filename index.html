@@ -163,6 +163,33 @@
           <button id="btnSiguiente_monitores">&rsaquo;</button>
           <button id="btnUltimo_monitores">&raquo;</button>
         </section>
+
+        <h3 class="subseccion-titulo">Catálogo de monitores contratados (sin asignar a un equipo)</h3>
+        <p class="subseccion-nota">El archivo de contratos no vincula cada monitor a una computadora específica. Esta lista es solo de referencia/inventario disponible.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_catalogoMonitores" placeholder="Buscar por serial, modelo, contrato...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Serial</th>
+                <th>Modelo</th>
+                <th>Descripción</th>
+                <th>Contrato</th>
+                <th>Vence</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_catalogoMonitores"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_catalogoMonitores">&laquo;</button>
+          <button id="btnAnterior_catalogoMonitores">&lsaquo;</button>
+          <span id="infoPagina_catalogoMonitores"></span>
+          <button id="btnSiguiente_catalogoMonitores">&rsaquo;</button>
+          <button id="btnUltimo_catalogoMonitores">&raquo;</button>
+        </section>
       </section>
 
       <!-- Impresoras -->
@@ -500,6 +527,7 @@
 <div id="printArea" class="print-only"></div>
 
 <script src="data.js"></script>
+<script src="monitores.js"></script>
 <script src="firmas.js"></script>
 <script src="app.js"></script>
 <script type="module" src="auth.js"></script>

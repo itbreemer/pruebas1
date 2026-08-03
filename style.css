@@ -524,3 +524,6 @@ main .btn-primary:hover { background: #163158; }
 }
 .login-btn:hover { background: #163158 !important; }
 .login-btn:disabled { opacity: 0.6; cursor: default; }
+
+.subseccion-titulo { margin: 28px 0 4px; font-size: 1rem; color: var(--azul); }
+.subseccion-nota { margin: 0 0 14px; font-size: 0.82rem; color: #6b7280; }

@@ -43,10 +43,14 @@ function cargarDatos() {
 function fusionarContratosDesdeSeed() {
   // Trae datos de "contratos" agregados a SEED_DATA después de que este navegador
   // ya había guardado su propia copia en localStorage, sin pisar nada que el
-  // usuario haya capturado manualmente.
+  // usuario haya capturado manualmente. También agrega equipos nuevos que se
+  // hayan sumado a SEED_DATA (por ejemplo, altas importadas desde un contrato)
+  // y que este navegador todavía no tenga.
   if (typeof SEED_DATA === "undefined" || !Array.isArray(SEED_DATA)) return;
   const seedPorId = new Map(SEED_DATA.map((s) => [s.id, s]));
+  const idsActuales = new Set(equipos.map((e) => e.id));
   let cambio = false;
+
   equipos.forEach((e) => {
     if (nonEmpty(e.contratos)) return;
     const seed = seedPorId.get(e.id);
@@ -55,6 +59,14 @@ function fusionarContratosDesdeSeed() {
       cambio = true;
     }
   });
+
+  SEED_DATA.forEach((seed) => {
+    if (!idsActuales.has(seed.id)) {
+      equipos.push({ ...seed });
+      cambio = true;
+    }
+  });
+
   if (cambio) guardarDatos();
 }
 
@@ -547,6 +559,7 @@ function refrescarVistasSecundarias() {
   renderTablero();
   vistaUsuarios.render();
   vistaMonitores.render();
+  vistaCatalogoMonitores.render();
   vistaImpresoras.render();
   vistaDispositivos.render();
   vistaContratos.render();
@@ -567,7 +580,10 @@ function cambiarVista(nombre) {
   if (nombre === "tablero") renderTablero();
   else if (nombre === "computadoras") render();
   else if (nombre === "usuarios") vistaUsuarios.render();
-  else if (nombre === "monitores") vistaMonitores.render();
+  else if (nombre === "monitores") {
+    vistaMonitores.render();
+    vistaCatalogoMonitores.render();
+  }
   else if (nombre === "impresoras") vistaImpresoras.render();
   else if (nombre === "dispositivos") vistaDispositivos.render();
   else if (nombre === "contratos") vistaContratos.render();
@@ -647,7 +663,8 @@ function crearVistaLista({ prefix, columnas, obtenerFilas, filtrar, alClicFila }
     }
 
     $(`infoPagina_${prefix}`).textContent = `Página ${pagina} de ${totalPag} — ${filtradas.length} registro(s)`;
-    if ($(`vista-${prefix}`).classList.contains("vista-active")) {
+    const vistaAsociada = $(`vista-${prefix}`);
+    if (vistaAsociada && vistaAsociada.classList.contains("vista-active")) {
       $("contadorTotal").textContent = `${filtradas.length} registro(s)`;
     }
     $(`btnPrimero_${prefix}`).disabled = pagina === 1;
@@ -750,6 +767,27 @@ const vistaMonitores = crearVistaLista({
   filtrar: (r, t) =>
     [r.equipo.monitor, r.equipo.nombreRed, r.equipo.nombreEmpleado, r.equipo.empresa].join(" ").toLowerCase().includes(t),
   alClicFila: (r) => abrirModal(r.equipo),
+});
+
+function obtenerCatalogoMonitores() {
+  const lista = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
+  return lista.map((m) => ({
+    monitor: m,
+    celdas: `
+      <td>${esc(m.serial)}</td>
+      <td>${esc(m.modelo)}</td>
+      <td>${esc(m.descripcion)}</td>
+      <td>${esc(m.contrato)}</td>
+      <td>${esc(m.fechaFin)}</td>
+    `,
+  }));
+}
+
+const vistaCatalogoMonitores = crearVistaLista({
+  prefix: "catalogoMonitores",
+  columnas: 5,
+  obtenerFilas: obtenerCatalogoMonitores,
+  filtrar: (r, t) => [r.monitor.serial, r.monitor.modelo, r.monitor.descripcion, r.monitor.contrato].join(" ").toLowerCase().includes(t),
 });
 
 function obtenerImpresoras() {
