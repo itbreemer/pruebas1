@@ -552,6 +552,11 @@ function imprimirDesdeEdicion() {
 
 /* ---------- Generación de la Tarjeta de Responsabilidad (Nuevo Ingreso) ---------- */
 
+function soloNumeroContrato(valor) {
+  if (!valor) return valor;
+  return String(valor).trim().split(/\s*\(/)[0].trim();
+}
+
 function fechaLarga(valor) {
   if (!valor) return "N/A";
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor).trim());
@@ -586,7 +591,7 @@ function tarjetaHTML(equipo, transaccion) {
         </tr>
         <tr>
           <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue plano subrayado">${fechaLarga(equipo.fechaIngresoEquipo)}</td>
-          <td class="tlabel">CONTRATO:</td><td class="tvalue plano">${esc(equipo.contratos)}</td>
+          <td class="tlabel">CONTRATO:</td><td class="tvalue plano">${esc(soloNumeroContrato(equipo.contratos))}</td>
         </tr>
       </table>
 
@@ -625,13 +630,15 @@ function tarjetaHTML(equipo, transaccion) {
       <table class="tarjeta-pie">
         <tr>
           <td class="tarjeta-pie-firma">FIRMA: <span class="linea-firma"></span></td>
-          <td class="tarjeta-pie-entrego" rowspan="3">Entrego: <span class="tvalue subrayado">${esc(transaccion.tecnico)}</span></td>
+          <td></td>
         </tr>
         <tr>
           <td class="tlabel">DPI: <span class="tvalue">${esc(equipo.dpi)}</span></td>
+          <td class="tlabel">Activo Fijo: <span class="tvalue">${esc(equipo.numeroInventario)}</span></td>
         </tr>
         <tr>
           <td class="tlabel">Fecha de Entrega: <span class="tvalue subrayado">${fechaLarga(transaccion.fechaEntrega)}</span></td>
+          <td class="tarjeta-pie-entrego">Entrego: <span class="tvalue subrayado">${esc(transaccion.tecnico)}</span></td>
         </tr>
       </table>
     </div>
