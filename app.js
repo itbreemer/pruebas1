@@ -585,7 +585,8 @@ function tarjetaHTML(equipo, transaccion) {
           <td class="tlabel">CODIGO SAP:</td><td class="tvalue">${esc(equipo.codigoEmpleado)}</td>
         </tr>
         <tr>
-          <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue subrayado" colspan="3">${fechaLarga(equipo.fechaIngresoEquipo)}</td>
+          <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue subrayado">${fechaLarga(equipo.fechaIngresoEquipo)}</td>
+          <td class="tlabel">CONTRATO:</td><td class="tvalue">${esc(equipo.contratos)}</td>
         </tr>
       </table>
 
@@ -704,6 +705,7 @@ const CAMPOS_INGRESO_EQUIPO = {
   ingresoContrato: "contratos",
   ingresoSerial: "numeroSerial",
   ingresoInventario: "numeroInventario",
+  ingresoMemoria: "memoria",
   ingresoMonitor: "monitor",
   ingresoCodigoRam: "codigoRam",
   ingresoMemoriaDescripcion: "memoriaDescripcion",
