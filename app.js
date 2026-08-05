@@ -740,7 +740,11 @@ function cerrarModalIngreso() {
 function onCambioNombreRedIngreso() {
   const equipo = buscarEquipoPorNombreRed($("ingresoNombreRed").value);
   if (equipo) {
-    $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se actualizarán sus datos con lo que escribas aquí.`;
+    Object.entries(CAMPOS_INGRESO_EQUIPO).forEach(([campoId, campoEquipo]) => {
+      if (campoId === "ingresoNombreRed") return;
+      $(campoId).value = equipo[campoEquipo] || "";
+    });
+    $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se cargaron sus datos actuales; edita solo lo que cambió.`;
     $("ingresoEstado").className = "acta-estado";
   } else if ($("ingresoNombreRed").value.trim()) {
     $("ingresoEstado").textContent = "No existe todavía: se creará como un equipo nuevo en el inventario.";
