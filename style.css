@@ -537,7 +537,7 @@ main .btn-primary:hover { background: #163158; }
   .print-only { display: block !important; }
   body { background: #fff; }
   @page { size: letter landscape; margin: 8mm; }
-  @page tarjeta-vertical { size: letter portrait; margin: 14mm; }
+  @page tarjeta-vertical { size: letter portrait; margin: 38mm 14mm 14mm 14mm; }
 }
 
 /* ---------- Login (Firebase Auth) ---------- */
