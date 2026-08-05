@@ -20,6 +20,7 @@ const FIELD_IDS = [
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
   "monitor", "tamanoDisco", "datosImpresora", "serialImpresora",
   "tipoImpresora", "nombreDispositivo", "serialDispositivo",
+  "puesto", "fechaIngresoEmpleado", "codigoRam",
 ];
 
 let equipos = [];
@@ -168,6 +169,8 @@ function poblarFiltrosYDatalists() {
     "dl-soSerial": "soSerial",
     "dl-subentidades": "subentidades",
     "dl-proyecto": "proyecto",
+    "dl-puesto": "puesto",
+    "dl-codigoRam": "codigoRam",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
@@ -179,12 +182,14 @@ function poblarFiltrosYDatalists() {
     });
   });
 
-  const dlNombreRed = $("dl-nombreRedActa");
-  dlNombreRed.innerHTML = "";
-  valoresUnicos("nombreRed").forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    dlNombreRed.appendChild(opt);
+  ["dl-nombreRedActa", "dl-nombreRedIngreso"].forEach((dlId) => {
+    const dlNombreRed = $(dlId);
+    dlNombreRed.innerHTML = "";
+    valoresUnicos("nombreRed").forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dlNombreRed.appendChild(opt);
+    });
   });
 }
 
@@ -406,11 +411,18 @@ function firmaTecnicoPara(nombre) {
   return "";
 }
 
-function renderActa(equipo, transaccion) {
+function formatearFechaSimple(valor) {
+  if (!valor) return "N/A";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor).trim());
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return valor;
+}
+
+function actaHTML(equipo, transaccion) {
   const declarante = transaccion.declarante || equipo.nombreEmpleado || "___________________________";
   const accion = transaccion.accion === "Devolucion" ? "Devuelvo" : "Recibo";
 
-  $("printArea").innerHTML = `
+  return `
     <div class="acta">
       <div class="acta-header">
         <div>
@@ -517,7 +529,10 @@ function renderActa(equipo, transaccion) {
       </div>
     </div>
   `;
+}
 
+function renderActa(equipo, transaccion) {
+  $("printArea").innerHTML = actaHTML(equipo, transaccion);
   window.print();
 }
 
@@ -532,6 +547,64 @@ function imprimirDesdeEdicion() {
     observaciones: equipo.comentarios || "",
     numeroForma: siguienteNumeroForma(),
   });
+}
+
+/* ---------- Generación de la Tarjeta de Responsabilidad (Nuevo Ingreso) ---------- */
+
+function tarjetaHTML(equipo, transaccion) {
+  const segundoRenglon = equipo.tipoEquipo === "Desktop"
+    ? { etiqueta: "S/N Monitor", valor: equipo.monitor }
+    : { etiqueta: "Código RAM", valor: equipo.codigoRam };
+
+  return `
+    <div class="tarjeta">
+      <div class="tarjeta-header">
+        <div class="tarjeta-titulo">Tarjeta de Responsabilidad</div>
+        <div class="tarjeta-fecha">${formatearFecha(new Date().toISOString())}</div>
+      </div>
+      <div class="tarjeta-datos">
+        ${filaActa("Nombre:", equipo.nombreEmpleado)}
+        ${filaActa("Puesto:", equipo.puesto)}
+        ${filaActa("Departamento:", equipo.departamento)}
+        ${filaActa("Área:", equipo.unidadNegocio)}
+        ${filaActa("Agencia:", equipo.ubicaciones)}
+        ${filaActa("Código SAP:", equipo.codigoEmpleado)}
+        ${filaActa("Fecha de Ingreso:", formatearFechaSimple(equipo.fechaIngresoEmpleado))}
+      </div>
+      <p class="tarjeta-clausula">
+        La entidad <strong>${esc(equipo.empresa)}</strong> hace entrega al trabajador de bienes del inventario propiedad de la
+        empresa que aparece marcado con una X del listado abajo enumerado, el cual le es confiado para que sea utilizado
+        exclusivamente para la ejecución de su trabajo en calidad de depósito, estando obligado por ende a rendir cuentas
+        de su uso así como a devolverlo en cualquier momento a su requerimiento, aceptando el trabajador que la
+        inobservancia a lo antes estipulado, constituirá falta, sujeta a la aplicación de medidas disciplinarias, sin
+        perjuicio de las demás responsabilidades, civiles, penales y de cualquier otra índole, en las que pueda incurrir
+        el trabajador por incumplimiento de lo antes estipulado.
+      </p>
+      <table class="tarjeta-tabla">
+        <thead>
+          <tr><th>Cantidad</th><th>Descripción</th><th>S/N Equipo</th><th>${segundoRenglon.etiqueta}</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>${esc(equipo.modelo)}</td>
+            <td>${esc(equipo.numeroSerial)}</td>
+            <td>${esc(segundoRenglon.valor)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="tarjeta-pie">
+        <div class="firma-bloque">
+          <div class="firma-linea">FIRMA</div>
+        </div>
+        <div class="tarjeta-pie-datos">
+          ${filaActa("DPI:", equipo.dpi)}
+          ${filaActa("Fecha de Entrega:", formatearFechaSimple(transaccion.fechaEntrega))}
+          ${filaActa("Entregó:", transaccion.tecnico)}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 /* ---------- Modal "Generar Acta" ---------- */
@@ -589,6 +662,120 @@ function generarEImprimirActa() {
     numeroForma: siguienteNumeroForma(),
   });
   cerrarModalActa();
+}
+
+/* ---------- Modal "Nuevo Ingreso" (recepción de equipo de bodega) ---------- */
+
+const CAMPOS_INGRESO_EQUIPO = {
+  ingresoNombreRed: "nombreRed",
+  ingresoTipoEquipo: "tipoEquipo",
+  ingresoFabricante: "fabricante",
+  ingresoModelo: "modelo",
+  ingresoContrato: "contratos",
+  ingresoSerial: "numeroSerial",
+  ingresoInventario: "numeroInventario",
+  ingresoMonitor: "monitor",
+  ingresoCodigoRam: "codigoRam",
+  ingresoNombreEmpleado: "nombreEmpleado",
+  ingresoPuesto: "puesto",
+  ingresoDepartamento: "departamento",
+  ingresoArea: "unidadNegocio",
+  ingresoEmpresa: "empresa",
+  ingresoAgencia: "ubicaciones",
+  ingresoCodigoSap: "codigoEmpleado",
+  ingresoDpi: "dpi",
+  ingresoFechaIngresoEmpleado: "fechaIngresoEmpleado",
+};
+
+function hoyISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function abrirModalIngreso() {
+  poblarFiltrosYDatalists();
+  Object.keys(CAMPOS_INGRESO_EQUIPO).forEach((id) => ($(id).value = ""));
+  $("ingresoFabricante").value = "LENOVO";
+  $("ingresoFechaEntrega").value = hoyISO();
+  $("ingresoTecnico").value = TECNICO_ACTUAL || "Sin identificar";
+  $("ingresoObservaciones").value = "";
+  $("ingresoEstado").textContent = "Escribe el Nombre en Red: si ya existe en el inventario se actualizará, si no, se creará como equipo nuevo.";
+  $("ingresoEstado").className = "acta-estado";
+  $("modalIngresoOverlay").classList.add("open");
+  $("ingresoNombreRed").focus();
+}
+
+function cerrarModalIngreso() {
+  $("modalIngresoOverlay").classList.remove("open");
+}
+
+function onCambioNombreRedIngreso() {
+  const equipo = buscarEquipoPorNombreRed($("ingresoNombreRed").value);
+  if (equipo) {
+    $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se actualizarán sus datos con lo que escribas aquí.`;
+    $("ingresoEstado").className = "acta-estado";
+  } else if ($("ingresoNombreRed").value.trim()) {
+    $("ingresoEstado").textContent = "No existe todavía: se creará como un equipo nuevo en el inventario.";
+    $("ingresoEstado").className = "acta-estado";
+  } else {
+    $("ingresoEstado").textContent = "Escribe el Nombre en Red: si ya existe en el inventario se actualizará, si no, se creará como equipo nuevo.";
+    $("ingresoEstado").className = "acta-estado";
+  }
+}
+
+function generarIngresoCompleto() {
+  const nombreRed = $("ingresoNombreRed").value.trim();
+  const numeroSerial = $("ingresoSerial").value.trim();
+  const nombreEmpleado = $("ingresoNombreEmpleado").value.trim();
+  const dpi = $("ingresoDpi").value.trim();
+
+  if (!nombreRed || !numeroSerial) {
+    alert("Escribe al menos el Nombre en Red y el Número de Serial del equipo.");
+    return;
+  }
+  if (!nombreEmpleado || !dpi) {
+    alert("Escribe el nombre y el DPI de la persona que recibirá el equipo.");
+    return;
+  }
+
+  let equipo = buscarEquipoPorNombreRed(nombreRed);
+  const esNuevo = !equipo;
+  if (!equipo) {
+    equipo = { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), entidad: "Root Entity" };
+  }
+
+  Object.entries(CAMPOS_INGRESO_EQUIPO).forEach(([campoId, campoEquipo]) => {
+    equipo[campoEquipo] = $(campoId).value.trim();
+  });
+  equipo.status = equipo.status && !esNuevo ? equipo.status : "Nuevo > Asignado";
+  equipo.comentarios = $("ingresoObservaciones").value.trim() || equipo.comentarios || "";
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  if (esNuevo) {
+    equipos.push(equipo);
+  } else {
+    const idx = equipos.findIndex((e) => e.id === equipo.id);
+    if (idx !== -1) equipos[idx] = equipo;
+  }
+  guardarDatos();
+
+  const tecnico = $("ingresoTecnico").value.trim();
+  const transaccion = {
+    accion: "Entrega",
+    declarante: nombreEmpleado,
+    tecnico,
+    jefe: "Gustavo Garcia",
+    observaciones: $("ingresoObservaciones").value.trim(),
+    numeroForma: siguienteNumeroForma(),
+    fechaEntrega: $("ingresoFechaEntrega").value,
+  };
+
+  $("printArea").innerHTML = `${actaHTML(equipo, transaccion)}<div class="salto-pagina"></div>${tarjetaHTML(equipo, transaccion)}`;
+  window.print();
+
+  cerrarModalIngreso();
+  poblarFiltrosYDatalists();
+  render();
+  refrescarVistasSecundarias();
 }
 
 /* ---------- Navegación de vistas (sidebar) ---------- */
@@ -919,6 +1106,12 @@ $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
 $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
+
+$("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
+$("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
+$("btnCancelarIngreso").addEventListener("click", cerrarModalIngreso);
+$("btnGenerarIngreso").addEventListener("click", generarIngresoCompleto);
+$("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("buscador").addEventListener("input", () => { paginaActual = 1; render(); });
 $("filtroEmpresa").addEventListener("change", () => { paginaActual = 1; render(); });

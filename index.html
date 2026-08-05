@@ -44,6 +44,7 @@
         <span id="contadorTotal" class="contador"></span>
         <span id="usuarioSesion" class="contador"></span>
         <button id="btnGenerarActa" class="btn btn-outline-header">🖶 Generar Acta</button>
+        <button id="btnNuevoIngreso" class="btn btn-outline-header">📦 Nuevo Ingreso</button>
         <button id="btnNuevo" class="btn btn-primary">+ Nuevo equipo</button>
         <button id="btnCerrarSesion" class="btn btn-outline-header" title="Cerrar sesión">🚪 Salir</button>
       </div>
@@ -319,6 +320,11 @@
             <input type="text" id="nombreEmpleado">
           </div>
           <div class="glpi-row">
+            <label for="puesto">Puesto</label>
+            <input type="text" id="puesto" list="dl-puesto">
+            <datalist id="dl-puesto"></datalist>
+          </div>
+          <div class="glpi-row">
             <label for="usuarioDominio">Usuario de Dominio <span class="lock">&#128274;</span></label>
             <input type="text" id="usuarioDominio" list="dl-usuarioDominio">
             <datalist id="dl-usuarioDominio"></datalist>
@@ -336,6 +342,10 @@
           <div class="glpi-row">
             <label for="codigoEmpleado">Código de empleado</label>
             <input type="text" id="codigoEmpleado">
+          </div>
+          <div class="glpi-row">
+            <label for="fechaIngresoEmpleado">Fecha de Ingreso (empleado)</label>
+            <input type="date" id="fechaIngresoEmpleado">
           </div>
           <div class="glpi-row">
             <label for="tipoUsuario">Tipo de Usuario</label>
@@ -444,6 +454,7 @@
         <div class="glpi-grid">
           <div class="glpi-col">
             <div class="glpi-row"><label for="monitor">Monitor</label><input type="text" id="monitor" list="dl-monitor" placeholder="N/A"><datalist id="dl-monitor"></datalist></div>
+            <div class="glpi-row"><label for="codigoRam">Código RAM adicional</label><input type="text" id="codigoRam" list="dl-codigoRam" placeholder="N/A"><datalist id="dl-codigoRam"></datalist></div>
             <div class="glpi-row"><label for="tamanoDisco">Tamaño Disco (GB)</label><input type="text" id="tamanoDisco" list="dl-tamanoDisco" placeholder="N/A"><datalist id="dl-tamanoDisco"></datalist></div>
             <div class="glpi-row"><label for="datosImpresora">Datos Impresora Asig.</label><input type="text" id="datosImpresora" list="dl-datosImpresora" placeholder="N/A"><datalist id="dl-datosImpresora"></datalist></div>
             <div class="glpi-row"><label for="serialImpresora">Serial Impresora Asig.</label><input type="text" id="serialImpresora" list="dl-serialImpresora" placeholder="N/A"><datalist id="dl-serialImpresora"></datalist></div>
@@ -517,6 +528,138 @@
         <div class="modal-actions-right">
           <button type="button" id="btnCancelarActa" class="btn btn-secondary">Cancelar</button>
           <button type="button" id="btnGenerarEImprimir" class="btn btn-primary">Generar e Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Nuevo Ingreso (recepción de equipo nuevo de bodega) -->
+<div id="modalIngresoOverlay" class="modal-overlay no-print">
+  <div class="modal modal-ingreso">
+    <div class="modal-header">
+      <h2>Nuevo Ingreso de Equipo (Bodega)</h2>
+      <button id="btnCerrarModalIngreso" class="btn-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="acta-estado">Registra el equipo recién recibido y a quién se le entregará. Al generar, se guarda el equipo en el inventario y se imprimen en un solo paso el <strong>Acta Forma-TI-001</strong> y la <strong>Tarjeta de Responsabilidad</strong>.</p>
+
+      <div class="glpi-row glpi-row-ancho">
+        <label for="ingresoNombreRed">Nombre en Red del equipo</label>
+        <input type="text" id="ingresoNombreRed" list="dl-nombreRedIngreso" placeholder="Escribe el nombre en red (si ya existe, se actualizará)...">
+        <datalist id="dl-nombreRedIngreso"></datalist>
+      </div>
+      <p id="ingresoEstado" class="acta-estado"></p>
+
+      <h3 class="ingreso-subtitulo">Datos del equipo</h3>
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ingresoTipoEquipo">Tipo de Equipo</label>
+            <input type="text" id="ingresoTipoEquipo" list="dl-tipoEquipo">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoFabricante">Fabricante</label>
+            <input type="text" id="ingresoFabricante" list="dl-fabricante" value="LENOVO">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoModelo">Modelo / Descripción</label>
+            <input type="text" id="ingresoModelo" list="dl-modelo">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoContrato">Contrato</label>
+            <input type="text" id="ingresoContrato" list="dl-contratos">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ingresoSerial">Número de Serial</label>
+            <input type="text" id="ingresoSerial" list="dl-numeroSerial">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoInventario">No. Inventario / Placa</label>
+            <input type="text" id="ingresoInventario" list="dl-numeroInventario">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoMonitor">S/N Monitor</label>
+            <input type="text" id="ingresoMonitor" list="dl-monitor" placeholder="N/A">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoCodigoRam">Código RAM adicional</label>
+            <input type="text" id="ingresoCodigoRam" list="dl-codigoRam" placeholder="N/A">
+          </div>
+        </div>
+      </div>
+
+      <h3 class="ingreso-subtitulo">Datos de quien recibe el equipo</h3>
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ingresoNombreEmpleado">Nombre completo</label>
+            <input type="text" id="ingresoNombreEmpleado">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoPuesto">Puesto</label>
+            <input type="text" id="ingresoPuesto" list="dl-puesto">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoDepartamento">Departamento</label>
+            <input type="text" id="ingresoDepartamento" list="dl-departamento">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoArea">Área / Unidad de Negocio</label>
+            <input type="text" id="ingresoArea" list="dl-unidadNegocio">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ingresoEmpresa">Empresa</label>
+            <input type="text" id="ingresoEmpresa" list="dl-empresa">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoAgencia">Agencia / Ubicación</label>
+            <input type="text" id="ingresoAgencia" list="dl-ubicaciones">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoCodigoSap">Código SAP / Empleado</label>
+            <input type="text" id="ingresoCodigoSap">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoDpi">DPI</label>
+            <input type="text" id="ingresoDpi" list="dl-dpi">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoFechaIngresoEmpleado">Fecha de Ingreso (empleado)</label>
+            <input type="date" id="ingresoFechaIngresoEmpleado">
+          </div>
+        </div>
+      </div>
+
+      <h3 class="ingreso-subtitulo">Entrega</h3>
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ingresoFechaEntrega">Fecha de Entrega</label>
+            <input type="date" id="ingresoFechaEntrega">
+          </div>
+          <div class="glpi-row">
+            <label for="ingresoTecnico">Entregó (Técnico)</label>
+            <input type="text" id="ingresoTecnico" readonly>
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row glpi-row-textarea">
+            <label for="ingresoObservaciones">Observaciones</label>
+            <textarea id="ingresoObservaciones" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <span></span>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarIngreso" class="btn btn-secondary">Cancelar</button>
+          <button type="button" id="btnGenerarIngreso" class="btn btn-primary">Guardar y generar los 2 documentos</button>
         </div>
       </div>
     </div>
