@@ -551,58 +551,87 @@ function imprimirDesdeEdicion() {
 
 /* ---------- Generación de la Tarjeta de Responsabilidad (Nuevo Ingreso) ---------- */
 
+function fechaLarga(valor) {
+  if (!valor) return "N/A";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor).trim());
+  if (!m) return valor;
+  const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  return `${parseInt(m[3], 10)} de ${MESES[parseInt(m[2], 10) - 1]} de ${m[1]}`;
+}
+
 function tarjetaHTML(equipo, transaccion) {
-  const segundoRenglon = equipo.tipoEquipo === "Desktop"
-    ? { etiqueta: "S/N Monitor", valor: equipo.monitor }
-    : { etiqueta: "Código RAM", valor: equipo.codigoRam };
+  const esDesktop = equipo.tipoEquipo === "Desktop";
+  const colDescripcion = esDesktop ? "DESCRIPCION DESKTOP - MONITOR" : "DESCRIPCION LAPTOP";
+  const colSerial = esDesktop ? "S/N DESKTOP" : "S/N LAPTOP";
+  const colAccesorio = esDesktop ? "S/N MONITOR" : "CODIGO RAM";
+  const valorAccesorio = esDesktop ? equipo.monitor : equipo.codigoRam;
 
   return `
     <div class="tarjeta">
-      <div class="tarjeta-header">
-        <div class="tarjeta-titulo">Tarjeta de Responsabilidad</div>
-        <div class="tarjeta-fecha">${formatearFecha(new Date().toISOString())}</div>
-      </div>
-      <div class="tarjeta-datos">
-        ${filaActa("Nombre:", equipo.nombreEmpleado)}
-        ${filaActa("Puesto:", equipo.puesto)}
-        ${filaActa("Departamento:", equipo.departamento)}
-        ${filaActa("Área:", equipo.unidadNegocio)}
-        ${filaActa("Agencia:", equipo.ubicaciones)}
-        ${filaActa("Código SAP:", equipo.codigoEmpleado)}
-        ${filaActa("Fecha de Ingreso:", formatearFechaSimple(equipo.fechaIngresoEmpleado))}
-      </div>
+      <div class="tarjeta-titulo">TARJETA DE RESPONSABILIDAD</div>
+
+      <table class="tarjeta-info">
+        <tr>
+          <td class="tlabel">NOMBRE:</td><td class="tvalue">${esc(equipo.nombreEmpleado)}</td>
+          <td class="tlabel">DEPARTAMENTO:</td><td class="tvalue">${esc(equipo.departamento)}</td>
+        </tr>
+        <tr>
+          <td class="tlabel">PUESTO:</td><td class="tvalue">${esc(equipo.puesto)}</td>
+          <td class="tlabel">AREA:</td><td class="tvalue">${esc(equipo.unidadNegocio)}</td>
+        </tr>
+        <tr>
+          <td class="tlabel">AGENCIA:</td><td class="tvalue">${esc(equipo.ubicaciones)}</td>
+          <td class="tlabel">CODIGO SAP:</td><td class="tvalue">${esc(equipo.codigoEmpleado)}</td>
+        </tr>
+        <tr>
+          <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue subrayado" colspan="3">${fechaLarga(equipo.fechaIngresoEmpleado)}</td>
+        </tr>
+      </table>
+
       <p class="tarjeta-clausula">
-        La entidad <strong>${esc(equipo.empresa)}</strong> hace entrega al trabajador de bienes del inventario propiedad de la
-        empresa que aparece marcado con una X del listado abajo enumerado, el cual le es confiado para que sea utilizado
-        exclusivamente para la ejecución de su trabajo en calidad de depósito, estando obligado por ende a rendir cuentas
-        de su uso así como a devolverlo en cualquier momento a su requerimiento, aceptando el trabajador que la
-        inobservancia a lo antes estipulado, constituirá falta, sujeta a la aplicación de medidas disciplinarias, sin
-        perjuicio de las demás responsabilidades, civiles, penales y de cualquier otra índole, en las que pueda incurrir
-        el trabajador por incumplimiento de lo antes estipulado.
+        La entidad <span class="tvalue-inline">${esc(equipo.empresa)}</span> hace entrega al trabajador de bienes del inventario
+        propiedad de la empresa que aparece marcado con una X del listado abajo enumerado, el cual le es confiado para que sea
+        utilizado exclusivamente para la ejecución de su trabajo en calidad de depósito, estando obligado por ende a rendir
+        cuentas de su uso así como a devolverlo en cualquier momento a su requerimiento, aceptando el trabajador que la
+        inobservancia a lo antes estipulado, constituirá falta, sujeta a la aplicación de medidas disciplinarias, sin perjuicio
+        de las demás responsabilidades, civiles, penales y de cualquier otra índole, en las que pueda incurrir el trabajador
+        por incumplimiento de lo antes estipulado.
       </p>
+
       <table class="tarjeta-tabla">
         <thead>
-          <tr><th>Cantidad</th><th>Descripción</th><th>S/N Equipo</th><th>${segundoRenglon.etiqueta}</th></tr>
+          <tr><th>CANTIDAD</th><th>${colDescripcion}</th><th>${colSerial}</th><th>${colAccesorio}</th></tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
-            <td>${esc(equipo.modelo)}</td>
-            <td>${esc(equipo.numeroSerial)}</td>
-            <td>${esc(segundoRenglon.valor)}</td>
+            <td class="tvalue">${esc(equipo.modelo)}</td>
+            <td class="tvalue">${esc(equipo.numeroSerial)}</td>
+            <td class="tvalue">${!esDesktop ? "" : esc(valorAccesorio)}</td>
           </tr>
+          <tr>
+            <td></td>
+            <td class="tvalue">${nonEmpty(equipo.memoria) ? esc(equipo.memoria) : ""}</td>
+            <td></td>
+            <td class="tvalue">${esDesktop ? "" : esc(valorAccesorio)}</td>
+          </tr>
+          <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+          <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
-      <div class="tarjeta-pie">
-        <div class="firma-bloque">
-          <div class="firma-linea">FIRMA</div>
-        </div>
-        <div class="tarjeta-pie-datos">
-          ${filaActa("DPI:", equipo.dpi)}
-          ${filaActa("Fecha de Entrega:", formatearFechaSimple(transaccion.fechaEntrega))}
-          ${filaActa("Entregó:", transaccion.tecnico)}
-        </div>
-      </div>
+
+      <table class="tarjeta-pie">
+        <tr>
+          <td class="tarjeta-pie-firma">FIRMA: <span class="linea-firma"></span></td>
+          <td class="tarjeta-pie-entrego" rowspan="3">Entrego: <span class="tvalue subrayado">${esc(transaccion.tecnico)}</span></td>
+        </tr>
+        <tr>
+          <td class="tlabel">DPI: <span class="tvalue">${esc(equipo.dpi)}</span></td>
+        </tr>
+        <tr>
+          <td class="tlabel">Fecha de Entrega: <span class="tvalue subrayado">${fechaLarga(transaccion.fechaEntrega)}</span></td>
+        </tr>
+      </table>
     </div>
   `;
 }
