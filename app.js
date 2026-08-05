@@ -475,7 +475,7 @@ function actaHTML(equipo, transaccion) {
           ${filaActa("Nombre de Usuario:", equipo.nombreEmpleado)}
           ${filaActa("Dominio:", equipo.dominio)}
           ${filaActa("Correo de Usuario:", equipo.correo)}
-          ${filaActa("Contratos:", equipo.contratos)}
+          ${filaActa("Contratos:", soloNumeroContrato(equipo.contratos))}
           ${filaActa("Ubicación:", equipo.ubicaciones)}
           ${filaActa("Departamento:", equipo.departamento)}
           ${filaActa("Unidad de Negocio:", equipo.unidadNegocio)}
