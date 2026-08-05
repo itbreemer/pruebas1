@@ -634,7 +634,11 @@ function tarjetaHTML(equipo, transaccion) {
         </tr>
         <tr>
           <td class="tlabel">DPI: <span class="tvalue">${esc(equipo.dpi)}</span></td>
+          <td></td>
+        </tr>
+        <tr>
           <td class="tlabel">Activo Fijo: <span class="tvalue">${esc(equipo.numeroInventario)}</span></td>
+          <td></td>
         </tr>
         <tr>
           <td class="tlabel">Fecha de Entrega: <span class="tvalue subrayado">${fechaLarga(transaccion.fechaEntrega)}</span></td>
