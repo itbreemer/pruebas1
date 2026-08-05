@@ -20,7 +20,7 @@ const FIELD_IDS = [
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
   "monitor", "tamanoDisco", "datosImpresora", "serialImpresora",
   "tipoImpresora", "nombreDispositivo", "serialDispositivo",
-  "puesto", "fechaIngresoEquipo", "codigoRam",
+  "puesto", "fechaIngresoEquipo", "codigoRam", "memoriaDescripcion",
 ];
 
 let equipos = [];
@@ -171,6 +171,7 @@ function poblarFiltrosYDatalists() {
     "dl-proyecto": "proyecto",
     "dl-puesto": "puesto",
     "dl-codigoRam": "codigoRam",
+    "dl-memoriaDescripcion": "memoriaDescripcion",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
     const dl = $(dlId);
@@ -611,7 +612,7 @@ function tarjetaHTML(equipo, transaccion) {
           </tr>
           <tr>
             <td></td>
-            <td class="tvalue">${nonEmpty(equipo.memoria) ? esc(equipo.memoria) : ""}</td>
+            <td class="tvalue">${nonEmpty(equipo.memoriaDescripcion) ? esc(equipo.memoriaDescripcion) : ""}</td>
             <td></td>
             <td class="tvalue">${esDesktop ? "" : esc(valorAccesorio)}</td>
           </tr>
@@ -705,6 +706,7 @@ const CAMPOS_INGRESO_EQUIPO = {
   ingresoInventario: "numeroInventario",
   ingresoMonitor: "monitor",
   ingresoCodigoRam: "codigoRam",
+  ingresoMemoriaDescripcion: "memoriaDescripcion",
   ingresoNombreEmpleado: "nombreEmpleado",
   ingresoPuesto: "puesto",
   ingresoDepartamento: "departamento",
