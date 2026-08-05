@@ -580,6 +580,9 @@ function tarjetaHTML(equipo, transaccion) {
           <td class="tlabel">PUESTO:</td><td class="tvalue">${esc(equipo.puesto)}</td>
           <td class="tlabel">AREA:</td><td class="tvalue">${esc(equipo.unidadNegocio)}</td>
         </tr>
+      </table>
+
+      <table class="tarjeta-info tarjeta-info-plana">
         <tr>
           <td class="tlabel">AGENCIA:</td><td class="tvalue">${esc(equipo.ubicaciones)}</td>
           <td class="tlabel">CODIGO SAP:</td><td class="tvalue">${esc(equipo.codigoEmpleado)}</td>

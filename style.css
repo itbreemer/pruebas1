@@ -499,10 +499,12 @@ main .btn-primary:hover { background: #163158; }
 .tarjeta .tvalue, .tarjeta .tvalue-inline { color: #1d4ed8; font-weight: 700; }
 .tarjeta .subrayado { text-decoration: underline; }
 
-.tarjeta-info { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+.tarjeta-info { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
 .tarjeta-info td { padding: 7px 8px; vertical-align: middle; }
 .tarjeta-info .tlabel { text-align: right; font-weight: 700; white-space: nowrap; width: 1%; }
 .tarjeta-info .tvalue { border: 1px solid #000; text-align: center; background: #f2f2f2; }
+.tarjeta-info-plana { margin-bottom: 26px; }
+.tarjeta-info-plana .tvalue { border: none; background: transparent; text-align: left; }
 
 .tarjeta-clausula {
   padding: 0 4px 26px;
