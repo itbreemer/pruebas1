@@ -20,7 +20,7 @@ const FIELD_IDS = [
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
   "monitor", "tamanoDisco", "datosImpresora", "serialImpresora",
   "tipoImpresora", "nombreDispositivo", "serialDispositivo",
-  "puesto", "fechaIngresoEmpleado", "codigoRam",
+  "puesto", "fechaIngresoEquipo", "codigoRam",
 ];
 
 let equipos = [];
@@ -584,7 +584,7 @@ function tarjetaHTML(equipo, transaccion) {
           <td class="tlabel">CODIGO SAP:</td><td class="tvalue">${esc(equipo.codigoEmpleado)}</td>
         </tr>
         <tr>
-          <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue subrayado" colspan="3">${fechaLarga(equipo.fechaIngresoEmpleado)}</td>
+          <td class="tlabel">FECHA DE INGRESO:</td><td class="tvalue subrayado" colspan="3">${fechaLarga(equipo.fechaIngresoEquipo)}</td>
         </tr>
       </table>
 
@@ -713,7 +713,7 @@ const CAMPOS_INGRESO_EQUIPO = {
   ingresoAgencia: "ubicaciones",
   ingresoCodigoSap: "codigoEmpleado",
   ingresoDpi: "dpi",
-  ingresoFechaIngresoEmpleado: "fechaIngresoEmpleado",
+  ingresoFechaIngresoEquipo: "fechaIngresoEquipo",
 };
 
 function hoyISO() {
@@ -724,6 +724,7 @@ function abrirModalIngreso() {
   poblarFiltrosYDatalists();
   Object.keys(CAMPOS_INGRESO_EQUIPO).forEach((id) => ($(id).value = ""));
   $("ingresoFabricante").value = "LENOVO";
+  $("ingresoAgencia").value = "Bodega 2";
   $("ingresoFechaEntrega").value = hoyISO();
   $("ingresoTecnico").value = TECNICO_ACTUAL || "Sin identificar";
   $("ingresoObservaciones").value = "";
@@ -741,7 +742,7 @@ function onCambioNombreRedIngreso() {
   const equipo = buscarEquipoPorNombreRed($("ingresoNombreRed").value);
   if (equipo) {
     Object.entries(CAMPOS_INGRESO_EQUIPO).forEach(([campoId, campoEquipo]) => {
-      if (campoId === "ingresoNombreRed") return;
+      if (campoId === "ingresoNombreRed" || campoId === "ingresoAgencia") return;
       $(campoId).value = equipo[campoEquipo] || "";
     });
     $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se cargaron sus datos actuales; edita solo lo que cambió.`;
