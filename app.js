@@ -591,9 +591,9 @@ function tarjetaHTML(equipo, transaccion) {
       </table>
 
       <p class="tarjeta-clausula">
-        La entidad <span class="tvalue-inline">${esc(equipo.empresa)}</span> hace entrega al trabajador de bienes del inventario
+        La entidad <span class="tvalue-inline">_____________Tecnoelect___________________</span> hace entrega al trabajador de bienes del inventario
         propiedad de la empresa que aparece marcado con una X del listado abajo enumerado, el cual le es confiado para que sea
-        utilizado exclusivamente para la ejecución de su trabajo en calidad de depósito, estando obligado por ende a rendir
+        utilizado exclusivamente para la ejecución de su trabajo en calidad de depósito estando obligado por ende a rendir
         cuentas de su uso así como a devolverlo en cualquier momento a su requerimiento, aceptando el trabajador que la
         inobservancia a lo antes estipulado, constituirá falta, sujeta a la aplicación de medidas disciplinarias, sin perjuicio
         de las demás responsabilidades, civiles, penales y de cualquier otra índole, en las que pueda incurrir el trabajador
@@ -807,7 +807,7 @@ function generarIngresoCompleto() {
     fechaEntrega: $("ingresoFechaEntrega").value,
   };
 
-  $("printArea").innerHTML = `${actaHTML(equipo, transaccion)}<div class="salto-pagina"></div>${tarjetaHTML(equipo, transaccion)}`;
+  $("printArea").innerHTML = `${actaHTML(equipo, transaccion)}${tarjetaHTML(equipo, transaccion)}`;
   window.print();
 
   cerrarModalIngreso();

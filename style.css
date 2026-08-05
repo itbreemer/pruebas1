@@ -480,12 +480,14 @@ main .btn-primary:hover { background: #163158; }
 /* ============ Tarjeta de Responsabilidad (Nuevo Ingreso) ============ */
 .salto-pagina { page-break-before: always; break-before: page; }
 
+/* La tarjeta imprime en vertical (carta), igual que el archivo de referencia en Excel */
 .tarjeta {
   font-family: "Calibri", Arial, sans-serif;
   color: #000;
-  max-width: 820px;
+  max-width: 100%;
   margin: 0 auto;
   font-size: 0.85rem;
+  page: tarjeta-vertical;
 }
 .tarjeta-titulo {
   font-weight: 700;
@@ -535,6 +537,7 @@ main .btn-primary:hover { background: #163158; }
   .print-only { display: block !important; }
   body { background: #fff; }
   @page { size: letter landscape; margin: 8mm; }
+  @page tarjeta-vertical { size: letter portrait; margin: 14mm; }
 }
 
 /* ---------- Login (Firebase Auth) ---------- */
