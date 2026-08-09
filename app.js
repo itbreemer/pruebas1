@@ -71,6 +71,7 @@ function fusionarContratosDesdeSeed() {
   if (limpiarPendientesDuplicados()) cambio = true;
   if (corregirFechaContrato8030028059()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
+  if (sincronizarComentariosCronograma()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -125,6 +126,28 @@ function corregirFechaContrato8030028059() {
       e.contratos = NUEVO;
       cambio = true;
     }
+  });
+  return cambio;
+}
+
+function sincronizarComentariosCronograma() {
+  // La marca "Pendiente validar: no aparece en el cronograma..." se agregó a
+  // SEED_DATA después de que muchos navegadores ya tenían su propia copia en
+  // localStorage, así que nunca la recibieron. La sincronizamos anexándola
+  // al comentario existente, sin pisar nada que el usuario haya escrito.
+  if (typeof SEED_DATA === "undefined" || !Array.isArray(SEED_DATA)) return false;
+  const MARCA_CRONOGRAMA = "Pendiente validar: no aparece en el cronograma de migracion AD 2026; posible equipo sin dar de baja.";
+  const idsConMarca = new Set(
+    SEED_DATA.filter((s) => (s.comentarios || "").includes(MARCA_CRONOGRAMA)).map((s) => s.id)
+  );
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!idsConMarca.has(e.id)) return;
+    const actual = (e.comentarios || "").trim();
+    if (actual.includes(MARCA_CRONOGRAMA)) return;
+    e.comentarios = actual ? `${actual} | ${MARCA_CRONOGRAMA}` : MARCA_CRONOGRAMA;
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    cambio = true;
   });
   return cambio;
 }
