@@ -73,6 +73,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
+  if (eliminarChatarraConfirmada()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -86,6 +87,20 @@ function eliminarDuplicadoP025194() {
   equipos = equipos.filter((e) => e.id !== "cronograma-4");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("cronograma-4");
+  return cambio;
+}
+
+const IDS_CHATARRA_CONFIRMADA = ["seed-30", "seed-394", "seed-432", "seed-755"];
+
+function eliminarChatarraConfirmada() {
+  // Confirmados contra Documentacion_Chatarra_300424.pdf (coincidencia exacta
+  // de serial o activo fijo). Al igual que con el duplicado P02-5194, hay que
+  // quitarlos explícitamente de cualquier navegador que ya los tuviera
+  // guardados, ya que SEED_DATA dejó de traerlos.
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => !IDS_CHATARRA_CONFIRMADA.includes(e.id));
+  const cambio = equipos.length !== antes;
+  if (cambio) IDS_CHATARRA_CONFIRMADA.forEach((id) => sincronizarEliminacion(id));
   return cambio;
 }
 
@@ -203,6 +218,7 @@ function establecerEquiposDesdeSync(remotos) {
 
   equipos = combinados;
   eliminarDuplicadoP025194();
+  eliminarChatarraConfirmada();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
@@ -1143,7 +1159,10 @@ document.addEventListener("click", (ev) => {
 });
 
 function renderTablero() {
-  if (eliminarDuplicadoP025194()) guardarDatos();
+  let cambioPurga = false;
+  if (eliminarDuplicadoP025194()) cambioPurga = true;
+  if (eliminarChatarraConfirmada()) cambioPurga = true;
+  if (cambioPurga) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
   const equiposUsuarioValidados = equiposUsuario.filter((e) => !esEnRevisionCronograma(e));
