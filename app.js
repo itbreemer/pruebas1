@@ -1079,13 +1079,15 @@ document.addEventListener("click", (ev) => {
 });
 
 function renderTablero() {
+  const equiposUsuario = equipos.filter((e) => !esServidor(e));
+
   const totalUsuarios = new Set(
-    equipos
+    equiposUsuario
       .filter((e) => nonEmpty(e.nombreEmpleado) || nonEmpty(e.usuarioDominio))
       .map((e) => `${(e.nombreEmpleado || "").toLowerCase()}|${(e.usuarioDominio || "").toLowerCase()}`)
   ).size;
-  const totalEmpresas = new Set(equipos.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
-  const asignados = equipos.filter((e) => (e.status || "").toLowerCase().startsWith("asignada")).length;
+  const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
+  const asignados = equiposUsuario.filter((e) => (e.status || "").toLowerCase().startsWith("asignada")).length;
 
   if ($("vista-tablero").classList.contains("vista-active")) {
     $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
@@ -1095,7 +1097,7 @@ function renderTablero() {
   const totalServidores = equipos.filter(esServidor).length;
 
   $("statCards").innerHTML = `
-    <div class="stat-card"><div class="numero">${equipos.length}</div><div class="etiqueta">Equipos totales</div></div>
+    <div class="stat-card"><div class="numero">${equiposUsuario.length}</div><div class="etiqueta">Equipos totales</div></div>
     <div class="stat-card"><div class="numero">${asignados}</div><div class="etiqueta">Asignados</div></div>
     <div class="stat-card"><div class="numero">${totalUsuarios}</div><div class="etiqueta">Usuarios distintos</div></div>
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
