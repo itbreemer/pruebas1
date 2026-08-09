@@ -337,86 +337,6 @@ function nonEmpty(v) {
   return v && String(v).trim() !== "" && String(v).trim().toUpperCase() !== "N/A";
 }
 
-/* ---------- Auditoría de inventario (gerencia / financiero) ---------- */
-
-function fechaVenceContrato(contratos) {
-  const m = /vence\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i.exec(contratos || "");
-  if (!m) return null;
-  const d = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
-  return isNaN(d) ? null : d;
-}
-
-function equiposIncompletos() {
-  return equipos.filter((e) => !nonEmpty(e.numeroSerial) || !nonEmpty(e.numeroInventario));
-}
-
-function equiposAsignadosSinUsuario() {
-  return equipos.filter((e) => (e.status || "").toLowerCase().startsWith("asignada") && !nonEmpty(e.nombreEmpleado));
-}
-
-function equiposContratoVencido() {
-  const hoy = new Date();
-  return equipos.filter((e) => {
-    const v = fechaVenceContrato(e.contratos);
-    return v && v < hoy;
-  });
-}
-
-function equiposContratoPorVencer(dias) {
-  const hoy = new Date();
-  const limite = new Date(hoy.getTime() + dias * 24 * 60 * 60 * 1000);
-  return equipos.filter((e) => {
-    const v = fechaVenceContrato(e.contratos);
-    return v && v >= hoy && v <= limite;
-  });
-}
-
-function equiposBajaSinDepurar() {
-  return equipos.filter((e) => /baja/i.test(e.status || "") && !nonEmpty(e.comentarios));
-}
-
-function equiposDesactualizados(meses) {
-  const limite = new Date();
-  limite.setMonth(limite.getMonth() - meses);
-  return equipos.filter((e) => {
-    if (!nonEmpty(e.ultimaModificacion)) return true;
-    const f = new Date(e.ultimaModificacion);
-    return isNaN(f) || f < limite;
-  });
-}
-
-const AUDITORIA_CATEGORIAS = {
-  incompletos: { etiqueta: "Sin Serial o Activo Fijo", obtener: equiposIncompletos },
-  sinUsuario: { etiqueta: "Asignados sin nombre de usuario", obtener: equiposAsignadosSinUsuario },
-  contratoVencido: { etiqueta: "Contrato ya vencido", obtener: equiposContratoVencido },
-  contratoPorVencer: { etiqueta: "Contrato vence en 60 días", obtener: () => equiposContratoPorVencer(60) },
-  bajaSinDepurar: { etiqueta: "Baja sin depurar del inventario activo", obtener: equiposBajaSinDepurar },
-  desactualizados: { etiqueta: "Sin actualizar hace más de 12 meses", obtener: () => equiposDesactualizados(12) },
-};
-
-function exportarReporteAuditoriaCSV() {
-  const filas = [["Categoría", "Nombre en Red", "Status", "Empresa", "Nombre de Empleado", "Fabricante", "Modelo", "Número de Serial", "Número de Inventario", "Contratos", "Última Modificación"]];
-  Object.values(AUDITORIA_CATEGORIAS).forEach((cat) => {
-    cat.obtener().forEach((e) => {
-      filas.push([
-        cat.etiqueta, e.nombreRed, e.status, e.empresa, e.nombreEmpleado, e.fabricante,
-        e.modelo, e.numeroSerial, e.numeroInventario, e.contratos, e.ultimaModificacion,
-      ]);
-    });
-  });
-  const csv = filas
-    .map((fila) => fila.map((v) => `"${String(v || "").replace(/"/g, '""')}"`).join(","))
-    .join("\r\n");
-  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const fecha = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `Reporte_Auditoria_Inventario_TI_${fecha}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 function coincideTexto(e, texto) {
   if (!texto) return true;
   const campos = [
@@ -429,18 +349,12 @@ function coincideTexto(e, texto) {
 }
 
 let filtroCampoVacio = null;
-let filtroAuditoria = null;
 
 function obtenerFiltrados() {
   const texto = $("buscador").value.trim().toLowerCase();
   const empresa = $("filtroEmpresa").value;
   const status = $("filtroStatus").value;
   const tipo = $("filtroTipo").value;
-
-  if (filtroAuditoria) {
-    const ids = new Set(AUDITORIA_CATEGORIAS[filtroAuditoria].obtener().map((e) => e.id));
-    return equipos.filter((e) => ids.has(e.id));
-  }
 
   return equipos.filter((e) => {
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
@@ -457,10 +371,7 @@ const NOMBRES_CAMPO_VACIO = {
 
 function render() {
   const avisoVacio = $("filtroVacioAviso");
-  if (filtroAuditoria) {
-    avisoVacio.textContent = `Auditoría: ${AUDITORIA_CATEGORIAS[filtroAuditoria].etiqueta}. Haz clic aquí para quitar este filtro.`;
-    avisoVacio.style.display = "";
-  } else if (filtroCampoVacio) {
+  if (filtroCampoVacio) {
     avisoVacio.textContent = `Mostrando equipos sin dato de ${NOMBRES_CAMPO_VACIO[filtroCampoVacio] || filtroCampoVacio}. Haz clic aquí para quitar este filtro.`;
     avisoVacio.style.display = "";
   } else {
@@ -1133,7 +1044,6 @@ function irAListaEquiposFiltrada(campo, valor) {
   $("filtroStatus").value = "";
   $("filtroTipo").value = "";
   filtroCampoVacio = null;
-  filtroAuditoria = null;
   if (valor === "Sin dato") {
     filtroCampoVacio = campo;
   } else if (campo === "empresa") $("filtroEmpresa").value = valor;
@@ -1144,23 +1054,6 @@ function irAListaEquiposFiltrada(campo, valor) {
   cambiarVista("computadoras");
   render();
 }
-
-function irAAuditoria(categoria) {
-  $("buscador").value = "";
-  $("filtroEmpresa").value = "";
-  $("filtroStatus").value = "";
-  $("filtroTipo").value = "";
-  filtroCampoVacio = null;
-  filtroAuditoria = categoria;
-  paginaActual = 1;
-  cambiarVista("computadoras");
-  render();
-}
-
-document.addEventListener("click", (ev) => {
-  const tarjeta = ev.target.closest(".auditoria-card[data-categoria]");
-  if (tarjeta) irAAuditoria(tarjeta.dataset.categoria);
-});
 
 document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".tablero-fila[data-campo]");
@@ -1222,18 +1115,6 @@ function renderTablero() {
     contarImpresorasPor("empresa").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
   $("tableroImpresorasDepartamento").innerHTML =
     contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
-
-  $("auditoriaGrid").innerHTML = Object.entries(AUDITORIA_CATEGORIAS)
-    .map(([key, cat]) => {
-      const cantidad = cat.obtener().length;
-      return `
-        <div class="auditoria-card${cantidad > 0 ? " alerta" : " ok"}" data-categoria="${key}">
-          <div class="numero">${cantidad}</div>
-          <div class="etiqueta">${esc(cat.etiqueta)}</div>
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function actualizarConteoRapido() {
@@ -1536,7 +1417,6 @@ $("btnGenerarIngreso").addEventListener("click", generarIngresoCompleto);
 $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
-$("btnExportarAuditoria").addEventListener("click", exportarReporteAuditoriaCSV);
 
 $("btnExportarDatos").addEventListener("click", exportarDatosJSON);
 $("btnImportarDatos").addEventListener("click", () => $("inputImportarDatos").click());
@@ -1546,12 +1426,12 @@ $("inputImportarDatos").addEventListener("change", (ev) => {
   ev.target.value = "";
 });
 
-$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
+$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
 
-$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
-$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
-$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
-$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
+$("buscador").addEventListener("input", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
 
 $("btnPrimero").addEventListener("click", () => { paginaActual = 1; render(); });
 $("btnAnterior").addEventListener("click", () => { paginaActual--; render(); });

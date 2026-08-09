@@ -614,26 +614,3 @@ main .btn-primary:hover { background: #163158; }
 
 .subseccion-titulo { margin: 28px 0 4px; font-size: 1rem; color: var(--azul); }
 .subseccion-nota { margin: 0 0 14px; font-size: 0.82rem; color: #6b7280; }
-.subseccion-titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.subseccion-titulo-fila .subseccion-titulo { margin: 28px 0 0; }
-
-.auditoria-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
-.auditoria-card {
-  background: #fff;
-  border: 1px solid var(--borde);
-  border-left: 5px solid var(--borde);
-  border-radius: 10px;
-  padding: 16px;
-  cursor: pointer;
-}
-.auditoria-card:hover { background: var(--fila-hover); }
-.auditoria-card .numero { font-size: 1.6rem; font-weight: 700; }
-.auditoria-card .etiqueta { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
-.auditoria-card.alerta { border-left-color: #d97706; }
-.auditoria-card.alerta .numero { color: #d97706; }
-.auditoria-card.ok { border-left-color: #16a34a; }
-.auditoria-card.ok .numero { color: #16a34a; }
