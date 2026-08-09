@@ -358,6 +358,7 @@ function obtenerFiltrados() {
 
   return equipos.filter((e) => {
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
+    if (filtroCampoVacio === "empresa" && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
     if (status && e.status !== status) return false;
     if (tipo && e.tipoEquipo !== tipo) return false;
@@ -1029,9 +1030,19 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
 
 /* ---------- Tablero ---------- */
 
-function contarPor(campo) {
+const TIPOS_SERVIDOR = [
+  "VMware", "Xen", "Hyper-V", "PRD-VIRTUAL", "DESA-VIRTUAL",
+  "Rack Mount Chassis", "Main System Chassis",
+];
+
+function esServidor(e) {
+  return TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
+}
+
+function contarPor(campo, { excluirServidores } = {}) {
   const conteo = {};
   equipos.forEach((e) => {
+    if (excluirServidores && esServidor(e)) return;
     const v = (e[campo] || "").trim() || "Sin dato";
     conteo[v] = (conteo[v] || 0) + 1;
   });
@@ -1089,16 +1100,20 @@ function renderTablero() {
     return `<div class="tablero-fila${clickable ? " clickable" : ""}"${atributos}><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
   };
 
-  const totalHtml = `<div class="tablero-total"><span>Total</span><span class="valor">${equipos.length}</span></div>`;
+  const totalHtml = (total) => `<div class="tablero-total"><span>Total</span><span class="valor">${total}</span></div>`;
 
   $("tableroStatus").innerHTML =
-    (contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml;
+    (contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
+
+  const empresaSinServidores = contarPor("empresa", { excluirServidores: true });
+  const totalSinServidores = empresaSinServidores.reduce((s, [, c]) => s + c, 0);
   $("tableroEmpresa").innerHTML =
-    (contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml;
+    (empresaSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+
   $("tableroTipo").innerHTML =
-    (contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml;
+    (contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
   $("tableroFabricante").innerHTML =
-    (contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml;
+    (contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
