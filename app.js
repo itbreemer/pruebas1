@@ -239,6 +239,8 @@ function coincideTexto(e, texto) {
   return haystack.includes(texto);
 }
 
+let filtroCampoVacio = null;
+
 function obtenerFiltrados() {
   const texto = $("buscador").value.trim().toLowerCase();
   const empresa = $("filtroEmpresa").value;
@@ -246,6 +248,7 @@ function obtenerFiltrados() {
   const tipo = $("filtroTipo").value;
 
   return equipos.filter((e) => {
+    if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
     if (empresa && e.empresa !== empresa) return false;
     if (status && e.status !== status) return false;
     if (tipo && e.tipoEquipo !== tipo) return false;
@@ -253,7 +256,19 @@ function obtenerFiltrados() {
   });
 }
 
+const NOMBRES_CAMPO_VACIO = {
+  empresa: "Empresa", status: "Status", tipoEquipo: "Tipo de Equipo", fabricante: "Fabricante",
+};
+
 function render() {
+  const avisoVacio = $("filtroVacioAviso");
+  if (filtroCampoVacio) {
+    avisoVacio.textContent = `Mostrando equipos sin dato de ${NOMBRES_CAMPO_VACIO[filtroCampoVacio] || filtroCampoVacio}. Haz clic aquí para quitar este filtro.`;
+    avisoVacio.style.display = "";
+  } else {
+    avisoVacio.style.display = "none";
+  }
+
   const filtrados = obtenerFiltrados();
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
   if (paginaActual > totalPaginas) paginaActual = totalPaginas;
@@ -913,7 +928,10 @@ function irAListaEquiposFiltrada(campo, valor) {
   $("filtroEmpresa").value = "";
   $("filtroStatus").value = "";
   $("filtroTipo").value = "";
-  if (campo === "empresa") $("filtroEmpresa").value = valor;
+  filtroCampoVacio = null;
+  if (valor === "Sin dato") {
+    filtroCampoVacio = campo;
+  } else if (campo === "empresa") $("filtroEmpresa").value = valor;
   else if (campo === "status") $("filtroStatus").value = valor;
   else if (campo === "tipoEquipo") $("filtroTipo").value = valor;
   else $("buscador").value = valor;
@@ -951,7 +969,7 @@ function renderTablero() {
   `;
 
   const filaHtml = (nombre, cantidad, campo) => {
-    const clickable = campo && nombre !== "Sin dato";
+    const clickable = !!campo;
     const atributos = clickable ? ` data-campo="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"` : "";
     return `<div class="tablero-fila${clickable ? " clickable" : ""}"${atributos}><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
   };
@@ -1285,10 +1303,12 @@ $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 
-$("buscador").addEventListener("input", () => { paginaActual = 1; render(); });
-$("filtroEmpresa").addEventListener("change", () => { paginaActual = 1; render(); });
-$("filtroStatus").addEventListener("change", () => { paginaActual = 1; render(); });
-$("filtroTipo").addEventListener("change", () => { paginaActual = 1; render(); });
+$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+
+$("buscador").addEventListener("input", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
 
 $("btnPrimero").addEventListener("click", () => { paginaActual = 1; render(); });
 $("btnAnterior").addEventListener("click", () => { paginaActual--; render(); });

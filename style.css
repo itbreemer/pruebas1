@@ -393,6 +393,8 @@ main .btn-primary:hover { background: #163158; }
   color: var(--azul);
 }
 .acta-estado.no-encontrado { background: #fdecec; color: #b91c1c; }
+#filtroVacioAviso { cursor: pointer; }
+#filtroVacioAviso:hover { background: #dde7f8; }
 
 /* ============ Plantilla imprimible (Acta Forma-TI-001) ============ */
 .print-only { display: none; }
