@@ -901,11 +901,14 @@ function renderTablero() {
     $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
   }
 
+  const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+
   $("statCards").innerHTML = `
     <div class="stat-card"><div class="numero">${equipos.length}</div><div class="etiqueta">Equipos totales</div></div>
     <div class="stat-card"><div class="numero">${asignados}</div><div class="etiqueta">Asignados</div></div>
     <div class="stat-card"><div class="numero">${totalUsuarios}</div><div class="etiqueta">Usuarios distintos</div></div>
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
+    <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
   `;
 
   const filaHtml = (nombre, cantidad) =>
@@ -917,6 +920,22 @@ function renderTablero() {
     contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
   $("tableroTipo").innerHTML =
     contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+
+  const contarImpresorasPor = (campo) => {
+    const conteo = {};
+    impresoras.forEach((p) => {
+      const v = (p[campo] || "").trim() || "Sin dato";
+      conteo[v] = (conteo[v] || 0) + 1;
+    });
+    return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+  };
+
+  $("tableroImpresorasTipo").innerHTML =
+    contarImpresorasPor("tipo").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+  $("tableroImpresorasEmpresa").innerHTML =
+    contarImpresorasPor("empresa").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+  $("tableroImpresorasDepartamento").innerHTML =
+    contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
 }
 
 /* ---------- Vistas de listas derivadas (Usuarios / Monitores / Impresoras / Dispositivos) ---------- */
