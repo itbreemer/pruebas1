@@ -90,13 +90,21 @@ function eliminarDuplicadoP025194() {
   return cambio;
 }
 
-const IDS_CHATARRA_CONFIRMADA = ["seed-30", "seed-394", "seed-432", "seed-755"];
+const IDS_CHATARRA_CONFIRMADA = [
+  // Documentacion_Chatarra_300424.pdf
+  "seed-30", "seed-394", "seed-432", "seed-755",
+  // Listado_Equipos_Chatarra_200226.pdf
+  "seed-8", "seed-21", "seed-26", "seed-32", "seed-34", "seed-433", "seed-434",
+  "seed-441", "seed-443", "seed-445", "seed-452", "seed-453", "seed-454",
+  "seed-455", "seed-458", "seed-459", "seed-497", "seed-500", "seed-511",
+  "seed-512", "seed-734", "seed-752", "seed-758", "seed-773", "seed-797", "seed-799",
+];
 
 function eliminarChatarraConfirmada() {
-  // Confirmados contra Documentacion_Chatarra_300424.pdf (coincidencia exacta
-  // de serial o activo fijo). Al igual que con el duplicado P02-5194, hay que
-  // quitarlos explícitamente de cualquier navegador que ya los tuviera
-  // guardados, ya que SEED_DATA dejó de traerlos.
+  // Confirmados contra los listados de chatarra proporcionados (coincidencia
+  // exacta de serial o activo fijo). Al igual que con el duplicado P02-5194,
+  // hay que quitarlos explícitamente de cualquier navegador que ya los
+  // tuviera guardados, ya que SEED_DATA dejó de traerlos.
   const antes = equipos.length;
   equipos = equipos.filter((e) => !IDS_CHATARRA_CONFIRMADA.includes(e.id));
   const cambio = equipos.length !== antes;
