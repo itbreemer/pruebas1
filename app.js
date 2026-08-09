@@ -358,7 +358,7 @@ function obtenerFiltrados() {
 
   return equipos.filter((e) => {
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
-    if (filtroCampoVacio === "empresa" && esServidor(e)) return false;
+    if ((filtroCampoVacio === "empresa" || filtroCampoVacio === "status") && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
     if (status && e.status !== status) return false;
     if (tipo && e.tipoEquipo !== tipo) return false;
@@ -1102,8 +1102,10 @@ function renderTablero() {
 
   const totalHtml = (total) => `<div class="tablero-total"><span>Total</span><span class="valor">${total}</span></div>`;
 
+  const statusSinServidores = contarPor("status", { excluirServidores: true });
+  const totalStatusSinServidores = statusSinServidores.reduce((s, [, c]) => s + c, 0);
   $("tableroStatus").innerHTML =
-    (contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
+    (statusSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml(totalStatusSinServidores);
 
   const empresaSinServidores = contarPor("empresa", { excluirServidores: true });
   const totalSinServidores = empresaSinServidores.reduce((s, [, c]) => s + c, 0);
