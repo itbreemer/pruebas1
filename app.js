@@ -202,6 +202,7 @@ function establecerEquiposDesdeSync(remotos) {
   });
 
   equipos = combinados;
+  eliminarDuplicadoP025194();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
