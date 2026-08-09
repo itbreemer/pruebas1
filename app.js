@@ -72,8 +72,21 @@ function fusionarContratosDesdeSeed() {
   if (corregirFechaContrato8030028059()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
+  if (eliminarDuplicadoP025194()) cambio = true;
 
   if (cambio) guardarDatos();
+}
+
+function eliminarDuplicadoP025194() {
+  // "P02-5194 bod2" se agregó por error como equipo nuevo del cronograma AD,
+  // pero es el mismo equipo físico que ya existía como "P02-5194". Si un
+  // navegador ya lo tenía guardado en localStorage antes de esta corrección,
+  // SEED_DATA ya no lo trae, así que hay que quitarlo explícitamente.
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => e.id !== "cronograma-4");
+  const cambio = equipos.length !== antes;
+  if (cambio) sincronizarEliminacion("cronograma-4");
+  return cambio;
 }
 
 function corregirSerialesTipeados() {
