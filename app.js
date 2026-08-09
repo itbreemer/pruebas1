@@ -386,6 +386,7 @@ function coincideTexto(e, texto) {
 }
 
 let filtroCampoVacio = null;
+let filtroEnRevision = false;
 
 function obtenerFiltrados() {
   const texto = $("buscador").value.trim().toLowerCase();
@@ -394,6 +395,7 @@ function obtenerFiltrados() {
   const tipo = $("filtroTipo").value;
 
   return equipos.filter((e) => {
+    if (filtroEnRevision && !esEnRevisionCronograma(e)) return false;
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
     if ((filtroCampoVacio === "empresa" || filtroCampoVacio === "status") && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
@@ -412,7 +414,10 @@ const NOMBRES_CAMPO_VACIO = {
 
 function render() {
   const avisoVacio = $("filtroVacioAviso");
-  if (filtroCampoVacio) {
+  if (filtroEnRevision) {
+    avisoVacio.textContent = `Mostrando los ${equipos.filter(esEnRevisionCronograma).length} equipos en revisión (no aparecen en el cronograma de migración AD 2026; valida si ya fueron dados de baja y no se quitaron del sistema). Haz clic aquí para quitar este filtro.`;
+    avisoVacio.style.display = "";
+  } else if (filtroCampoVacio) {
     avisoVacio.textContent = `Mostrando equipos sin dato de ${NOMBRES_CAMPO_VACIO[filtroCampoVacio] || filtroCampoVacio}. Haz clic aquí para quitar este filtro.`;
     avisoVacio.style.display = "";
   } else {
@@ -1079,13 +1084,20 @@ function esServidor(e) {
   return TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
 }
 
+const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
+
+function esEnRevisionCronograma(e) {
+  return (e.comentarios || "").includes(MARCA_CRONOGRAMA);
+}
+
 const ALIAS_TIPO_EQUIPO = { Laptop: "Notebook" };
 
-function contarPor(campo, { excluirServidores, soloServidores, agruparTipoEquipo } = {}) {
+function contarPor(campo, { excluirServidores, soloServidores, excluirEnRevision, agruparTipoEquipo } = {}) {
   const conteo = {};
   equipos.forEach((e) => {
     if (excluirServidores && esServidor(e)) return;
     if (soloServidores && !esServidor(e)) return;
+    if (excluirEnRevision && esEnRevisionCronograma(e)) return;
     let v = (e[campo] || "").trim() || "Sin dato";
     if (agruparTipoEquipo) v = ALIAS_TIPO_EQUIPO[v] || v;
     conteo[v] = (conteo[v] || 0) + 1;
@@ -1099,6 +1111,7 @@ function irAListaEquiposFiltrada(campo, valor) {
   $("filtroStatus").value = "";
   $("filtroTipo").value = "";
   filtroCampoVacio = null;
+  filtroEnRevision = false;
   if (valor === "Sin dato") {
     filtroCampoVacio = campo;
   } else if (campo === "empresa") $("filtroEmpresa").value = valor;
@@ -1110,9 +1123,23 @@ function irAListaEquiposFiltrada(campo, valor) {
   render();
 }
 
+function irARevisionCronograma() {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = true;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
 document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".tablero-fila[data-campo]");
   if (fila) irAListaEquiposFiltrada(fila.dataset.campo, fila.dataset.valor);
+  if (ev.target.closest("#tarjetaEnRevision")) irARevisionCronograma();
+  if (ev.target.closest(".tablero-fila-secundaria")) irARevisionCronograma();
 });
 
 function renderTablero() {
@@ -1123,9 +1150,8 @@ function renderTablero() {
   const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
   const equiposLenovo = equiposUsuario.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO").length;
 
-  const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
   const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
-  const propiosEnRevision = propios.filter((e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA)).length;
+  const propiosEnRevision = propios.filter(esEnRevisionCronograma).length;
   const equiposPropios = propios.length - propiosEnRevision;
 
   if ($("vista-tablero").classList.contains("vista-active")) {
@@ -1145,7 +1171,7 @@ function renderTablero() {
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
     <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
     <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
-    <div class="stat-card stat-card-secundaria"><div class="numero">${propiosEnRevision}</div><div class="etiqueta">En revisión (no está en cronograma AD)</div></div>
+    <div id="tarjetaEnRevision" class="stat-card stat-card-secundaria clickable"><div class="numero">${propiosEnRevision}</div><div class="etiqueta">En revisión (no está en cronograma AD) — clic para revisar</div></div>
   `;
 
   const filaHtml = (nombre, cantidad, campo) => {
@@ -1156,21 +1182,21 @@ function renderTablero() {
 
   const totalHtml = (total) => `<div class="tablero-total"><span>Total</span><span class="valor">${total}</span></div>`;
 
-  const statusSinServidores = contarPor("status", { excluirServidores: true });
+  const statusSinServidores = contarPor("status", { excluirServidores: true, excluirEnRevision: true });
   const totalStatusSinServidores = statusSinServidores.reduce((s, [, c]) => s + c, 0);
   $("tableroStatus").innerHTML =
     (statusSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml(totalStatusSinServidores);
 
-  const empresaSinServidores = contarPor("empresa", { excluirServidores: true });
+  const empresaSinServidores = contarPor("empresa", { excluirServidores: true, excluirEnRevision: true });
   const totalSinServidores = empresaSinServidores.reduce((s, [, c]) => s + c, 0);
   $("tableroEmpresa").innerHTML =
     (empresaSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
-  const tipoSinServidores = contarPor("tipoEquipo", { excluirServidores: true, agruparTipoEquipo: true });
+  const tipoSinServidores = contarPor("tipoEquipo", { excluirServidores: true, excluirEnRevision: true, agruparTipoEquipo: true });
   $("tableroTipo").innerHTML =
     (tipoSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
-  const fabricanteSinServidores = contarPor("fabricante", { excluirServidores: true });
+  const fabricanteSinServidores = contarPor("fabricante", { excluirServidores: true, excluirEnRevision: true });
   $("tableroFabricante").innerHTML =
     (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
@@ -1515,12 +1541,12 @@ $("inputImportarDatos").addEventListener("change", (ev) => {
   ev.target.value = "";
 });
 
-$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
 
-$("buscador").addEventListener("input", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
-$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
-$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
-$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; paginaActual = 1; render(); });
+$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
+$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
+$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
+$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
 
 $("btnPrimero").addEventListener("click", () => { paginaActual = 1; render(); });
 $("btnAnterior").addEventListener("click", () => { paginaActual--; render(); });

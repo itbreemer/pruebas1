@@ -99,6 +99,8 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .stat-card .etiqueta { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
 .stat-card-secundaria { border-style: dashed; background: #f8fafc; }
 .stat-card-secundaria .numero { color: #b45309; }
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable:hover { background: #fef3e2; }
 .stat-card-destacada { background: var(--azul); border-color: var(--azul); }
 .stat-card-destacada .numero { color: #fff; }
 .stat-card-destacada .etiqueta { color: #dbeafe; }
@@ -152,8 +154,9 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
   font-weight: 700;
 }
 .tablero-total .valor { color: var(--azul); }
-.tablero-fila-secundaria { margin-top: 4px; color: #b45309; font-style: italic; }
+.tablero-fila-secundaria { margin-top: 4px; color: #b45309; font-style: italic; cursor: pointer; }
 .tablero-fila-secundaria .valor { color: #b45309; font-weight: 700; }
+.tablero-fila-secundaria:hover { background: #fef3e2; }
 
 @media (max-width: 860px) {
   .app-shell { flex-direction: column; }
