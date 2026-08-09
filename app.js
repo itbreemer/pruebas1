@@ -1148,7 +1148,7 @@ function renderTablero() {
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
 
   const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
-  const equiposLenovo = equiposUsuario.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO").length;
+  const equiposLenovo = equiposUsuario.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO" && !esEnRevisionCronograma(e)).length;
 
   const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
   const propiosEnRevision = propios.filter(esEnRevisionCronograma).length;
