@@ -133,6 +133,35 @@ function guardarDatos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(equipos));
 }
 
+/* ---------- Sincronización en línea (Firestore, ver firestore-sync.js) ---------- */
+/* Estas funciones las usa firestore-sync.js para leer/reemplazar el arreglo
+   "equipos" desde un módulo aparte, y para reflejar en línea cada cambio que
+   se hace aquí, sin depender de que ese servicio esté disponible. */
+
+function obtenerEquiposActuales() {
+  return equipos;
+}
+
+function establecerEquiposDesdeSync(nuevos) {
+  equipos = nuevos;
+  guardarDatos();
+  poblarFiltrosYDatalists();
+  render();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarEquipo(equipo) {
+  if (window.FirestoreSync && typeof window.FirestoreSync.guardarEquipo === "function") {
+    window.FirestoreSync.guardarEquipo(equipo);
+  }
+}
+
+function sincronizarEliminacion(id) {
+  if (window.FirestoreSync && typeof window.FirestoreSync.eliminarEquipo === "function") {
+    window.FirestoreSync.eliminarEquipo(id);
+  }
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -174,9 +203,11 @@ function importarDatosJSON(archivo) {
         equipos.push(imp);
         porId.set(imp.id, imp);
         nuevos++;
+        sincronizarEquipo(imp);
       } else if ((imp.ultimaModificacion || "") > (local.ultimaModificacion || "")) {
         Object.assign(local, imp);
         actualizados++;
+        sincronizarEquipo(local);
       }
     });
 
@@ -528,14 +559,18 @@ function onSubmit(e) {
 
   data.ultimaModificacion = new Date().toISOString().slice(0, 16);
 
+  let guardado;
   if (data.id) {
     const idx = equipos.findIndex((eq) => eq.id === data.id);
     if (idx !== -1) equipos[idx] = { ...equipos[idx], ...data };
+    guardado = equipos[idx];
   } else {
     data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
     equipos.push(data);
+    guardado = data;
   }
   guardarDatos();
+  sincronizarEquipo(guardado);
   cerrarModal();
   poblarFiltrosYDatalists();
   render();
@@ -548,6 +583,7 @@ function eliminarActual() {
   if (!confirm("¿Eliminar este registro de forma permanente?")) return;
   equipos = equipos.filter((e) => e.id !== id);
   guardarDatos();
+  sincronizarEliminacion(id);
   cerrarModal();
   poblarFiltrosYDatalists();
   render();
@@ -992,6 +1028,7 @@ function generarIngresoCompleto() {
     if (idx !== -1) equipos[idx] = equipo;
   }
   guardarDatos();
+  sincronizarEquipo(equipo);
 
   const tecnico = $("ingresoTecnico").value.trim();
   const transaccion = {
