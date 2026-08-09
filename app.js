@@ -1162,13 +1162,10 @@ function renderTablero() {
   const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
   const totalServidores = equipos.filter(esServidor).length;
 
-  const totalLenovoMasPropios = equiposLenovo + equiposPropios;
-
   $("statCards").innerHTML = `
     <div class="stat-card"><div class="numero">${equiposUsuarioValidados.length}</div><div class="etiqueta">Equipos totales</div></div>
     <div class="stat-card"><div class="numero">${equiposLenovo}</div><div class="etiqueta">Equipos Lenovo</div></div>
     <div class="stat-card"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios</div></div>
-    <div class="stat-card stat-card-destacada"><div class="numero">${totalLenovoMasPropios}</div><div class="etiqueta">Total Lenovo + Propios</div></div>
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
     <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
     <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
