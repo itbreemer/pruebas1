@@ -142,8 +142,30 @@ function obtenerEquiposActuales() {
   return equipos;
 }
 
-function establecerEquiposDesdeSync(nuevos) {
-  equipos = nuevos;
+function establecerEquiposDesdeSync(remotos) {
+  // No reemplazamos sin más: si esta computadora tiene equipos que Firestore
+  // todavía no conoce (porque se capturaron antes de sincronizar, o mientras
+  // estaba sin internet), los conservamos y los subimos, en vez de perderlos.
+  const remotosPorId = new Map(remotos.map((e) => [e.id, e]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  equipos.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarEquipo(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  equipos = combinados;
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
