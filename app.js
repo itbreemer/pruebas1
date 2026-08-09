@@ -956,14 +956,16 @@ function renderTablero() {
     return `<div class="tablero-fila${clickable ? " clickable" : ""}"${atributos}><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
   };
 
+  const totalHtml = `<div class="tablero-total"><span>Total</span><span class="valor">${equipos.length}</span></div>`;
+
   $("tableroStatus").innerHTML =
-    contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>";
+    (contarPor("status").slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml;
   $("tableroEmpresa").innerHTML =
-    contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>";
+    (contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml;
   $("tableroTipo").innerHTML =
-    contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>";
+    (contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml;
   $("tableroFabricante").innerHTML =
-    contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>";
+    (contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml;
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
