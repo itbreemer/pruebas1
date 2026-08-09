@@ -1127,6 +1127,15 @@ function renderTablero() {
   $("tableroFabricante").innerHTML =
     (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
+  const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
+  const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
+  const propiosEnRevision = propios.filter((e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA)).length;
+  const propiosEnCronograma = propios.length - propiosEnRevision;
+  $("tableroPropiosCronograma").innerHTML =
+    filaHtml("En cronograma AD 2026", propiosEnCronograma) +
+    filaHtml("En revisión (no aparece en cronograma)", propiosEnRevision) +
+    totalHtml(propios.length);
+
   const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
   $("tableroServidoresTipo").innerHTML =
     servidorPorTipo.map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
