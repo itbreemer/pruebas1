@@ -101,6 +101,9 @@ const IDS_CHATARRA_CONFIRMADA = [
   // Registro_todo.pdf: equipos sin uso por fallas (bateria, pantalla, teclado, etc.)
   "seed-65", "seed-68", "seed-71", "seed-98", "seed-107", "seed-114", "seed-115",
   "seed-119", "seed-342", "seed-361",
+  // Registro_todo1.pdf: "LAPTOS DE BODEGA" no funcionales
+  "seed-99", "seed-108", "seed-112", "seed-345", "seed-346", "seed-357", "seed-367",
+  "seed-376", "seed-380", "seed-383", "seed-386", "seed-439", "seed-771", "seed-795",
 ];
 
 function eliminarChatarraConfirmada() {
