@@ -98,6 +98,9 @@ const IDS_CHATARRA_CONFIRMADA = [
   "seed-441", "seed-443", "seed-445", "seed-452", "seed-453", "seed-454",
   "seed-455", "seed-458", "seed-459", "seed-497", "seed-500", "seed-511",
   "seed-512", "seed-734", "seed-752", "seed-758", "seed-773", "seed-797", "seed-799",
+  // Registro_todo.pdf: equipos sin uso por fallas (bateria, pantalla, teclado, etc.)
+  "seed-65", "seed-68", "seed-71", "seed-98", "seed-107", "seed-114", "seed-115",
+  "seed-119", "seed-342", "seed-361",
 ];
 
 function eliminarChatarraConfirmada() {
