@@ -54,6 +54,12 @@
       <!-- Tablero -->
       <section id="vista-tablero" class="vista vista-active">
         <div class="stat-cards" id="statCards"></div>
+
+        <section class="tablero-conteo">
+          <input type="text" id="conteoRapidoInput" placeholder="Conteo rápido: escribe una marca, modelo, empresa, status, tipo... (ej. Lenovo)">
+          <p id="conteoRapidoResultado" class="acta-estado" style="display:none;"></p>
+        </section>
+
         <div class="tablero-grid">
           <div class="tablero-panel">
             <h3>Por Status</h3>
@@ -66,6 +72,10 @@
           <div class="tablero-panel">
             <h3>Por Tipo de Equipo</h3>
             <div id="tableroTipo" class="tablero-lista"></div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Por Fabricante (top 8)</h3>
+            <div id="tableroFabricante" class="tablero-lista"></div>
           </div>
         </div>
 

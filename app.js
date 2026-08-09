@@ -920,6 +920,8 @@ function renderTablero() {
     contarPor("empresa").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
   $("tableroTipo").innerHTML =
     contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+  $("tableroFabricante").innerHTML =
+    contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
@@ -936,6 +938,28 @@ function renderTablero() {
     contarImpresorasPor("empresa").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
   $("tableroImpresorasDepartamento").innerHTML =
     contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+}
+
+const CAMPOS_CONTEO_RAPIDO = [
+  "fabricante", "modelo", "tipoEquipo", "empresa", "status", "departamento",
+  "unidadNegocio", "ubicaciones", "nombreRed", "nombreEmpleado", "numeroSerial",
+];
+
+function actualizarConteoRapido() {
+  const original = $("conteoRapidoInput").value.trim();
+  const texto = original.toLowerCase();
+  const resultado = $("conteoRapidoResultado");
+  if (!texto) {
+    resultado.textContent = "";
+    resultado.style.display = "none";
+    return;
+  }
+  const coincidencias = equipos.filter((e) =>
+    CAMPOS_CONTEO_RAPIDO.some((campo) => (e[campo] || "").toLowerCase().includes(texto))
+  );
+  resultado.textContent = `${coincidencias.length} equipo(s) coinciden con "${original}"`;
+  resultado.className = "acta-estado";
+  resultado.style.display = "";
 }
 
 /* ---------- Vistas de listas derivadas (Usuarios / Monitores / Impresoras / Dispositivos) ---------- */
@@ -1221,6 +1245,8 @@ $("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
 $("btnCancelarIngreso").addEventListener("click", cerrarModalIngreso);
 $("btnGenerarIngreso").addEventListener("click", generarIngresoCompleto);
 $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
+
+$("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 
 $("buscador").addEventListener("input", () => { paginaActual = 1; render(); });
 $("filtroEmpresa").addEventListener("change", () => { paginaActual = 1; render(); });

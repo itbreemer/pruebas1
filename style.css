@@ -98,6 +98,22 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .stat-card .numero { font-size: 1.6rem; font-weight: 700; color: var(--azul); }
 .stat-card .etiqueta { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
 
+.tablero-conteo {
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.tablero-conteo input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.tablero-conteo .acta-estado { margin: 10px 0 0; }
+
 .tablero-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
