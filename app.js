@@ -1198,10 +1198,6 @@ function renderTablero() {
   $("tableroFabricante").innerHTML =
     (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
-  $("tableroPropiosCronograma").innerHTML =
-    filaHtml("En cronograma AD 2026", equiposPropios) +
-    totalHtml(equiposPropios) +
-    `<div class="tablero-fila tablero-fila-secundaria"><span>En revisión (no aparece en cronograma)</span><span class="valor">${propiosEnRevision}</span></div>`;
 
   const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
   $("tableroServidoresTipo").innerHTML =
