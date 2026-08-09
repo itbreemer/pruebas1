@@ -1083,7 +1083,11 @@ function renderTablero() {
 
   const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
   const equiposLenovo = equiposUsuario.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO").length;
-  const equiposPropios = equiposUsuario.filter((e) => !nonEmpty(e.contratos)).length;
+
+  const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
+  const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
+  const propiosEnRevision = propios.filter((e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA)).length;
+  const equiposPropios = propios.length - propiosEnRevision;
 
   if ($("vista-tablero").classList.contains("vista-active")) {
     $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
@@ -1099,6 +1103,7 @@ function renderTablero() {
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
     <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
     <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
+    <div class="stat-card stat-card-secundaria"><div class="numero">${propiosEnRevision}</div><div class="etiqueta">En revisión (no está en cronograma AD)</div></div>
   `;
 
   const filaHtml = (nombre, cantidad, campo) => {
@@ -1127,14 +1132,10 @@ function renderTablero() {
   $("tableroFabricante").innerHTML =
     (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
-  const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
-  const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
-  const propiosEnRevision = propios.filter((e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA)).length;
-  const propiosEnCronograma = propios.length - propiosEnRevision;
   $("tableroPropiosCronograma").innerHTML =
-    filaHtml("En cronograma AD 2026", propiosEnCronograma) +
-    filaHtml("En revisión (no aparece en cronograma)", propiosEnRevision) +
-    totalHtml(propios.length);
+    filaHtml("En cronograma AD 2026", equiposPropios) +
+    totalHtml(equiposPropios) +
+    `<div class="tablero-fila tablero-fila-secundaria"><span>En revisión (no aparece en cronograma)</span><span class="valor">${propiosEnRevision}</span></div>`;
 
   const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
   $("tableroServidoresTipo").innerHTML =
