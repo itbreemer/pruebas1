@@ -99,6 +99,9 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .stat-card .etiqueta { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
 .stat-card-secundaria { border-style: dashed; background: #f8fafc; }
 .stat-card-secundaria .numero { color: #b45309; }
+.stat-card-destacada { background: var(--azul); border-color: var(--azul); }
+.stat-card-destacada .numero { color: #fff; }
+.stat-card-destacada .etiqueta { color: #dbeafe; }
 
 .tablero-conteo {
   background: #fff;
