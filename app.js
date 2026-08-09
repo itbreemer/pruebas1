@@ -1116,6 +1116,8 @@ document.addEventListener("click", (ev) => {
 });
 
 function renderTablero() {
+  if (eliminarDuplicadoP025194()) guardarDatos();
+
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
 
   const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
