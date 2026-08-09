@@ -982,11 +982,6 @@ function renderTablero() {
     contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
 }
 
-const CAMPOS_CONTEO_RAPIDO = [
-  "fabricante", "modelo", "tipoEquipo", "empresa", "status", "departamento",
-  "unidadNegocio", "ubicaciones", "nombreRed", "nombreEmpleado", "numeroSerial",
-];
-
 function actualizarConteoRapido() {
   const original = $("conteoRapidoInput").value.trim();
   const texto = original.toLowerCase();
@@ -996,10 +991,8 @@ function actualizarConteoRapido() {
     resultado.style.display = "none";
     return;
   }
-  const coincidencias = equipos.filter((e) =>
-    CAMPOS_CONTEO_RAPIDO.some((campo) => (e[campo] || "").toLowerCase().includes(texto))
-  );
-  resultado.textContent = `${coincidencias.length} equipo(s) coinciden con "${original}"`;
+  const coincidencias = equipos.filter((e) => (e.fabricante || "").toLowerCase().includes(texto));
+  resultado.textContent = `${coincidencias.length} equipo(s) coinciden con "${original}" en Fabricante`;
   resultado.className = "acta-estado";
   resultado.style.display = "";
 }
