@@ -133,6 +133,62 @@ function guardarDatos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(equipos));
 }
 
+/* ---------- Exportar / Importar datos entre computadoras ---------- */
+/* Los datos viven en el localStorage de cada navegador, así que lo que se
+   captura en una computadora no aparece en otra automáticamente. Estas
+   funciones permiten mover manualmente esa información entre equipos. */
+
+function exportarDatosJSON() {
+  const blob = new Blob([JSON.stringify(equipos, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const fecha = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `Inventario_TI_backup_${fecha}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importarDatosJSON(archivo) {
+  const lector = new FileReader();
+  lector.onload = () => {
+    let importados;
+    try {
+      importados = JSON.parse(lector.result);
+    } catch (err) {
+      alert("El archivo no es un JSON válido de este sistema.");
+      return;
+    }
+    if (!Array.isArray(importados)) {
+      alert("El archivo no tiene el formato esperado (debe ser el exportado desde este mismo programa).");
+      return;
+    }
+
+    const porId = new Map(equipos.map((e) => [e.id, e]));
+    let nuevos = 0;
+    let actualizados = 0;
+    importados.forEach((imp) => {
+      if (!imp || !imp.id) return;
+      const local = porId.get(imp.id);
+      if (!local) {
+        equipos.push(imp);
+        porId.set(imp.id, imp);
+        nuevos++;
+      } else if ((imp.ultimaModificacion || "") > (local.ultimaModificacion || "")) {
+        Object.assign(local, imp);
+        actualizados++;
+      }
+    });
+
+    guardarDatos();
+    poblarFiltrosYDatalists();
+    render();
+    refrescarVistasSecundarias();
+    alert(`Importación completa: ${nuevos} equipo(s) nuevo(s), ${actualizados} actualizado(s).`);
+  };
+  lector.readAsText(archivo);
+}
+
 function poblarSelect(select, valores, placeholder) {
   const actual = select.value;
   select.innerHTML = `<option value="">${placeholder}</option>`;
@@ -1422,6 +1478,14 @@ $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 $("btnExportarAuditoria").addEventListener("click", exportarReporteAuditoriaCSV);
+
+$("btnExportarDatos").addEventListener("click", exportarDatosJSON);
+$("btnImportarDatos").addEventListener("click", () => $("inputImportarDatos").click());
+$("inputImportarDatos").addEventListener("change", (ev) => {
+  const archivo = ev.target.files[0];
+  if (archivo) importarDatosJSON(archivo);
+  ev.target.value = "";
+});
 
 $("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroAuditoria = null; paginaActual = 1; render(); });
 
