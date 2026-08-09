@@ -361,7 +361,10 @@ function obtenerFiltrados() {
     if ((filtroCampoVacio === "empresa" || filtroCampoVacio === "status") && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
     if (status && e.status !== status) return false;
-    if (tipo && e.tipoEquipo !== tipo) return false;
+    if (tipo) {
+      const grupoTipo = tipo === "Notebook" ? ["Notebook", "Laptop"] : [tipo];
+      if (!grupoTipo.includes(e.tipoEquipo)) return false;
+    }
     return coincideTexto(e, texto);
   });
 }
@@ -1039,11 +1042,14 @@ function esServidor(e) {
   return TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
 }
 
-function contarPor(campo, { excluirServidores } = {}) {
+const ALIAS_TIPO_EQUIPO = { Laptop: "Notebook" };
+
+function contarPor(campo, { excluirServidores, agruparTipoEquipo } = {}) {
   const conteo = {};
   equipos.forEach((e) => {
     if (excluirServidores && esServidor(e)) return;
-    const v = (e[campo] || "").trim() || "Sin dato";
+    let v = (e[campo] || "").trim() || "Sin dato";
+    if (agruparTipoEquipo) v = ALIAS_TIPO_EQUIPO[v] || v;
     conteo[v] = (conteo[v] || 0) + 1;
   });
   return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
@@ -1113,7 +1119,7 @@ function renderTablero() {
     (empresaSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
   $("tableroTipo").innerHTML =
-    (contarPor("tipoEquipo").slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
+    (contarPor("tipoEquipo", { agruparTipoEquipo: true }).slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
   $("tableroFabricante").innerHTML =
     (contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
 
