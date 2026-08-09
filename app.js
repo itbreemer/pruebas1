@@ -70,8 +70,28 @@ function fusionarContratosDesdeSeed() {
 
   if (limpiarPendientesDuplicados()) cambio = true;
   if (corregirFechaContrato8030028059()) cambio = true;
+  if (corregirSerialesTipeados()) cambio = true;
 
   if (cambio) guardarDatos();
+}
+
+function corregirSerialesTipeados() {
+  // PCLNV125 y PCLNV228 se capturaron con el serial mal digitado, por lo que
+  // nunca coincidieron con su contrato al importar. Forzamos la corrección
+  // aunque el campo ya tenga un valor guardado.
+  const CORRECCIONES = {
+    PCLNV125: { viejo: "MJH051N0", nuevo: "MJ0H51N0" },
+    PCLNV228: { viejo: "MZ01XHXH", nuevo: "MZ01XHX" },
+  };
+  let cambio = false;
+  equipos.forEach((e) => {
+    const c = CORRECCIONES[(e.nombreRed || "").trim()];
+    if (c && (e.numeroSerial || "").trim() === c.viejo) {
+      e.numeroSerial = c.nuevo;
+      cambio = true;
+    }
+  });
+  return cambio;
 }
 
 function limpiarPendientesDuplicados() {
