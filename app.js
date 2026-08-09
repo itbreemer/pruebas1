@@ -835,6 +835,7 @@ function refrescarVistasSecundarias() {
   vistaMonitores.render();
   vistaCatalogoMonitores.render();
   vistaImpresoras.render();
+  vistaCatalogoImpresoras.render();
   vistaDispositivos.render();
   vistaContratos.render();
 }
@@ -858,7 +859,10 @@ function cambiarVista(nombre) {
     vistaMonitores.render();
     vistaCatalogoMonitores.render();
   }
-  else if (nombre === "impresoras") vistaImpresoras.render();
+  else if (nombre === "impresoras") {
+    vistaImpresoras.render();
+    vistaCatalogoImpresoras.render();
+  }
   else if (nombre === "dispositivos") vistaDispositivos.render();
   else if (nombre === "contratos") vistaContratos.render();
 }
@@ -1062,6 +1066,37 @@ const vistaCatalogoMonitores = crearVistaLista({
   columnas: 5,
   obtenerFilas: obtenerCatalogoMonitores,
   filtrar: (r, t) => [r.monitor.serial, r.monitor.modelo, r.monitor.descripcion, r.monitor.contrato].join(" ").toLowerCase().includes(t),
+});
+
+function obtenerCatalogoImpresoras() {
+  const lista = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  return lista.map((p) => ({
+    impresora: p,
+    celdas: `
+      <td>${esc(p.tipoEquipoImp)}</td>
+      <td>${esc(p.ip)}</td>
+      <td>${esc(p.gpr)}</td>
+      <td>${esc(p.serial)}</td>
+      <td>${esc(p.modelo)}</td>
+      <td>${esc(p.tipo)}</td>
+      <td>${esc(p.codigoPrinter)}</td>
+      <td>${esc(p.departamento)}</td>
+      <td>${esc(p.ubicacion)}</td>
+      <td>${esc(p.empresa)}</td>
+      <td>${esc(p.activoFijo)}</td>
+    `,
+  }));
+}
+
+const vistaCatalogoImpresoras = crearVistaLista({
+  prefix: "catalogoImpresoras",
+  columnas: 11,
+  obtenerFilas: obtenerCatalogoImpresoras,
+  filtrar: (r, t) =>
+    [r.impresora.ip, r.impresora.serial, r.impresora.modelo, r.impresora.departamento, r.impresora.ubicacion, r.impresora.empresa]
+      .join(" ")
+      .toLowerCase()
+      .includes(t),
 });
 
 function obtenerImpresoras() {
