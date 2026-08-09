@@ -1146,9 +1146,10 @@ function renderTablero() {
   if (eliminarDuplicadoP025194()) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
+  const equiposUsuarioValidados = equiposUsuario.filter((e) => !esEnRevisionCronograma(e));
 
-  const totalEmpresas = new Set(equiposUsuario.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
-  const equiposLenovo = equiposUsuario.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO" && !esEnRevisionCronograma(e)).length;
+  const totalEmpresas = new Set(equiposUsuarioValidados.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
+  const equiposLenovo = equiposUsuarioValidados.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO").length;
 
   const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
   const propiosEnRevision = propios.filter(esEnRevisionCronograma).length;
@@ -1164,7 +1165,7 @@ function renderTablero() {
   const totalLenovoMasPropios = equiposLenovo + equiposPropios;
 
   $("statCards").innerHTML = `
-    <div class="stat-card"><div class="numero">${equiposUsuario.length}</div><div class="etiqueta">Equipos totales</div></div>
+    <div class="stat-card"><div class="numero">${equiposUsuarioValidados.length}</div><div class="etiqueta">Equipos totales</div></div>
     <div class="stat-card"><div class="numero">${equiposLenovo}</div><div class="etiqueta">Equipos Lenovo</div></div>
     <div class="stat-card"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios</div></div>
     <div class="stat-card stat-card-destacada"><div class="numero">${totalLenovoMasPropios}</div><div class="etiqueta">Total Lenovo + Propios</div></div>
