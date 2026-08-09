@@ -1044,10 +1044,11 @@ function esServidor(e) {
 
 const ALIAS_TIPO_EQUIPO = { Laptop: "Notebook" };
 
-function contarPor(campo, { excluirServidores, agruparTipoEquipo } = {}) {
+function contarPor(campo, { excluirServidores, soloServidores, agruparTipoEquipo } = {}) {
   const conteo = {};
   equipos.forEach((e) => {
     if (excluirServidores && esServidor(e)) return;
+    if (soloServidores && !esServidor(e)) return;
     let v = (e[campo] || "").trim() || "Sin dato";
     if (agruparTipoEquipo) v = ALIAS_TIPO_EQUIPO[v] || v;
     conteo[v] = (conteo[v] || 0) + 1;
@@ -1091,6 +1092,7 @@ function renderTablero() {
   }
 
   const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  const totalServidores = equipos.filter(esServidor).length;
 
   $("statCards").innerHTML = `
     <div class="stat-card"><div class="numero">${equipos.length}</div><div class="etiqueta">Equipos totales</div></div>
@@ -1098,6 +1100,7 @@ function renderTablero() {
     <div class="stat-card"><div class="numero">${totalUsuarios}</div><div class="etiqueta">Usuarios distintos</div></div>
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
     <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
+    <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
   `;
 
   const filaHtml = (nombre, cantidad, campo) => {
@@ -1118,10 +1121,23 @@ function renderTablero() {
   $("tableroEmpresa").innerHTML =
     (empresaSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
 
+  const tipoSinServidores = contarPor("tipoEquipo", { excluirServidores: true, agruparTipoEquipo: true });
   $("tableroTipo").innerHTML =
-    (contarPor("tipoEquipo", { agruparTipoEquipo: true }).slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
+    (tipoSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+
+  const fabricanteSinServidores = contarPor("fabricante", { excluirServidores: true });
   $("tableroFabricante").innerHTML =
-    (contarPor("fabricante").slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(equipos.length);
+    (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+
+  const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
+  $("tableroServidoresTipo").innerHTML =
+    servidorPorTipo.map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
+  const servidorPorEmpresa = contarPor("empresa", { soloServidores: true });
+  $("tableroServidoresEmpresa").innerHTML =
+    servidorPorEmpresa.slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
+  const servidorPorStatus = contarPor("status", { soloServidores: true });
+  $("tableroServidoresStatus").innerHTML =
+    servidorPorStatus.slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
