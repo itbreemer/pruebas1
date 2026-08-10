@@ -123,6 +123,8 @@ const IDS_CONFIRMADOS_ACTIVOS = [
   // laptop.pdf: equipos por sede que siguen activos, se les quita "en revision"
   "seed-18", "seed-27", "seed-49", "seed-50", "seed-118", "seed-354",
   "seed-379", "seed-405", "seed-461", "seed-766", "seed-774",
+  // deskmark.pdf: desktops por sede confirmados activos
+  "seed-402", "seed-456", "seed-739",
 ];
 
 function quitarMarcaRevisionConfirmados() {
