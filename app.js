@@ -76,6 +76,7 @@ function fusionarContratosDesdeSeed() {
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
   if (corregirEmpresasMalCapturadas()) cambio = true;
+  if (corregirTipoEquipoMalClasificado()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -175,6 +176,29 @@ function corregirEmpresasMalCapturadas() {
     const nueva = CORRECCIONES_EMPRESA[e.id];
     if (!nueva || (e.empresa || "").trim() === nueva) return;
     e.empresa = nueva;
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    cambio = true;
+    sincronizarEquipo(e);
+  });
+  return cambio;
+}
+
+const CORRECCIONES_TIPO_EQUIPO = {
+  "seed-598": "Mini PC",
+  "seed-800": "Mini PC",
+  "pendiente-mj0h51jj": "Mini PC",
+};
+
+function corregirTipoEquipoMalClasificado() {
+  // PCLNV087 y UNIFILARDELCAMPO son ThinkCentre M70q/M75q Gen 2 (linea "Tiny"
+  // de Lenovo, un Mini PC), y PENDIENTE-MJ0H51JJ es el mismo modelo segun su
+  // comentario, pero los 3 estaban clasificados como Desktop. Forzamos la
+  // correccion aunque el campo ya tenga un valor guardado.
+  let cambio = false;
+  equipos.forEach((e) => {
+    const nuevo = CORRECCIONES_TIPO_EQUIPO[e.id];
+    if (!nuevo || (e.tipoEquipo || "").trim() === nuevo) return;
+    e.tipoEquipo = nuevo;
     e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     cambio = true;
     sincronizarEquipo(e);
@@ -299,6 +323,7 @@ function establecerEquiposDesdeSync(remotos) {
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
+  corregirTipoEquipoMalClasificado();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
@@ -1244,6 +1269,7 @@ function renderTablero() {
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;
+  if (corregirTipoEquipoMalClasificado()) cambioPurga = true;
   if (cambioPurga) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
