@@ -159,9 +159,12 @@ function quitarMarcaRevisionConfirmados() {
       .replace(/^\s*\|\s*/, "")
       .replace(/\s*\|\s*$/, "")
       .trim();
-    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    // No se toca ultimaModificacion ni se empuja a Firestore aqui: forzar una
+    // fecha "reciente" podia hacer que una copia local vieja/incompleta le
+    // ganara en la fusion a una edicion real mas nueva de otro navegador,
+    // borrando esa informacion. Esta correccion solo arregla la vista local;
+    // si el equipo ya tiene datos buenos en la nube, esos prevalecen.
     cambio = true;
-    sincronizarEquipo(e);
   });
   return cambio;
 }
@@ -177,15 +180,16 @@ function corregirEmpresasMalCapturadas() {
   // Estos 4 equipos tenian un departamento (Informatica, Textil > Engomadora,
   // Inmobiliaria > Administración Flores Del Lago) o un typo (Tenant) en el
   // campo empresa. Forzamos la correccion aunque el campo ya tenga un valor
-  // guardado, igual que con los seriales tipeados.
+  // guardado, igual que con los seriales tipeados. No se toca
+  // ultimaModificacion ni se empuja a Firestore (ver nota en
+  // quitarMarcaRevisionConfirmados): esto es solo un arreglo de la vista
+  // local, para no arriesgar sobrescribir una edicion real mas nueva.
   let cambio = false;
   equipos.forEach((e) => {
     const nueva = CORRECCIONES_EMPRESA[e.id];
     if (!nueva || (e.empresa || "").trim() === nueva) return;
     e.empresa = nueva;
-    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     cambio = true;
-    sincronizarEquipo(e);
   });
   return cambio;
 }
@@ -200,15 +204,17 @@ function corregirTipoEquipoMalClasificado() {
   // PCLNV087 y UNIFILARDELCAMPO son ThinkCentre M70q/M75q Gen 2 (linea "Tiny"
   // de Lenovo, un Mini PC), y PENDIENTE-MJ0H51JJ es el mismo modelo segun su
   // comentario, pero los 3 estaban clasificados como Desktop. Forzamos la
-  // correccion aunque el campo ya tenga un valor guardado.
+  // correccion aunque el campo ya tenga un valor guardado. No se toca
+  // ultimaModificacion ni se empuja a Firestore (ver nota en
+  // quitarMarcaRevisionConfirmados): un registro como PENDIENTE-MJ0H51JJ
+  // puede haberse completado con datos reales en otro navegador, y forzar
+  // aqui una fecha "reciente" le haria ganar a esa edicion real y borrarla.
   let cambio = false;
   equipos.forEach((e) => {
     const nuevo = CORRECCIONES_TIPO_EQUIPO[e.id];
     if (!nuevo || (e.tipoEquipo || "").trim() === nuevo) return;
     e.tipoEquipo = nuevo;
-    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     cambio = true;
-    sincronizarEquipo(e);
   });
   return cambio;
 }
@@ -271,7 +277,11 @@ function sincronizarComentariosCronograma() {
   // La marca "Pendiente validar: no aparece en el cronograma..." se agregó a
   // SEED_DATA después de que muchos navegadores ya tenían su propia copia en
   // localStorage, así que nunca la recibieron. La sincronizamos anexándola
-  // al comentario existente, sin pisar nada que el usuario haya escrito.
+  // al comentario existente, sin pisar nada que el usuario haya escrito. No
+  // se toca ultimaModificacion ni se empuja a Firestore: forzar una fecha
+  // "reciente" podia hacer que una copia local vieja le gane en la fusion a
+  // una edicion real mas nueva de ese mismo equipo (le paso a
+  // PENDIENTE-MJ0H51JJ), borrando esa informacion.
   if (typeof SEED_DATA === "undefined" || !Array.isArray(SEED_DATA)) return false;
   const MARCA_CRONOGRAMA = "Pendiente validar: no aparece en el cronograma de migracion AD 2026; posible equipo sin dar de baja.";
   const idsConMarca = new Set(
@@ -283,7 +293,6 @@ function sincronizarComentariosCronograma() {
     const actual = (e.comentarios || "").trim();
     if (actual.includes(MARCA_CRONOGRAMA)) return;
     e.comentarios = actual ? `${actual} | ${MARCA_CRONOGRAMA}` : MARCA_CRONOGRAMA;
-    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     cambio = true;
   });
   return cambio;
