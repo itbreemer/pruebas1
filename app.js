@@ -125,6 +125,9 @@ const IDS_CONFIRMADOS_ACTIVOS = [
   "seed-379", "seed-405", "seed-461", "seed-766", "seed-774",
   // deskmark.pdf: desktops por sede confirmados activos
   "seed-402", "seed-456", "seed-739",
+  // dsk.pdf: desktops de Riolsa/Mixco/San Rafael confirmados activos
+  "seed-42", "seed-393", "seed-733", "seed-735", "seed-736", "seed-737",
+  "seed-738", "seed-742", "seed-743", "seed-770", "seed-775",
 ];
 
 function quitarMarcaRevisionConfirmados() {
