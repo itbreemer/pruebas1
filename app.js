@@ -1319,13 +1319,29 @@ function renderTablero() {
     return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
   };
 
+  const filaHtmlImpresora = (nombre, cantidad, campo) => {
+    const atributos = ` data-campo-imp="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"`;
+    return `<div class="tablero-fila clickable"${atributos}><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
+  };
+
   $("tableroImpresorasTipo").innerHTML =
-    contarImpresorasPor("tipo").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+    contarImpresorasPor("tipo").map(([n, c]) => filaHtmlImpresora(n, c, "tipo")).join("") || "<p>Sin datos.</p>";
   $("tableroImpresorasEmpresa").innerHTML =
-    contarImpresorasPor("empresa").map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+    contarImpresorasPor("empresa").map(([n, c]) => filaHtmlImpresora(n, c, "empresa")).join("") || "<p>Sin datos.</p>";
   $("tableroImpresorasDepartamento").innerHTML =
-    contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") || "<p>Sin datos.</p>";
+    contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtmlImpresora(n, c, "departamento")).join("") || "<p>Sin datos.</p>";
 }
+
+function irACatalogoImpresorasFiltrado(campo, valor) {
+  $("buscador_catalogoImpresoras").value = valor === "Sin dato" ? "" : valor;
+  cambiarVista("impresoras");
+  vistaCatalogoImpresoras.render();
+}
+
+document.addEventListener("click", (ev) => {
+  const filaImp = ev.target.closest(".tablero-fila[data-campo-imp]");
+  if (filaImp) irACatalogoImpresorasFiltrado(filaImp.dataset.campoImp, filaImp.dataset.valor);
+});
 
 function actualizarConteoRapido() {
   const original = $("conteoRapidoInput").value.trim();
@@ -1522,7 +1538,7 @@ const vistaCatalogoImpresoras = crearVistaLista({
   columnas: 11,
   obtenerFilas: obtenerCatalogoImpresoras,
   filtrar: (r, t) =>
-    [r.impresora.ip, r.impresora.serial, r.impresora.modelo, r.impresora.departamento, r.impresora.ubicacion, r.impresora.empresa]
+    [r.impresora.ip, r.impresora.serial, r.impresora.modelo, r.impresora.departamento, r.impresora.ubicacion, r.impresora.empresa, r.impresora.tipo]
       .join(" ")
       .toLowerCase()
       .includes(t),
