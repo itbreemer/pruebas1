@@ -110,6 +110,10 @@ const IDS_CHATARRA_CONFIRMADA = [
   // Status "Devolucion > Baja de Equipo" dentro de los equipos en revision
   "seed-1", "seed-5", "seed-12", "seed-13", "seed-60", "seed-347", "seed-365",
   "seed-399", "seed-400", "seed-403", "seed-504", "seed-505", "seed-517", "seed-772",
+  // PENDIENTE- del contrato 8030028059: las 5 laptops ya se entregaron y
+  // tienen su registro real con nombre/empleado, estos placeholders sobran
+  "pendiente-pf6686wt", "pendiente-pf662c4r", "pendiente-pf65l51z",
+  "pendiente-pf66acc4", "pendiente-pf661gjy",
 ];
 
 function eliminarChatarraConfirmada() {
