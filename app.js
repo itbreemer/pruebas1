@@ -75,6 +75,7 @@ function fusionarContratosDesdeSeed() {
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
+  if (corregirEmpresasMalCapturadas()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -150,6 +151,30 @@ function quitarMarcaRevisionConfirmados() {
       .replace(/^\s*\|\s*/, "")
       .replace(/\s*\|\s*$/, "")
       .trim();
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    cambio = true;
+    sincronizarEquipo(e);
+  });
+  return cambio;
+}
+
+const CORRECCIONES_EMPRESA = {
+  "seed-201": "Breemer",
+  "seed-494": "Tennat",
+  "seed-599": "MALVERTH S.A",
+  "seed-667": "Tennat",
+};
+
+function corregirEmpresasMalCapturadas() {
+  // Estos 4 equipos tenian un departamento (Informatica, Textil > Engomadora,
+  // Inmobiliaria > Administración Flores Del Lago) o un typo (Tenant) en el
+  // campo empresa. Forzamos la correccion aunque el campo ya tenga un valor
+  // guardado, igual que con los seriales tipeados.
+  let cambio = false;
+  equipos.forEach((e) => {
+    const nueva = CORRECCIONES_EMPRESA[e.id];
+    if (!nueva || (e.empresa || "").trim() === nueva) return;
+    e.empresa = nueva;
     e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     cambio = true;
     sincronizarEquipo(e);
@@ -273,6 +298,7 @@ function establecerEquiposDesdeSync(remotos) {
   eliminarDuplicadoP025194();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
+  corregirEmpresasMalCapturadas();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
@@ -1217,6 +1243,7 @@ function renderTablero() {
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
+  if (corregirEmpresasMalCapturadas()) cambioPurga = true;
   if (cambioPurga) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
