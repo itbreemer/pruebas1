@@ -1598,14 +1598,6 @@ $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 
-$("btnExportarDatos").addEventListener("click", exportarDatosJSON);
-$("btnImportarDatos").addEventListener("click", () => $("inputImportarDatos").click());
-$("inputImportarDatos").addEventListener("change", (ev) => {
-  const archivo = ev.target.files[0];
-  if (archivo) importarDatosJSON(archivo);
-  ev.target.value = "";
-});
-
 $("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
 
 $("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
