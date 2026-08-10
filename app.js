@@ -137,6 +137,9 @@ const IDS_CONFIRMADOS_ACTIVOS = [
   // dsk.pdf: desktops de Riolsa/Mixco/San Rafael confirmados activos
   "seed-42", "seed-393", "seed-733", "seed-735", "seed-736", "seed-737",
   "seed-738", "seed-742", "seed-743", "seed-770", "seed-775",
+  // LAPLNV283: confirmado activo, es una de las 5 laptops LAPLNV283-287
+  // entregadas y ya sincronizadas desde la computadora de la oficina
+  "seed-335",
 ];
 
 function quitarMarcaRevisionConfirmados() {
