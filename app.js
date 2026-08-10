@@ -74,6 +74,7 @@ function fusionarContratosDesdeSeed() {
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
+  if (quitarMarcaRevisionConfirmados()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -115,6 +116,36 @@ function eliminarChatarraConfirmada() {
   equipos = equipos.filter((e) => !IDS_CHATARRA_CONFIRMADA.includes(e.id));
   const cambio = equipos.length !== antes;
   if (cambio) IDS_CHATARRA_CONFIRMADA.forEach((id) => sincronizarEliminacion(id));
+  return cambio;
+}
+
+const IDS_CONFIRMADOS_ACTIVOS = [
+  // laptop.pdf: equipos por sede que siguen activos, se les quita "en revision"
+  "seed-18", "seed-27", "seed-49", "seed-50", "seed-118", "seed-354",
+  "seed-379", "seed-405", "seed-461", "seed-766", "seed-774",
+];
+
+function quitarMarcaRevisionConfirmados() {
+  // Estos equipos aparecían marcados como "no aparece en el cronograma AD",
+  // pero un registro de equipos activos por sede confirmó que sí siguen en
+  // uso. Se les quita la marca sin tocar el resto del comentario, y se
+  // actualiza la fecha para que la corrección se propague a otros
+  // navegadores/Firestore.
+  const MARCA_CRONOGRAMA_COMPLETA = "Pendiente validar: no aparece en el cronograma de migracion AD 2026; posible equipo sin dar de baja.";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!IDS_CONFIRMADOS_ACTIVOS.includes(e.id)) return;
+    const actual = e.comentarios || "";
+    if (!actual.includes(MARCA_CRONOGRAMA_COMPLETA)) return;
+    e.comentarios = actual
+      .replace(MARCA_CRONOGRAMA_COMPLETA, "")
+      .replace(/^\s*\|\s*/, "")
+      .replace(/\s*\|\s*$/, "")
+      .trim();
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    cambio = true;
+    sincronizarEquipo(e);
+  });
   return cambio;
 }
 
@@ -233,6 +264,7 @@ function establecerEquiposDesdeSync(remotos) {
   equipos = combinados;
   eliminarDuplicadoP025194();
   eliminarChatarraConfirmada();
+  quitarMarcaRevisionConfirmados();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
@@ -1176,6 +1208,7 @@ function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
+  if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (cambioPurga) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
