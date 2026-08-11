@@ -22,7 +22,7 @@ const TIPOS_SERVIDOR = [
   "Rack Mount Chassis", "Main System Chassis",
 ];
 const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
-const TIPOS_PC = ["Desktop", "Mini PC"];
+const TIPOS_PC = ["Desktop", "Mini PC", "Mini Tower", "Low Profile Desktop"];
 const TIPOS_LAPTOP = ["Notebook", "Laptop"];
 
 const esServidor = (e) => TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
