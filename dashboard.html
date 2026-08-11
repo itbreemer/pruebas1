@@ -10,9 +10,12 @@
     --azul-700: #1c3d6e;
     --azul-600: #2a4f85;
     --azul-500: #3c6aa8;
-    --azul-300: #8fb0d6;
     --azul-100: #dbe6f4;
-    --ambar-600: #b45309;
+    --verde-700: #1f6f4f;
+    --verde-500: #2f9c6f;
+    --verde-100: #d9f0e5;
+    --ambar-700: #b45309;
+    --ambar-500: #e0954a;
     --ambar-100: #fbe6cf;
     --fondo: #f5f7fb;
     --superficie: #ffffff;
@@ -24,15 +27,17 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6;
-      --azul-300: #375d8f; --azul-100: #1c2c48; --ambar-600: #e0954a; --ambar-100: #3a2a15;
+      --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6; --azul-100: #1c2c48;
+      --verde-700: #7fd6ae; --verde-500: #4fb787; --verde-100: #12301f;
+      --ambar-700: #f0b27a; --ambar-500: #e0954a; --ambar-100: #3a2a15;
       --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
       --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
     }
   }
   :root[data-theme="dark"] {
-    --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6;
-    --azul-300: #375d8f; --azul-100: #1c2c48; --ambar-600: #e0954a; --ambar-100: #3a2a15;
+    --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6; --azul-100: #1c2c48;
+    --verde-700: #7fd6ae; --verde-500: #4fb787; --verde-100: #12301f;
+    --ambar-700: #f0b27a; --ambar-500: #e0954a; --ambar-100: #3a2a15;
     --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
     --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
   }
@@ -43,7 +48,7 @@
     font-family: -apple-system, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
     padding: clamp(20px, 4vw, 48px);
   }
-  #envoltorio { max-width: 1180px; margin: 0 auto; }
+  #envoltorio { max-width: 1080px; margin: 0 auto; }
   #estadoCarga {
     max-width: 480px; margin: 15vh auto; text-align: center;
     color: var(--texto-tenue); font-size: 1rem; padding: 24px;
@@ -51,42 +56,51 @@
 
   .encabezado {
     display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
-    margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--borde);
+    margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--borde);
   }
   .encabezado .rotulo {
     font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-    color: var(--ambar-600); margin: 0 0 6px;
+    color: var(--ambar-700); margin: 0 0 6px;
   }
   .encabezado h1 { margin: 0; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 750; letter-spacing: -0.01em; text-wrap: balance; }
-  .encabezado p { margin: 6px 0 0; color: var(--texto-tenue); font-size: 0.95rem; max-width: 46ch; }
+  .encabezado p { margin: 6px 0 0; color: var(--texto-tenue); font-size: 0.95rem; max-width: 52ch; }
   .fecha { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--texto-tenue); text-align: right; }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 32px; }
-  .stat { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; box-shadow: var(--sombra); }
-  .stat .numero {
-    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
-    font-size: 1.7rem; font-weight: 600; color: var(--azul-700); line-height: 1;
+  .bloques { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
+
+  .bloque {
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px;
+    padding: 24px 26px; box-shadow: var(--sombra); border-top: 3px solid var(--acento, var(--azul-600));
   }
-  .stat .etiqueta { margin-top: 6px; font-size: 0.78rem; color: var(--texto-tenue); }
-  .stat.ambar .numero { color: var(--ambar-600); }
+  .bloque.lenovo { --acento: var(--azul-600); }
+  .bloque.propios { --acento: var(--verde-500); }
+  .bloque.riolsa { --acento: var(--ambar-500); }
 
-  .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
-  .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 20px 22px 18px; box-shadow: var(--sombra); }
-  .tarjeta-cabecera { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-  .tarjeta h2 { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--azul-900); }
-  .tarjeta h2 span { font-weight: 400; color: var(--texto-tenue); }
-  .tarjeta .subtotal { font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--texto-tenue); }
+  .bloque .titulo { font-size: 0.85rem; font-weight: 700; color: var(--texto-tenue); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; }
+  .bloque .nota { font-size: 0.78rem; color: var(--texto-tenue); margin: 0 0 14px; }
 
-  .fila { display: grid; grid-template-columns: 118px 1fr 52px; align-items: center; gap: 10px; padding: 6px 0; }
-  .fila .rotulo-fila { font-size: 0.83rem; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pista { position: relative; height: 9px; border-radius: 5px; background: var(--azul-100); overflow: hidden; }
-  .barra { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: linear-gradient(90deg, var(--azul-600), var(--azul-500)); }
-  .fila.destacada .barra { background: linear-gradient(90deg, var(--azul-900), var(--azul-700)); }
-  .fila .valor { font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums; font-size: 0.85rem; font-weight: 600; text-align: right; color: var(--texto); }
+  .bloque .total {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
+    font-size: 2.6rem; font-weight: 650; color: var(--acento); line-height: 1; margin-bottom: 18px;
+  }
 
-  .pie-tarjeta { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--borde); display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--texto-tenue); }
+  .desglose { display: flex; flex-direction: column; gap: 10px; }
+  .desglose-fila { display: grid; grid-template-columns: 58px 1fr 34px; align-items: center; gap: 10px; }
+  .desglose-fila .etiqueta { font-size: 0.8rem; color: var(--texto); font-weight: 600; }
+  .desglose-fila .pista { position: relative; height: 8px; border-radius: 5px; background: var(--azul-100); overflow: hidden; }
+  .bloque.lenovo .pista { background: var(--azul-100); }
+  .bloque.propios .pista { background: var(--verde-100); }
+  .bloque.riolsa .pista { background: var(--ambar-100); }
+  .desglose-fila .barra { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--acento); }
+  .desglose-fila .valor {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
+    font-size: 0.85rem; font-weight: 700; text-align: right;
+  }
 
-  @media (max-width: 480px) { .fila { grid-template-columns: 84px 1fr 40px; } }
+  .nota-pie {
+    margin-top: 8px; padding: 14px 18px; border: 1px dashed var(--borde); border-radius: 12px;
+    color: var(--texto-tenue); font-size: 0.84rem; background: var(--superficie);
+  }
 </style>
 </head>
 <body>
@@ -96,37 +110,70 @@
 <div id="envoltorio" style="display:none">
   <div class="encabezado">
     <div>
-      <p class="rotulo">Vista en tiempo real</p>
-      <h1>Dashboard — Inventario TI</h1>
-      <p>Se actualiza automáticamente cuando algo cambia en el sistema, sin necesidad de recargar la página.</p>
+      <p class="rotulo">Para directiva IT · vista en tiempo real</p>
+      <h1>Lenovo, equipos propios y RIOLSA</h1>
+      <p>Cuántos equipos Lenovo llevamos hasta el momento, cuántos son propios (pendientes de contrato) y cuántos corresponde a RIOLSA por separado, ya que ellos compran su propio equipo.</p>
     </div>
     <div class="fecha" id="fecha-corte"></div>
   </div>
 
-  <div class="stats" id="stats"></div>
+  <div class="bloques">
+    <div class="bloque lenovo">
+      <p class="titulo">Equipos Lenovo</p>
+      <p class="nota">PC y Laptop, ya validados</p>
+      <div class="total" id="lenovo-total">—</div>
+      <div class="desglose">
+        <div class="desglose-fila">
+          <span class="etiqueta">PC</span>
+          <span class="pista"><span class="barra" id="lenovo-pc-barra"></span></span>
+          <span class="valor" id="lenovo-pc-valor">—</span>
+        </div>
+        <div class="desglose-fila">
+          <span class="etiqueta">Laptop</span>
+          <span class="pista"><span class="barra" id="lenovo-lap-barra"></span></span>
+          <span class="valor" id="lenovo-lap-valor">—</span>
+        </div>
+      </div>
+    </div>
 
-  <div class="rejilla">
-    <div class="tarjeta">
-      <div class="tarjeta-cabecera"><h2>Por Status</h2><span class="subtotal" id="subtotal-status"></span></div>
-      <div id="c-status"></div>
-      <div class="pie-tarjeta" id="meta-status"></div>
+    <div class="bloque propios">
+      <p class="titulo">Equipos propios</p>
+      <p class="nota">PC y Laptop sin contrato, sin RIOLSA</p>
+      <div class="total" id="propios-total">—</div>
+      <div class="desglose">
+        <div class="desglose-fila">
+          <span class="etiqueta">PC</span>
+          <span class="pista"><span class="barra" id="propios-pc-barra"></span></span>
+          <span class="valor" id="propios-pc-valor">—</span>
+        </div>
+        <div class="desglose-fila">
+          <span class="etiqueta">Laptop</span>
+          <span class="pista"><span class="barra" id="propios-lap-barra"></span></span>
+          <span class="valor" id="propios-lap-valor">—</span>
+        </div>
+      </div>
     </div>
-    <div class="tarjeta">
-      <div class="tarjeta-cabecera"><h2>Por Empresa <span>(top 8)</span></h2><span class="subtotal" id="subtotal-empresa"></span></div>
-      <div id="c-empresa"></div>
-      <div class="pie-tarjeta" id="meta-empresa"></div>
-    </div>
-    <div class="tarjeta">
-      <div class="tarjeta-cabecera"><h2>Por Tipo de Equipo</h2><span class="subtotal" id="subtotal-tipo"></span></div>
-      <div id="c-tipo"></div>
-      <div class="pie-tarjeta" id="meta-tipo"></div>
-    </div>
-    <div class="tarjeta">
-      <div class="tarjeta-cabecera"><h2>Por Fabricante <span>(top 8)</span></h2><span class="subtotal" id="subtotal-fabricante"></span></div>
-      <div id="c-fabricante"></div>
-      <div class="pie-tarjeta" id="meta-fabricante"></div>
+
+    <div class="bloque riolsa">
+      <p class="titulo">Equipos RIOLSA</p>
+      <p class="nota">PC y Laptop, todos (validados + en revisión)</p>
+      <div class="total" id="riolsa-total">—</div>
+      <div class="desglose">
+        <div class="desglose-fila">
+          <span class="etiqueta">PC</span>
+          <span class="pista"><span class="barra" id="riolsa-pc-barra"></span></span>
+          <span class="valor" id="riolsa-pc-valor">—</span>
+        </div>
+        <div class="desglose-fila">
+          <span class="etiqueta">Laptop</span>
+          <span class="pista"><span class="barra" id="riolsa-lap-barra"></span></span>
+          <span class="valor" id="riolsa-lap-valor">—</span>
+        </div>
+      </div>
     </div>
   </div>
+
+  <p class="nota-pie">RIOLSA compra su propio equipo por su cuenta, por eso se muestra aparte de "Equipos propios" — ahí se incluyen todos sus equipos (aunque estén pendientes de validar contra el cronograma), sin contar servidores.</p>
 </div>
 
 <script type="module" src="dashboard.js"></script>

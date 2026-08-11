@@ -22,86 +22,43 @@ const TIPOS_SERVIDOR = [
   "Rack Mount Chassis", "Main System Chassis",
 ];
 const MARCA_CRONOGRAMA = "no aparece en el cronograma de migracion AD";
-const ALIAS_TIPO_EQUIPO = { Laptop: "Notebook" };
+const TIPOS_PC = ["Desktop", "Mini PC"];
+const TIPOS_LAPTOP = ["Notebook", "Laptop"];
 
-function esServidor(e) {
-  return TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
-}
-function esEnRevision(e) {
-  return (e.comentarios || "").includes(MARCA_CRONOGRAMA);
-}
-function nonEmpty(v) {
-  return !!(v && String(v).trim());
-}
+const esServidor = (e) => TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
+const esEnRevision = (e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA);
+const nonEmpty = (v) => !!(v && String(v).trim());
+const esPC = (e) => TIPOS_PC.includes((e.tipoEquipo || "").trim());
+const esLaptop = (e) => TIPOS_LAPTOP.includes((e.tipoEquipo || "").trim());
+const esRiolsa = (e) => (e.empresa || "").trim().toUpperCase() === "RIOL S.A.";
 
-function contarPor(equipos, campo, { agruparTipoEquipo } = {}) {
-  const conteo = {};
-  equipos.forEach((e) => {
-    let v = (e[campo] || "").trim() || "Sin dato";
-    if (agruparTipoEquipo) v = ALIAS_TIPO_EQUIPO[v] || v;
-    conteo[v] = (conteo[v] || 0) + 1;
-  });
-  return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
-}
-
-function renderBarras(id, filas, total, topN) {
-  const contenedor = $(id);
-  contenedor.innerHTML = "";
-  const mostrar = topN ? filas.slice(0, topN) : filas;
-  const max = mostrar.length ? mostrar[0][1] : 1;
-  mostrar.forEach(([nombre, valor], i) => {
-    const pct = Math.max(4, Math.round((valor / max) * 100));
-    const fila = document.createElement("div");
-    fila.className = "fila" + (i === 0 ? " destacada" : "");
-    fila.innerHTML = `
-      <span class="rotulo-fila" title="${esc(nombre)}">${esc(nombre)}</span>
-      <span class="pista"><span class="barra" style="width:${pct}%"></span></span>
-      <span class="valor">${valor}</span>
-    `;
-    contenedor.appendChild(fila);
-  });
-  return { categorias: filas.length, top: mostrar[0] ? mostrar[0][0] : "—" };
-}
-
-function esc(s) {
-  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function pintarBloque(prefijo, pc, laptop) {
+  const total = pc + laptop;
+  $(`${prefijo}-total`).textContent = total;
+  $(`${prefijo}-pc-valor`).textContent = pc;
+  $(`${prefijo}-lap-valor`).textContent = laptop;
+  const max = Math.max(pc, laptop, 1);
+  $(`${prefijo}-pc-barra`).style.width = `${Math.max(4, Math.round((pc / max) * 100))}%`;
+  $(`${prefijo}-lap-barra`).style.width = `${Math.max(4, Math.round((laptop / max) * 100))}%`;
 }
 
 function renderTodo(equipos) {
-  const equiposUsuario = equipos.filter((e) => !esServidor(e));
-  const validados = equiposUsuario.filter((e) => !esEnRevision(e));
-  const propios = equiposUsuario.filter((e) => !nonEmpty(e.contratos));
-  const propiosEnRevision = propios.filter(esEnRevision).length;
-  const equiposPropios = propios.length - propiosEnRevision;
-  const lenovo = validados.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO").length;
-  const empresas = new Set(validados.map((e) => (e.empresa || "").trim()).filter(Boolean)).size;
-  const servidores = equipos.filter(esServidor).length;
+  const noServidor = equipos.filter((e) => !esServidor(e));
+  const validados = noServidor.filter((e) => !esEnRevision(e));
 
-  $("stats").innerHTML = `
-    <div class="stat"><div class="numero">${validados.length}</div><div class="etiqueta">Equipos totales</div></div>
-    <div class="stat"><div class="numero">${lenovo}</div><div class="etiqueta">Equipos Lenovo</div></div>
-    <div class="stat"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios</div></div>
-    <div class="stat"><div class="numero">${empresas}</div><div class="etiqueta">Empresas</div></div>
-    <div class="stat"><div class="numero">${servidores}</div><div class="etiqueta">Servidores</div></div>
-    <div class="stat ambar"><div class="numero">${propiosEnRevision}</div><div class="etiqueta">En revisión</div></div>
-  `;
+  // Bloque 1: Equipos Lenovo (PC + Laptop), validados
+  const lenovo = validados.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO");
+  pintarBloque("lenovo", lenovo.filter(esPC).length, lenovo.filter(esLaptop).length);
 
-  const rStatus = renderBarras("c-status", contarPor(validados, "status"), validados.length, 8);
-  const rEmpresa = renderBarras("c-empresa", contarPor(validados, "empresa"), validados.length, 8);
-  const rTipo = renderBarras("c-tipo", contarPor(validados, "tipoEquipo", { agruparTipoEquipo: true }), validados.length, 8);
-  const rFabricante = renderBarras("c-fabricante", contarPor(validados, "fabricante"), validados.length, 8);
+  // Bloque 2: Equipos propios, sin RIOLSA (validados, sin contrato)
+  const propiosSinRiolsa = validados.filter((e) => !nonEmpty(e.contratos) && !esRiolsa(e));
+  pintarBloque("propios", propiosSinRiolsa.filter(esPC).length, propiosSinRiolsa.filter(esLaptop).length);
 
-  $("meta-status").textContent = `${rStatus.categorias} categorías · top: ${rStatus.top}`;
-  $("meta-empresa").textContent = `${rEmpresa.categorias} empresas · top: ${rEmpresa.top}`;
-  $("meta-tipo").textContent = `${rTipo.categorias} tipos · top: ${rTipo.top}`;
-  $("meta-fabricante").textContent = `${rFabricante.categorias} marcas · top: ${rFabricante.top}`;
+  // Bloque 3: Equipos RIOLSA, todos (validados + en revision), sin servidor
+  const riolsa = noServidor.filter(esRiolsa);
+  pintarBloque("riolsa", riolsa.filter(esPC).length, riolsa.filter(esLaptop).length);
 
-  $("subtotal-status").textContent = `${validados.length} en total`;
-  $("subtotal-empresa").textContent = `${validados.length} en total`;
-  $("subtotal-tipo").textContent = `${validados.length} en total`;
-  $("subtotal-fabricante").textContent = `${validados.length} en total`;
-
-  $("fecha-corte").textContent = `${validados.length} equipos validados · actualizado ${new Date().toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}`;
+  $("fecha-corte").textContent = `Actualizado ${new Date().toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 onAuthStateChanged(auth, (user) => {
