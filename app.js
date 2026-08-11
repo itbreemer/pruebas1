@@ -61,10 +61,12 @@ function fusionarContratosDesdeSeed() {
     }
   });
 
+  const IDS_ALTAS_NUEVAS_SEED = ["pendiente-pcriolsa005"];
   SEED_DATA.forEach((seed) => {
     if (!idsActuales.has(seed.id)) {
       equipos.push({ ...seed });
       cambio = true;
+      if (IDS_ALTAS_NUEVAS_SEED.includes(seed.id)) sincronizarEquipo(seed);
     }
   });
 
@@ -174,6 +176,7 @@ const CORRECCIONES_EMPRESA = {
   "seed-494": "Tennat",
   "seed-599": "MALVERTH S.A",
   "seed-667": "Tennat",
+  "seed-739": "RIOL S.A.",
 };
 
 function corregirEmpresasMalCapturadas() {
