@@ -17,6 +17,9 @@
     --ambar-700: #b45309;
     --ambar-500: #e0954a;
     --ambar-100: #fbe6cf;
+    --morado-700: #6d3fa0;
+    --morado-500: #8a5cc4;
+    --morado-100: #ece2f7;
     --fondo: #f5f7fb;
     --superficie: #ffffff;
     --borde: #e2e6ef;
@@ -30,6 +33,7 @@
       --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6; --azul-100: #1c2c48;
       --verde-700: #7fd6ae; --verde-500: #4fb787; --verde-100: #12301f;
       --ambar-700: #f0b27a; --ambar-500: #e0954a; --ambar-100: #3a2a15;
+      --morado-700: #c9a8ec; --morado-500: #a479d9; --morado-100: #2c1f3d;
       --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
       --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
     }
@@ -75,6 +79,7 @@
   .bloque.lenovo { --acento: var(--azul-600); }
   .bloque.propios { --acento: var(--verde-500); }
   .bloque.riolsa { --acento: var(--ambar-500); }
+  .bloque.impresoras { --acento: var(--morado-500); }
 
   .bloque .titulo { font-size: 0.85rem; font-weight: 700; color: var(--texto-tenue); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; }
   .bloque .nota { font-size: 0.78rem; color: var(--texto-tenue); margin: 0 0 14px; }
@@ -91,6 +96,7 @@
   .bloque.lenovo .pista { background: var(--azul-100); }
   .bloque.propios .pista { background: var(--verde-100); }
   .bloque.riolsa .pista { background: var(--ambar-100); }
+  .bloque.impresoras .pista { background: var(--morado-100); }
   .desglose-fila .barra { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--acento); }
   .desglose-fila .valor {
     font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
@@ -173,8 +179,34 @@
     </div>
   </div>
 
+  <div class="bloques" style="margin-top: 4px;">
+    <div class="bloque impresoras" style="max-width: 340px;">
+      <p class="titulo">Impresoras Canon</p>
+      <p class="nota">Catálogo de referencia</p>
+      <div class="total" id="impresoras-total">—</div>
+      <div class="desglose">
+        <div class="desglose-fila">
+          <span class="etiqueta">B/N</span>
+          <span class="pista"><span class="barra" id="impresoras-bn-barra"></span></span>
+          <span class="valor" id="impresoras-bn-valor">—</span>
+        </div>
+        <div class="desglose-fila">
+          <span class="etiqueta">Colores</span>
+          <span class="pista"><span class="barra" id="impresoras-color-barra"></span></span>
+          <span class="valor" id="impresoras-color-valor">—</span>
+        </div>
+        <div class="desglose-fila">
+          <span class="etiqueta">Plotter</span>
+          <span class="pista"><span class="barra" id="impresoras-plotter-barra"></span></span>
+          <span class="valor" id="impresoras-plotter-valor">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
+<script src="impresoras.js"></script>
 <script type="module" src="dashboard.js"></script>
 </body>
 </html>

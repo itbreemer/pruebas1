@@ -42,6 +42,20 @@ function pintarBloque(prefijo, pc, laptop) {
   $(`${prefijo}-lap-barra`).style.width = `${Math.max(4, Math.round((laptop / max) * 100))}%`;
 }
 
+function pintarImpresoras() {
+  const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  const bn = catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length;
+  const color = catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length;
+  const plotter = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length;
+  $("impresoras-total").textContent = catalogo.length;
+  const max = Math.max(bn, color, plotter, 1);
+  const pares = [["bn", bn], ["color", color], ["plotter", plotter]];
+  pares.forEach(([clave, valor]) => {
+    $(`impresoras-${clave}-valor`).textContent = valor;
+    $(`impresoras-${clave}-barra`).style.width = `${Math.max(4, Math.round((valor / max) * 100))}%`;
+  });
+}
+
 function renderTodo(equipos) {
   const noServidor = equipos.filter((e) => !esServidor(e));
   const validados = noServidor.filter((e) => !esEnRevision(e));
@@ -70,6 +84,7 @@ onAuthStateChanged(auth, (user) => {
   }
   $("estadoCarga").style.display = "none";
   $("envoltorio").style.display = "";
+  pintarImpresoras();
   onSnapshot(
     collection(db, "equipos"),
     (snapshot) => {
