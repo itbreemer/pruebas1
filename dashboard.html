@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Inventario TI</title>
+<style>
+  :root {
+    --azul-900: #16294f;
+    --azul-700: #1c3d6e;
+    --azul-600: #2a4f85;
+    --azul-500: #3c6aa8;
+    --azul-300: #8fb0d6;
+    --azul-100: #dbe6f4;
+    --ambar-600: #b45309;
+    --ambar-100: #fbe6cf;
+    --fondo: #f5f7fb;
+    --superficie: #ffffff;
+    --borde: #e2e6ef;
+    --texto: #16223a;
+    --texto-tenue: #5b6478;
+    --sombra: 0 1px 2px rgba(22, 41, 79, 0.06), 0 8px 24px -12px rgba(22, 41, 79, 0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6;
+      --azul-300: #375d8f; --azul-100: #1c2c48; --ambar-600: #e0954a; --ambar-100: #3a2a15;
+      --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
+      --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --azul-900: #dbe6f4; --azul-700: #9cc0ef; --azul-600: #7fabe0; --azul-500: #6b9bd6;
+    --azul-300: #375d8f; --azul-100: #1c2c48; --ambar-600: #e0954a; --ambar-100: #3a2a15;
+    --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font-family: -apple-system, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+    padding: clamp(20px, 4vw, 48px);
+  }
+  #envoltorio { max-width: 1180px; margin: 0 auto; }
+  #estadoCarga {
+    max-width: 480px; margin: 15vh auto; text-align: center;
+    color: var(--texto-tenue); font-size: 1rem; padding: 24px;
+  }
+
+  .encabezado {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+    margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--borde);
+  }
+  .encabezado .rotulo {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ambar-600); margin: 0 0 6px;
+  }
+  .encabezado h1 { margin: 0; font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 750; letter-spacing: -0.01em; text-wrap: balance; }
+  .encabezado p { margin: 6px 0 0; color: var(--texto-tenue); font-size: 0.95rem; max-width: 46ch; }
+  .fecha { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--texto-tenue); text-align: right; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .stat { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 18px; box-shadow: var(--sombra); }
+  .stat .numero {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
+    font-size: 1.7rem; font-weight: 600; color: var(--azul-700); line-height: 1;
+  }
+  .stat .etiqueta { margin-top: 6px; font-size: 0.78rem; color: var(--texto-tenue); }
+  .stat.ambar .numero { color: var(--ambar-600); }
+
+  .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+  .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 20px 22px 18px; box-shadow: var(--sombra); }
+  .tarjeta-cabecera { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .tarjeta h2 { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--azul-900); }
+  .tarjeta h2 span { font-weight: 400; color: var(--texto-tenue); }
+  .tarjeta .subtotal { font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--texto-tenue); }
+
+  .fila { display: grid; grid-template-columns: 118px 1fr 52px; align-items: center; gap: 10px; padding: 6px 0; }
+  .fila .rotulo-fila { font-size: 0.83rem; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pista { position: relative; height: 9px; border-radius: 5px; background: var(--azul-100); overflow: hidden; }
+  .barra { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: linear-gradient(90deg, var(--azul-600), var(--azul-500)); }
+  .fila.destacada .barra { background: linear-gradient(90deg, var(--azul-900), var(--azul-700)); }
+  .fila .valor { font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums; font-size: 0.85rem; font-weight: 600; text-align: right; color: var(--texto); }
+
+  .pie-tarjeta { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--borde); display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--texto-tenue); }
+
+  @media (max-width: 480px) { .fila { grid-template-columns: 84px 1fr 40px; } }
+</style>
+</head>
+<body>
+
+<div id="estadoCarga">Cargando datos en vivo…</div>
+
+<div id="envoltorio" style="display:none">
+  <div class="encabezado">
+    <div>
+      <p class="rotulo">Vista en tiempo real</p>
+      <h1>Dashboard — Inventario TI</h1>
+      <p>Se actualiza automáticamente cuando algo cambia en el sistema, sin necesidad de recargar la página.</p>
+    </div>
+    <div class="fecha" id="fecha-corte"></div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="rejilla">
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Por Status</h2><span class="subtotal" id="subtotal-status"></span></div>
+      <div id="c-status"></div>
+      <div class="pie-tarjeta" id="meta-status"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Por Empresa <span>(top 8)</span></h2><span class="subtotal" id="subtotal-empresa"></span></div>
+      <div id="c-empresa"></div>
+      <div class="pie-tarjeta" id="meta-empresa"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Por Tipo de Equipo</h2><span class="subtotal" id="subtotal-tipo"></span></div>
+      <div id="c-tipo"></div>
+      <div class="pie-tarjeta" id="meta-tipo"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Por Fabricante <span>(top 8)</span></h2><span class="subtotal" id="subtotal-fabricante"></span></div>
+      <div id="c-fabricante"></div>
+      <div class="pie-tarjeta" id="meta-fabricante"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>

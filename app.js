@@ -1678,6 +1678,10 @@ $("btnCancelarActa").addEventListener("click", cerrarModalActa);
 $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
+$("btnDashboard").addEventListener("click", () => {
+  window.open("dashboard.html", "dashboardInventarioTI", "width=1280,height=900,noopener");
+});
+
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
 $("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
 $("btnCancelarIngreso").addEventListener("click", cerrarModalIngreso);
