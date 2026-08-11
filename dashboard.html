@@ -85,14 +85,28 @@
 
   .bloque {
     background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px;
-    padding: 18px 22px; box-shadow: var(--sombra); border-top: 3px solid var(--acento, var(--azul-600));
+    padding: 18px 22px; box-shadow: var(--sombra); border-top: 3px solid var(--acento, var(--azul-700));
+    position: relative; transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .bloque.lenovo { --acento: var(--azul-600); }
-  .bloque.propios { --acento: var(--verde-500); }
-  .bloque.riolsa { --acento: var(--ambar-500); }
-  .bloque.impresoras-bn { --acento: var(--morado-500); }
-  .bloque.impresoras-color { --acento: var(--rosa-500); }
-  .bloque.impresoras-plotter { --acento: var(--coral-500); }
+  .bloque.clickable { cursor: pointer; }
+  .bloque.clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 2px 4px rgba(22, 41, 79, 0.08), 0 16px 32px -14px rgba(22, 41, 79, 0.28);
+  }
+  .bloque.clickable:active { transform: translateY(-1px); }
+  .bloque.clickable::after {
+    content: "Ver equipos →"; position: absolute; top: 16px; right: 20px;
+    font-size: 0.72rem; font-weight: 600; color: var(--acento); opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .bloque.clickable:hover::after { opacity: 1; }
+
+  .bloque.lenovo { --acento: var(--azul-700); --acento2: var(--azul-500); --acento-bg: var(--azul-100); }
+  .bloque.propios { --acento: var(--verde-700); --acento2: var(--verde-500); --acento-bg: var(--verde-100); }
+  .bloque.riolsa { --acento: var(--ambar-700); --acento2: var(--ambar-500); --acento-bg: var(--ambar-100); }
+  .bloque.impresoras-bn { --acento: var(--morado-700); --acento2: var(--morado-500); --acento-bg: var(--morado-100); }
+  .bloque.impresoras-color { --acento: var(--rosa-700); --acento2: var(--rosa-500); --acento-bg: var(--rosa-100); }
+  .bloque.impresoras-plotter { --acento: var(--coral-700); --acento2: var(--coral-500); --acento-bg: var(--coral-100); }
 
   .bloque .titulo { font-size: 0.85rem; font-weight: 700; color: var(--texto-tenue); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; }
   .bloque .nota { font-size: 0.78rem; color: var(--texto-tenue); margin: 0 0 14px; }
@@ -100,25 +114,47 @@
 
   .bloque .total {
     font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
-    font-size: 2.3rem; font-weight: 650; color: var(--acento); line-height: 1; margin-bottom: 12px;
+    font-size: 2.3rem; font-weight: 650; color: var(--acento); line-height: 1;
   }
 
-  .desglose { display: flex; flex-direction: column; gap: 10px; }
-  .desglose-fila { display: grid; grid-template-columns: 58px 1fr 34px; align-items: center; gap: 10px; }
-  .desglose-fila .etiqueta { font-size: 0.8rem; color: var(--texto); font-weight: 600; }
-  .desglose-fila .pista { position: relative; height: 8px; border-radius: 5px; background: var(--azul-100); overflow: hidden; }
-  .bloque.lenovo .pista { background: var(--azul-100); }
-  .bloque.propios .pista { background: var(--verde-100); }
-  .bloque.riolsa .pista { background: var(--ambar-100); }
-  .desglose-fila .barra { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--acento); }
-  .desglose-fila .valor {
+  .fila-metrica { display: flex; align-items: center; gap: 20px; }
+
+  .donut {
+    position: relative; width: 86px; height: 86px; border-radius: 50%; flex: none;
+    background: conic-gradient(var(--acento) 0% var(--pct, 50%), var(--acento2) var(--pct, 50%) 100%);
+    transition: background 0.4s ease;
+  }
+  .donut::after { content: ""; position: absolute; inset: 13px; border-radius: 50%; background: var(--superficie); }
+  .donut-total {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
-    font-size: 0.85rem; font-weight: 700; text-align: right;
+    font-size: 1.2rem; font-weight: 700; color: var(--texto);
+  }
+
+  .leyenda { display: flex; flex-direction: column; gap: 9px; flex: 1; min-width: 0; }
+  .leyenda-item { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--texto); }
+  .leyenda-item .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .leyenda-item .punto-pc { background: var(--acento); }
+  .leyenda-item .punto-laptop { background: var(--acento2); }
+  .leyenda-item strong {
+    margin-left: auto; font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-variant-numeric: tabular-nums; font-size: 0.92rem; font-weight: 700;
   }
 
   .nota-pie {
     margin-top: 8px; padding: 14px 18px; border: 1px dashed var(--borde); border-radius: 12px;
     color: var(--texto-tenue); font-size: 0.84rem; background: var(--superficie);
+  }
+
+  .pulso {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--verde-500); margin-right: 6px; box-shadow: 0 0 0 0 rgba(47, 156, 111, 0.6);
+    animation: pulso-anim 2s infinite;
+  }
+  @keyframes pulso-anim {
+    0% { box-shadow: 0 0 0 0 rgba(47, 156, 111, 0.5); }
+    70% { box-shadow: 0 0 0 7px rgba(47, 156, 111, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(47, 156, 111, 0); }
   }
 </style>
 </head>
@@ -133,60 +169,42 @@
       <h1>Lenovo, Unidades de Negocio, Riolsa</h1>
       <p style="min-height: 2.7em; line-height: 1.35;"></p>
     </div>
-    <div class="fecha" id="fecha-corte"></div>
+    <div class="fecha"><span class="pulso"></span><span id="fecha-corte">—</span></div>
   </div>
 
   <div class="bloques">
-    <div class="bloque lenovo">
+    <div class="bloque lenovo clickable" id="bloque-lenovo" title="Ver equipos Lenovo en el sistema">
       <p class="titulo">Equipos Lenovo</p>
       <p class="nota">En renta con GBM desde 2022</p>
-      <div class="total" id="lenovo-total">—</div>
-      <div class="desglose">
-        <div class="desglose-fila">
-          <span class="etiqueta">PC</span>
-          <span class="pista"><span class="barra" id="lenovo-pc-barra"></span></span>
-          <span class="valor" id="lenovo-pc-valor">—</span>
-        </div>
-        <div class="desglose-fila">
-          <span class="etiqueta">Laptop</span>
-          <span class="pista"><span class="barra" id="lenovo-lap-barra"></span></span>
-          <span class="valor" id="lenovo-lap-valor">—</span>
+      <div class="fila-metrica">
+        <div class="donut" id="lenovo-donut"><span class="donut-total" id="lenovo-total">—</span></div>
+        <div class="leyenda">
+          <div class="leyenda-item"><span class="punto punto-pc"></span>PC<strong id="lenovo-pc-valor">—</strong></div>
+          <div class="leyenda-item"><span class="punto punto-laptop"></span>Laptop<strong id="lenovo-lap-valor">—</strong></div>
         </div>
       </div>
     </div>
 
-    <div class="bloque propios">
+    <div class="bloque propios clickable" id="bloque-propios" title="Ver equipos propios en el sistema">
       <p class="titulo">Equipos Unidades de Negocio</p>
       <p class="nota">Antigüedad de 5 a 11 años</p>
-      <div class="total" id="propios-total">—</div>
-      <div class="desglose">
-        <div class="desglose-fila">
-          <span class="etiqueta">PC</span>
-          <span class="pista"><span class="barra" id="propios-pc-barra"></span></span>
-          <span class="valor" id="propios-pc-valor">—</span>
-        </div>
-        <div class="desglose-fila">
-          <span class="etiqueta">Laptop</span>
-          <span class="pista"><span class="barra" id="propios-lap-barra"></span></span>
-          <span class="valor" id="propios-lap-valor">—</span>
+      <div class="fila-metrica">
+        <div class="donut" id="propios-donut"><span class="donut-total" id="propios-total">—</span></div>
+        <div class="leyenda">
+          <div class="leyenda-item"><span class="punto punto-pc"></span>PC<strong id="propios-pc-valor">—</strong></div>
+          <div class="leyenda-item"><span class="punto punto-laptop"></span>Laptop<strong id="propios-lap-valor">—</strong></div>
         </div>
       </div>
     </div>
 
-    <div class="bloque riolsa">
+    <div class="bloque riolsa clickable" id="bloque-riolsa" title="Ver equipos RIOLSA en el sistema">
       <p class="titulo">Equipos RIOLSA</p>
       <p class="nota">Propios</p>
-      <div class="total" id="riolsa-total">—</div>
-      <div class="desglose">
-        <div class="desglose-fila">
-          <span class="etiqueta">PC</span>
-          <span class="pista"><span class="barra" id="riolsa-pc-barra"></span></span>
-          <span class="valor" id="riolsa-pc-valor">—</span>
-        </div>
-        <div class="desglose-fila">
-          <span class="etiqueta">Laptop</span>
-          <span class="pista"><span class="barra" id="riolsa-lap-barra"></span></span>
-          <span class="valor" id="riolsa-lap-valor">—</span>
+      <div class="fila-metrica">
+        <div class="donut" id="riolsa-donut"><span class="donut-total" id="riolsa-total">—</span></div>
+        <div class="leyenda">
+          <div class="leyenda-item"><span class="punto punto-pc"></span>PC<strong id="riolsa-pc-valor">—</strong></div>
+          <div class="leyenda-item"><span class="punto punto-laptop"></span>Laptop<strong id="riolsa-lap-valor">—</strong></div>
         </div>
       </div>
     </div>
@@ -201,19 +219,19 @@
   </div>
 
   <div class="bloques" style="margin-top: 4px;">
-    <div class="bloque impresoras-bn">
+    <div class="bloque impresoras-bn clickable" id="bloque-impresoras-bn" title="Ver impresoras B/N en el catálogo">
       <p class="titulo">Impresoras Canon B/N</p>
       <p class="nota">Impresión monocromática</p>
       <div class="total" id="impresoras-bn-total">—</div>
     </div>
 
-    <div class="bloque impresoras-color">
+    <div class="bloque impresoras-color clickable" id="bloque-impresoras-color" title="Ver impresoras a color en el catálogo">
       <p class="titulo">Impresoras Canon Colores</p>
       <p class="nota">Impresión a color</p>
       <div class="total" id="impresoras-color-total">—</div>
     </div>
 
-    <div class="bloque impresoras-plotter">
+    <div class="bloque impresoras-plotter clickable" id="bloque-impresoras-plotter" title="Ver plotters en el catálogo">
       <p class="titulo">Plotters</p>
       <p class="nota">Gran formato</p>
       <div class="total" id="impresoras-plotter-total">—</div>
@@ -222,7 +240,7 @@
 
 </div>
 
-<script src="impresoras.js?v=20260811a"></script>
-<script type="module" src="dashboard.js?v=20260811a"></script>
+<script src="impresoras.js?v=20260811b"></script>
+<script type="module" src="dashboard.js?v=20260811b"></script>
 </body>
 </html>

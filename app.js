@@ -554,6 +554,8 @@ function coincideTexto(e, texto) {
 let filtroCampoVacio = null;
 let filtroEnRevision = false;
 let filtroPropios = false;
+let filtroLenovo = false;
+let filtroRiolsaTodos = false;
 
 function obtenerFiltrados() {
   const texto = $("buscador").value.trim().toLowerCase();
@@ -564,6 +566,8 @@ function obtenerFiltrados() {
   return equipos.filter((e) => {
     if (filtroEnRevision && !esEnRevisionCronograma(e)) return false;
     if (filtroPropios && (esServidor(e) || esEnRevisionCronograma(e) || nonEmpty(e.contratos))) return false;
+    if (filtroLenovo && (esServidor(e) || esEnRevisionCronograma(e) || (e.fabricante || "").trim().toUpperCase() !== "LENOVO")) return false;
+    if (filtroRiolsaTodos && (esServidor(e) || (e.empresa || "").trim().toUpperCase() !== "RIOL S.A.")) return false;
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
     if ((filtroCampoVacio === "empresa" || filtroCampoVacio === "status") && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
@@ -587,6 +591,12 @@ function render() {
     avisoVacio.style.display = "";
   } else if (filtroPropios) {
     avisoVacio.textContent = `Mostrando equipos propios (sin contrato de renta activo). Haz clic aquí para quitar este filtro.`;
+    avisoVacio.style.display = "";
+  } else if (filtroLenovo) {
+    avisoVacio.textContent = `Mostrando equipos Lenovo validados. Haz clic aquí para quitar este filtro.`;
+    avisoVacio.style.display = "";
+  } else if (filtroRiolsaTodos) {
+    avisoVacio.textContent = `Mostrando equipos de RIOL S.A. Haz clic aquí para quitar este filtro.`;
     avisoVacio.style.display = "";
   } else if (filtroCampoVacio) {
     avisoVacio.textContent = `Mostrando equipos sin dato de ${NOMBRES_CAMPO_VACIO[filtroCampoVacio] || filtroCampoVacio}. Haz clic aquí para quitar este filtro.`;
@@ -1284,6 +1294,8 @@ function irAListaEquiposFiltrada(campo, valor) {
   filtroCampoVacio = null;
   filtroEnRevision = false;
   filtroPropios = false;
+  filtroLenovo = false;
+  filtroRiolsaTodos = false;
   if (valor === "Sin dato") {
     filtroCampoVacio = campo;
   } else if (campo === "empresa") $("filtroEmpresa").value = valor;
@@ -1303,6 +1315,38 @@ function irAEquiposPropios() {
   filtroCampoVacio = null;
   filtroEnRevision = false;
   filtroPropios = true;
+  filtroLenovo = false;
+  filtroRiolsaTodos = false;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
+function irAEquiposLenovo() {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = false;
+  filtroPropios = false;
+  filtroLenovo = true;
+  filtroRiolsaTodos = false;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
+function irAEquiposRiolsaTodos() {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = false;
+  filtroPropios = false;
+  filtroLenovo = false;
+  filtroRiolsaTodos = true;
   paginaActual = 1;
   cambiarVista("computadoras");
   render();
@@ -1316,6 +1360,8 @@ function irARevisionCronograma() {
   filtroCampoVacio = null;
   filtroEnRevision = true;
   filtroPropios = false;
+  filtroLenovo = false;
+  filtroRiolsaTodos = false;
   paginaActual = 1;
   cambiarVista("computadoras");
   render();
@@ -1730,7 +1776,7 @@ $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
 $("btnDashboard").addEventListener("click", () => {
-  window.open("dashboard.html?v=20260811h", "dashboardInventarioTI", "width=1280,height=900,noopener");
+  window.open("dashboard.html?v=20260811i", "dashboardInventarioTI", "width=1280,height=900");
 });
 
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
@@ -1741,12 +1787,12 @@ $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 
-$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
+$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; filtroLenovo = false; filtroRiolsaTodos = false; paginaActual = 1; render(); });
 
-$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
-$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
-$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
-$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
+$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; filtroLenovo = false; filtroRiolsaTodos = false; paginaActual = 1; render(); });
+$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; filtroLenovo = false; filtroRiolsaTodos = false; paginaActual = 1; render(); });
+$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; filtroLenovo = false; filtroRiolsaTodos = false; paginaActual = 1; render(); });
+$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; filtroLenovo = false; filtroRiolsaTodos = false; paginaActual = 1; render(); });
 
 $("btnPrimero").addEventListener("click", () => { paginaActual = 1; render(); });
 $("btnAnterior").addEventListener("click", () => { paginaActual--; render(); });

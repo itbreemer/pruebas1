@@ -32,21 +32,52 @@ const esPC = (e) => TIPOS_PC.includes((e.tipoEquipo || "").trim());
 const esLaptop = (e) => TIPOS_LAPTOP.includes((e.tipoEquipo || "").trim());
 const esRiolsa = (e) => (e.empresa || "").trim().toUpperCase() === "RIOL S.A.";
 
+function animarNumero(el, valorFinal) {
+  const yaPintado = el.dataset.valor !== undefined;
+  const inicio = yaPintado ? Number(el.dataset.valor) : 0;
+  if (yaPintado && inicio === valorFinal) return;
+  el.dataset.valor = valorFinal;
+  const duracion = 500;
+  const t0 = performance.now();
+  function paso(ahora) {
+    const p = Math.min(1, (ahora - t0) / duracion);
+    const suavizado = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(inicio + (valorFinal - inicio) * suavizado);
+    if (p < 1) requestAnimationFrame(paso);
+  }
+  requestAnimationFrame(paso);
+}
+
 function pintarBloque(prefijo, pc, laptop) {
   const total = pc + laptop;
-  $(`${prefijo}-total`).textContent = total;
+  animarNumero($(`${prefijo}-total`), total);
   $(`${prefijo}-pc-valor`).textContent = pc;
   $(`${prefijo}-lap-valor`).textContent = laptop;
-  const max = Math.max(pc, laptop, 1);
-  $(`${prefijo}-pc-barra`).style.width = `${Math.max(4, Math.round((pc / max) * 100))}%`;
-  $(`${prefijo}-lap-barra`).style.width = `${Math.max(4, Math.round((laptop / max) * 100))}%`;
+  const pct = total > 0 ? Math.round((pc / total) * 100) : 50;
+  $(`${prefijo}-donut`).style.setProperty("--pct", `${pct}%`);
 }
+
+function irOpener(nombreFuncion, ...args) {
+  if (window.opener && !window.opener.closed && typeof window.opener[nombreFuncion] === "function") {
+    window.opener[nombreFuncion](...args);
+    window.opener.focus();
+  } else {
+    window.open("index.html", "_blank");
+  }
+}
+
+$("bloque-lenovo").addEventListener("click", () => irOpener("irAEquiposLenovo"));
+$("bloque-propios").addEventListener("click", () => irOpener("irAEquiposPropios"));
+$("bloque-riolsa").addEventListener("click", () => irOpener("irAEquiposRiolsaTodos"));
+$("bloque-impresoras-bn").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "B/N"));
+$("bloque-impresoras-color").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Colores"));
+$("bloque-impresoras-plotter").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Plotter"));
 
 function pintarImpresoras() {
   const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  $("impresoras-bn-total").textContent = catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length;
-  $("impresoras-color-total").textContent = catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length;
-  $("impresoras-plotter-total").textContent = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length;
+  animarNumero($("impresoras-bn-total"), catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length);
+  animarNumero($("impresoras-color-total"), catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length);
+  animarNumero($("impresoras-plotter-total"), catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length);
 }
 
 function renderTodo(equipos) {
