@@ -1679,7 +1679,7 @@ $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
 $("btnDashboard").addEventListener("click", () => {
-  window.open("dashboard.html?v=20260811b", "dashboardInventarioTI", "width=1280,height=900,noopener");
+  window.open("dashboard.html?v=20260811c", "dashboardInventarioTI", "width=1280,height=900,noopener");
 });
 
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
