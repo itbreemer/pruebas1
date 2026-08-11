@@ -61,7 +61,7 @@ function fusionarContratosDesdeSeed() {
     }
   });
 
-  const IDS_ALTAS_NUEVAS_SEED = ["pendiente-pcriolsa005"];
+  const IDS_ALTAS_NUEVAS_SEED = ["pendiente-pcriolsa005", "pendiente-bascula1"];
   SEED_DATA.forEach((seed) => {
     if (!idsActuales.has(seed.id)) {
       equipos.push({ ...seed });
@@ -79,6 +79,7 @@ function fusionarContratosDesdeSeed() {
   if (quitarMarcaRevisionConfirmados()) cambio = true;
   if (corregirEmpresasMalCapturadas()) cambio = true;
   if (corregirTipoEquipoMalClasificado()) cambio = true;
+  if (corregirComentariosUsoRiolsa()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -192,6 +193,30 @@ function corregirEmpresasMalCapturadas() {
     const nueva = CORRECCIONES_EMPRESA[e.id];
     if (!nueva || (e.empresa || "").trim() === nueva) return;
     e.empresa = nueva;
+    cambio = true;
+  });
+  return cambio;
+}
+
+const CORRECCIONES_COMENTARIO_USO = {
+  "seed-735": "Uso reportado (archivo de equipos activos RIOLSA): Mantenimiento de riegos.",
+  "seed-770": "Uso reportado (archivo de equipos activos RIOLSA): Monitoreo de velocidades de cosechadoras.",
+};
+
+function corregirComentariosUsoRiolsa() {
+  // PCRIOL016 y RIOLSA016 estan asignados a Saulo Rendon en GLPI, pero su
+  // usuarioDominio/correo son cuentas funcionales compartidas (Mantenimiento
+  // Riegos, monitoreovelocidades@riolcorp.com). El archivo de equipos activos
+  // de RIOLSA los describe por su uso y no por una persona, asi que se deja
+  // constancia en comentarios sin tocar nombreEmpleado (no hay certeza de
+  // cual nombre es el correcto, y sobrescribirlo arriesgaria perder el dato
+  // real). No se toca ultimaModificacion ni se empuja a Firestore, igual que
+  // las demas correcciones locales de esta lista.
+  let cambio = false;
+  equipos.forEach((e) => {
+    const nota = CORRECCIONES_COMENTARIO_USO[e.id];
+    if (!nota || (e.comentarios || "").includes(nota)) return;
+    e.comentarios = nota;
     cambio = true;
   });
   return cambio;
@@ -343,6 +368,7 @@ function establecerEquiposDesdeSync(remotos) {
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
   corregirTipoEquipoMalClasificado();
+  corregirComentariosUsoRiolsa();
   guardarDatos();
   poblarFiltrosYDatalists();
   render();
@@ -1289,6 +1315,7 @@ function renderTablero() {
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;
   if (corregirTipoEquipoMalClasificado()) cambioPurga = true;
+  if (corregirComentariosUsoRiolsa()) cambioPurga = true;
   if (cambioPurga) guardarDatos();
 
   const equiposUsuario = equipos.filter((e) => !esServidor(e));
