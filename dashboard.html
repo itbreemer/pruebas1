@@ -58,7 +58,7 @@
   body {
     margin: 0; background: var(--fondo); color: var(--texto);
     font-family: -apple-system, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
-    padding: clamp(20px, 4vw, 48px);
+    padding: clamp(14px, 2.4vw, 28px);
   }
   #envoltorio { max-width: 1080px; margin: 0 auto; }
   #estadoCarga {
@@ -68,7 +68,7 @@
 
   .encabezado {
     display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
-    margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--borde);
+    margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--borde);
   }
   .encabezado .rotulo {
     font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
@@ -78,11 +78,11 @@
   .encabezado p { margin: 6px 0 0; color: var(--texto-tenue); font-size: 0.95rem; max-width: 52ch; }
   .fecha { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--texto-tenue); text-align: right; }
 
-  .bloques { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
+  .bloques { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px; }
 
   .bloque {
     background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px;
-    padding: 24px 26px; box-shadow: var(--sombra); border-top: 3px solid var(--acento, var(--azul-600));
+    padding: 18px 22px; box-shadow: var(--sombra); border-top: 3px solid var(--acento, var(--azul-600));
   }
   .bloque.lenovo { --acento: var(--azul-600); }
   .bloque.propios { --acento: var(--verde-500); }
@@ -96,7 +96,7 @@
 
   .bloque .total {
     font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
-    font-size: 2.6rem; font-weight: 650; color: var(--acento); line-height: 1; margin-bottom: 18px;
+    font-size: 2.3rem; font-weight: 650; color: var(--acento); line-height: 1; margin-bottom: 12px;
   }
 
   .desglose { display: flex; flex-direction: column; gap: 10px; }
@@ -188,7 +188,7 @@
     </div>
   </div>
 
-  <div class="encabezado" style="margin-top: 36px; border-top: 1px solid var(--borde); padding-top: 28px; border-bottom: none; margin-bottom: 28px;">
+  <div class="encabezado" style="margin-top: 18px; border-top: 1px solid var(--borde); padding-top: 16px; border-bottom: none; margin-bottom: 14px;">
     <div>
       <p class="rotulo">Vista en tiempo real - Equipos de Impresión</p>
       <h1>Impresoras Canon</h1>
