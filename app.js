@@ -553,6 +553,7 @@ function coincideTexto(e, texto) {
 
 let filtroCampoVacio = null;
 let filtroEnRevision = false;
+let filtroPropios = false;
 
 function obtenerFiltrados() {
   const texto = $("buscador").value.trim().toLowerCase();
@@ -562,6 +563,7 @@ function obtenerFiltrados() {
 
   return equipos.filter((e) => {
     if (filtroEnRevision && !esEnRevisionCronograma(e)) return false;
+    if (filtroPropios && (esServidor(e) || esEnRevisionCronograma(e) || nonEmpty(e.contratos))) return false;
     if (filtroCampoVacio && nonEmpty(e[filtroCampoVacio])) return false;
     if ((filtroCampoVacio === "empresa" || filtroCampoVacio === "status") && esServidor(e)) return false;
     if (empresa && e.empresa !== empresa) return false;
@@ -582,6 +584,9 @@ function render() {
   const avisoVacio = $("filtroVacioAviso");
   if (filtroEnRevision) {
     avisoVacio.textContent = `Mostrando los ${equipos.filter(esEnRevisionCronograma).length} equipos en revisión (no aparecen en el cronograma de migración AD 2026; valida si ya fueron dados de baja y no se quitaron del sistema). Haz clic aquí para quitar este filtro.`;
+    avisoVacio.style.display = "";
+  } else if (filtroPropios) {
+    avisoVacio.textContent = `Mostrando equipos propios (sin contrato de renta activo). Haz clic aquí para quitar este filtro.`;
     avisoVacio.style.display = "";
   } else if (filtroCampoVacio) {
     avisoVacio.textContent = `Mostrando equipos sin dato de ${NOMBRES_CAMPO_VACIO[filtroCampoVacio] || filtroCampoVacio}. Haz clic aquí para quitar este filtro.`;
@@ -1278,12 +1283,26 @@ function irAListaEquiposFiltrada(campo, valor) {
   $("filtroTipo").value = "";
   filtroCampoVacio = null;
   filtroEnRevision = false;
+  filtroPropios = false;
   if (valor === "Sin dato") {
     filtroCampoVacio = campo;
   } else if (campo === "empresa") $("filtroEmpresa").value = valor;
   else if (campo === "status") $("filtroStatus").value = valor;
   else if (campo === "tipoEquipo") $("filtroTipo").value = valor;
   else $("buscador").value = valor;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
+function irAEquiposPropios() {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = false;
+  filtroPropios = true;
   paginaActual = 1;
   cambiarVista("computadoras");
   render();
@@ -1296,6 +1315,7 @@ function irARevisionCronograma() {
   $("filtroTipo").value = "";
   filtroCampoVacio = null;
   filtroEnRevision = true;
+  filtroPropios = false;
   paginaActual = 1;
   cambiarVista("computadoras");
   render();
@@ -1305,6 +1325,7 @@ document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".tablero-fila[data-campo]");
   if (fila) irAListaEquiposFiltrada(fila.dataset.campo, fila.dataset.valor);
   if (ev.target.closest("#tarjetaEnRevision")) irARevisionCronograma();
+  if (ev.target.closest("#tarjetaPropios")) irAEquiposPropios();
   if (ev.target.closest(".tablero-fila-secundaria")) irARevisionCronograma();
 });
 
@@ -1338,7 +1359,7 @@ function renderTablero() {
   $("statCards").innerHTML = `
     <div class="stat-card"><div class="numero">${equiposUsuarioValidados.length}</div><div class="etiqueta">Equipos totales</div></div>
     <div class="stat-card"><div class="numero">${equiposLenovo}</div><div class="etiqueta">Equipos Lenovo</div></div>
-    <div class="stat-card"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios</div></div>
+    <div id="tarjetaPropios" class="stat-card clickable"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios — clic para ver el listado</div></div>
     <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
     <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
     <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
@@ -1720,12 +1741,12 @@ $("ingresoNombreRed").addEventListener("input", onCambioNombreRedIngreso);
 
 $("conteoRapidoInput").addEventListener("input", actualizarConteoRapido);
 
-$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
+$("filtroVacioAviso").addEventListener("click", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
 
-$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
-$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
-$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
-$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; paginaActual = 1; render(); });
+$("buscador").addEventListener("input", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
+$("filtroEmpresa").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
+$("filtroStatus").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
+$("filtroTipo").addEventListener("change", () => { filtroCampoVacio = null; filtroEnRevision = false; filtroPropios = false; paginaActual = 1; render(); });
 
 $("btnPrimero").addEventListener("click", () => { paginaActual = 1; render(); });
 $("btnAnterior").addEventListener("click", () => { paginaActual--; render(); });
