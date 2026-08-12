@@ -1376,7 +1376,6 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("#tarjetaLenovo")) irAEquiposLenovo();
   if (ev.target.closest("#tarjetaEmpresas")) irAEmpresasPanel();
   if (ev.target.closest("#tarjetaImpresoras")) irAImpresorasVista();
-  if (ev.target.closest("#tarjetaServidores")) irAServidoresPanel();
   if (ev.target.closest(".tablero-fila-secundaria")) irARevisionCronograma();
 });
 
@@ -1441,13 +1440,6 @@ function irAEmpresasPanel() {
 
 function irAImpresorasVista() {
   cambiarVista("impresoras");
-}
-
-function irAServidoresPanel() {
-  cambiarVista("tablero");
-  requestAnimationFrame(() => {
-    $("tituloSeccionServidores")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 }
 
 /* ---------- Donas de los paneles del tablero (Status/Empresa/Tipo/Fabricante) ---------- */
@@ -1599,7 +1591,6 @@ function renderTablero() {
   }
 
   const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  const totalServidores = equipos.filter(esServidor).length;
 
   $("statCards").innerHTML =
     construirStatCard(equiposUsuarioValidados.length, "Equipos totales", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true, icono: "pc", titulo: "Ver el listado completo" }) +
@@ -1607,7 +1598,6 @@ function renderTablero() {
     construirStatCard(equiposPropios, "Equipos propios", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true, icono: "pc", titulo: "Ver equipos propios" }) +
     construirStatCard(totalEmpresas, "Empresas", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true, icono: "edificio", titulo: "Ver desglose por empresa" }) +
     construirStatCard(impresoras.length, "Impresoras Canon", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora", titulo: "Ver catálogo de impresoras" }) +
-    construirStatCard(totalServidores, "Servidores", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true, icono: "servidor", titulo: "Ver desglose de servidores" }) +
     construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD)", { id: "tarjetaEnRevision", clickable: true, secundaria: true, icono: "alerta", titulo: "Ver equipos en revisión" });
 
   if (!statCardsAnimadas) {
@@ -1654,16 +1644,6 @@ function renderTablero() {
   });
   $("tableroFabricante").innerHTML += totalHtml(totalSinServidores);
 
-
-  const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
-  $("tableroServidoresTipo").innerHTML =
-    servidorPorTipo.map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
-  const servidorPorEmpresa = contarPor("empresa", { soloServidores: true });
-  $("tableroServidoresEmpresa").innerHTML =
-    servidorPorEmpresa.slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
-  const servidorPorStatus = contarPor("status", { soloServidores: true });
-  $("tableroServidoresStatus").innerHTML =
-    servidorPorStatus.slice(0, 8).map(([n, c]) => filaHtml(n, c)).join("") + totalHtml(totalServidores);
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
