@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812e">
+<link rel="stylesheet" href="style.css?v=20260812f">
 </head>
 <body>
 
@@ -65,19 +65,31 @@
         <div class="tablero-grid">
           <div class="tablero-panel">
             <h3>Por Status</h3>
-            <div id="tableroStatus" class="tablero-lista"></div>
+            <div class="panel-cuerpo">
+              <div id="tableroStatusDona" class="panel-dona"></div>
+              <div id="tableroStatus" class="tablero-lista"></div>
+            </div>
           </div>
           <div class="tablero-panel">
             <h3>Por Empresa (top 8)</h3>
-            <div id="tableroEmpresa" class="tablero-lista"></div>
+            <div class="panel-cuerpo">
+              <div id="tableroEmpresaDona" class="panel-dona"></div>
+              <div id="tableroEmpresa" class="tablero-lista"></div>
+            </div>
           </div>
           <div class="tablero-panel">
             <h3>Por Tipo de Equipo</h3>
-            <div id="tableroTipo" class="tablero-lista"></div>
+            <div class="panel-cuerpo">
+              <div id="tableroTipoDona" class="panel-dona"></div>
+              <div id="tableroTipo" class="tablero-lista"></div>
+            </div>
           </div>
           <div class="tablero-panel">
             <h3>Por Fabricante (top 8)</h3>
-            <div id="tableroFabricante" class="tablero-lista"></div>
+            <div class="panel-cuerpo">
+              <div id="tableroFabricanteDona" class="panel-dona"></div>
+              <div id="tableroFabricante" class="tablero-lista"></div>
+            </div>
           </div>
         </div>
 
@@ -756,12 +768,12 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812e"></script>
+<script src="data.js?v=20260812f"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812e"></script>
+<script src="app.js?v=20260812f"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812e"></script>
+<script type="module" src="firestore-sync.js?v=20260812f"></script>
 </body>
 </html>

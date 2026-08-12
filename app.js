@@ -1450,6 +1450,134 @@ function irAServidoresPanel() {
   });
 }
 
+/* ---------- Donas de los paneles del tablero (Status/Empresa/Tipo/Fabricante) ---------- */
+
+function hexARgb(hex) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function rgbAHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4;
+    }
+    h *= 60;
+  }
+  return { h, s: s * 100, l: l * 100 };
+}
+
+function hslAHex(h, s, l) {
+  h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const toHex = (v) => Math.round((v + m) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Paleta contrastada: paso fijo por indice (no dividido entre el total de
+// categorias), asi la 2da y 3ra categoria ya se distinguen de la primera
+// aunque haya muchas categorias chiquitas despues.
+function generarPaletaDona(hex, n) {
+  const { h, s, l } = rgbAHsl(hexARgb(hex).r, hexARgb(hex).g, hexARgb(hex).b);
+  const colores = [];
+  for (let i = 0; i < n; i++) {
+    colores.push(hslAHex(h + i * 18, Math.max(42, s - i * 5), Math.min(80, l + i * 11)));
+  }
+  return colores;
+}
+
+function porcentajesRealesDona(valores, total) {
+  return valores.map((v) => (v / total) * 100);
+}
+
+// Ancho minimo por categoria (Opcion B): las categorias muy chicas reciben
+// un porcentaje minimo visible, y las grandes ceden ese espacio entre ellas.
+function porcentajesConMinimoDona(valores, total, minPct = 6) {
+  let pcts = porcentajesRealesDona(valores, total);
+  const chicas = pcts.filter((p) => p < minPct);
+  if (!chicas.length) return pcts;
+  const sumaChicasObjetivo = chicas.length * minPct;
+  const sumaGrandesOriginal = pcts.filter((p) => p >= minPct).reduce((s, p) => s + p, 0);
+  const sumaGrandesObjetivo = 100 - sumaChicasObjetivo;
+  const factor = sumaGrandesOriginal > 0 ? sumaGrandesObjetivo / sumaGrandesOriginal : 0;
+  return pcts.map((p) => (p < minPct ? minPct : p * factor));
+}
+
+function pintarPanelConDona({ idDona, idLista, datosTop, total, hex, modo, campo }) {
+  if (!datosTop.length) {
+    $(idDona).innerHTML = "";
+    $(idLista).innerHTML = "<p>Sin datos.</p>";
+    return;
+  }
+  const sumaVisible = datosTop.reduce((s, [, v]) => s + v, 0);
+  const otros = Math.max(0, total - sumaVisible);
+  const segmentos = otros > 0 ? [...datosTop, ["Otros", otros]] : datosTop;
+  const valores = segmentos.map(([, v]) => v);
+  const pcts = modo === "B" ? porcentajesConMinimoDona(valores, total) : porcentajesRealesDona(valores, total);
+  const paleta = generarPaletaDona(hex, segmentos.length);
+
+  let acc = 0;
+  const paradas = pcts.map((p, i) => {
+    const desde = acc;
+    acc += p;
+    return `${paleta[i]} ${desde}% ${acc}%`;
+  });
+
+  const [nombreTop, valorTop] = datosTop[0];
+  const pctTop = Math.round((valorTop / total) * 100);
+
+  $(idDona).innerHTML = `
+    <div class="dona-wrap">
+      <div class="dona" style="--dona-gradient: ${paradas.join(", ")}"></div>
+      <div class="dona-total"><span class="num">${total}</span></div>
+    </div>
+    <div class="dona-caption"><strong>${pctTop}%</strong> ${esc(nombreTop)}</div>
+  `;
+
+  $(idLista).innerHTML = datosTop
+    .map(([nombre, cantidad], i) => {
+      const atributos = campo ? ` data-campo="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"` : "";
+      return `<div class="tablero-fila fila-dona clickable" data-idx="${i}"${atributos}>
+        <span class="punto-dona" style="background:${paleta[i]}"></span>
+        <span class="nombre-dona">${esc(nombre)}</span>
+        <span class="valor">${cantidad}</span>
+      </div>`;
+    })
+    .join("");
+}
+
+document.addEventListener("mouseover", (ev) => {
+  const fila = ev.target.closest(".fila-dona");
+  if (!fila) return;
+  const contenedor = fila.closest(".panel-cuerpo");
+  if (!contenedor) return;
+  contenedor.querySelectorAll(".fila-dona").forEach((f) => f.classList.toggle("atenuada", f !== fila));
+});
+document.addEventListener("mouseout", (ev) => {
+  const fila = ev.target.closest(".fila-dona");
+  if (!fila) return;
+  const contenedor = fila.closest(".panel-cuerpo");
+  if (!contenedor) return;
+  contenedor.querySelectorAll(".fila-dona").forEach((f) => f.classList.remove("atenuada"));
+});
+
 function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
@@ -1502,21 +1630,33 @@ function renderTablero() {
 
   const statusSinServidores = contarPor("status", { excluirServidores: true, excluirEnRevision: true });
   const totalStatusSinServidores = statusSinServidores.reduce((s, [, c]) => s + c, 0);
-  $("tableroStatus").innerHTML =
-    (statusSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "status")).join("") || "<p>Sin datos.</p>") + totalHtml(totalStatusSinServidores);
+  pintarPanelConDona({
+    idDona: "tableroStatusDona", idLista: "tableroStatus", campo: "status",
+    datosTop: statusSinServidores.slice(0, 8), total: totalStatusSinServidores, hex: "#1c3d6e", modo: "A",
+  });
+  $("tableroStatus").innerHTML += totalHtml(totalStatusSinServidores);
 
   const empresaSinServidores = contarPor("empresa", { excluirServidores: true, excluirEnRevision: true });
   const totalSinServidores = empresaSinServidores.reduce((s, [, c]) => s + c, 0);
-  $("tableroEmpresa").innerHTML =
-    (empresaSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "empresa")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+  pintarPanelConDona({
+    idDona: "tableroEmpresaDona", idLista: "tableroEmpresa", campo: "empresa",
+    datosTop: empresaSinServidores.slice(0, 8), total: totalSinServidores, hex: "#a3336f", modo: "A",
+  });
+  $("tableroEmpresa").innerHTML += totalHtml(totalSinServidores);
 
   const tipoSinServidores = contarPor("tipoEquipo", { excluirServidores: true, excluirEnRevision: true, agruparTipoEquipo: true });
-  $("tableroTipo").innerHTML =
-    (tipoSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "tipoEquipo")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+  pintarPanelConDona({
+    idDona: "tableroTipoDona", idLista: "tableroTipo", campo: "tipoEquipo",
+    datosTop: tipoSinServidores.slice(0, 8), total: totalSinServidores, hex: "#15803d", modo: "B",
+  });
+  $("tableroTipo").innerHTML += totalHtml(totalSinServidores);
 
   const fabricanteSinServidores = contarPor("fabricante", { excluirServidores: true, excluirEnRevision: true });
-  $("tableroFabricante").innerHTML =
-    (fabricanteSinServidores.slice(0, 8).map(([n, c]) => filaHtml(n, c, "fabricante")).join("") || "<p>Sin datos.</p>") + totalHtml(totalSinServidores);
+  pintarPanelConDona({
+    idDona: "tableroFabricanteDona", idLista: "tableroFabricante", campo: "fabricante",
+    datosTop: fabricanteSinServidores.slice(0, 8), total: totalSinServidores, hex: "#4338ca", modo: "B",
+  });
+  $("tableroFabricante").innerHTML += totalHtml(totalSinServidores);
 
 
   const servidorPorTipo = contarPor("tipoEquipo", { soloServidores: true });
