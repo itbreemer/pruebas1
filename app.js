@@ -1512,7 +1512,7 @@ function porcentajesConMinimoDona(valores, total, minPct = 6) {
   return pcts.map((p) => (p < minPct ? minPct : p * factor));
 }
 
-function pintarPanelConDona({ idDona, idLista, datosTop, total, hex, modo, campo }) {
+function pintarPanelConDona({ idDona, idLista, datosTop, total, hex, modo, campo, atributoCampo = "data-campo" }) {
   if (!datosTop.length) {
     $(idDona).innerHTML = "";
     $(idLista).innerHTML = "<p>Sin datos.</p>";
@@ -1541,7 +1541,7 @@ function pintarPanelConDona({ idDona, idLista, datosTop, total, hex, modo, campo
 
   $(idLista).innerHTML = datosTop
     .map(([nombre, cantidad], i) => {
-      const atributos = campo ? ` data-campo="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"` : "";
+      const atributos = campo ? ` ${atributoCampo}="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"` : "";
       return `<div class="tablero-fila fila-dona clickable" data-idx="${i}"${atributos}>
         <span class="punto-dona" style="background:${paleta[i]}"></span>
         <span class="nombre-dona">${esc(nombre)}</span>
@@ -1654,17 +1654,18 @@ function renderTablero() {
     return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
   };
 
-  const filaHtmlImpresora = (nombre, cantidad, campo) => {
-    const atributos = ` data-campo-imp="${campo}" data-valor="${String(nombre).replace(/"/g, "&quot;")}"`;
-    return `<div class="tablero-fila clickable"${atributos}><span>${esc(nombre)}</span><span class="valor">${cantidad}</span></div>`;
-  };
-
-  $("tableroImpresorasTipo").innerHTML =
-    contarImpresorasPor("tipo").map(([n, c]) => filaHtmlImpresora(n, c, "tipo")).join("") || "<p>Sin datos.</p>";
-  $("tableroImpresorasEmpresa").innerHTML =
-    contarImpresorasPor("empresa").map(([n, c]) => filaHtmlImpresora(n, c, "empresa")).join("") || "<p>Sin datos.</p>";
-  $("tableroImpresorasDepartamento").innerHTML =
-    contarImpresorasPor("departamento").slice(0, 8).map(([n, c]) => filaHtmlImpresora(n, c, "departamento")).join("") || "<p>Sin datos.</p>";
+  pintarPanelConDona({
+    idDona: "tableroImpresorasTipoDona", idLista: "tableroImpresorasTipo", campo: "tipo", atributoCampo: "data-campo-imp",
+    datosTop: contarImpresorasPor("tipo"), total: impresoras.length, hex: "#0f766e", modo: "A",
+  });
+  pintarPanelConDona({
+    idDona: "tableroImpresorasEmpresaDona", idLista: "tableroImpresorasEmpresa", campo: "empresa", atributoCampo: "data-campo-imp",
+    datosTop: contarImpresorasPor("empresa"), total: impresoras.length, hex: "#b45309", modo: "A",
+  });
+  pintarPanelConDona({
+    idDona: "tableroImpresorasDepartamentoDona", idLista: "tableroImpresorasDepartamento", campo: "departamento", atributoCampo: "data-campo-imp",
+    datosTop: contarImpresorasPor("departamento").slice(0, 8), total: impresoras.length, hex: "#334155", modo: "B",
+  });
 }
 
 function irACatalogoImpresorasFiltrado(campo, valor) {
