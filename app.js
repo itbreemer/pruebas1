@@ -1372,8 +1372,72 @@ document.addEventListener("click", (ev) => {
   if (fila) irAListaEquiposFiltrada(fila.dataset.campo, fila.dataset.valor);
   if (ev.target.closest("#tarjetaEnRevision")) irARevisionCronograma();
   if (ev.target.closest("#tarjetaPropios")) irAEquiposPropios();
+  if (ev.target.closest("#tarjetaTotales")) irATodosLosEquipos();
+  if (ev.target.closest("#tarjetaLenovo")) irAEquiposLenovo();
+  if (ev.target.closest("#tarjetaEmpresas")) irAEmpresasPanel();
+  if (ev.target.closest("#tarjetaImpresoras")) irAImpresorasVista();
+  if (ev.target.closest("#tarjetaServidores")) irAServidoresPanel();
   if (ev.target.closest(".tablero-fila-secundaria")) irARevisionCronograma();
 });
+
+let statCardsAnimadas = false;
+
+function animarNumeroStatCard(el) {
+  const valorFinal = Number(el.dataset.valorFinal || 0);
+  const duracion = 700;
+  const t0 = performance.now();
+  function paso(ahora) {
+    const p = Math.min(1, (ahora - t0) / duracion);
+    const suavizado = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(valorFinal * suavizado);
+    if (p < 1) requestAnimationFrame(paso);
+    else el.textContent = valorFinal;
+  }
+  requestAnimationFrame(paso);
+}
+
+function construirStatCard(valor, etiqueta, opts = {}) {
+  const { id = "", claseColor = "", clickable = false, secundaria = false } = opts;
+  const clases = ["stat-card", claseColor, clickable ? "clickable" : "", secundaria ? "stat-card-secundaria" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const idAttr = id ? ` id="${id}"` : "";
+  const valorMostrado = statCardsAnimadas ? valor : 0;
+  return `<div${idAttr} class="${clases}"><div class="numero" data-valor-final="${valor}">${valorMostrado}</div><div class="etiqueta">${etiqueta}</div></div>`;
+}
+
+function irATodosLosEquipos() {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = false;
+  filtroPropios = false;
+  filtroLenovo = false;
+  filtroRiolsaTodos = false;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
+function irAEmpresasPanel() {
+  cambiarVista("tablero");
+  requestAnimationFrame(() => {
+    $("tableroEmpresa")?.closest(".tablero-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
+function irAImpresorasVista() {
+  cambiarVista("impresoras");
+}
+
+function irAServidoresPanel() {
+  cambiarVista("tablero");
+  requestAnimationFrame(() => {
+    document.querySelector(".subseccion-titulo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
 
 function renderTablero() {
   let cambioPurga = false;
@@ -1402,15 +1466,19 @@ function renderTablero() {
   const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
   const totalServidores = equipos.filter(esServidor).length;
 
-  $("statCards").innerHTML = `
-    <div class="stat-card"><div class="numero">${equiposUsuarioValidados.length}</div><div class="etiqueta">Equipos totales</div></div>
-    <div class="stat-card"><div class="numero">${equiposLenovo}</div><div class="etiqueta">Equipos Lenovo</div></div>
-    <div id="tarjetaPropios" class="stat-card clickable"><div class="numero">${equiposPropios}</div><div class="etiqueta">Equipos propios — clic para ver el listado</div></div>
-    <div class="stat-card"><div class="numero">${totalEmpresas}</div><div class="etiqueta">Empresas</div></div>
-    <div class="stat-card"><div class="numero">${impresoras.length}</div><div class="etiqueta">Impresoras Canon</div></div>
-    <div class="stat-card"><div class="numero">${totalServidores}</div><div class="etiqueta">Servidores</div></div>
-    <div id="tarjetaEnRevision" class="stat-card stat-card-secundaria clickable"><div class="numero">${propiosEnRevision}</div><div class="etiqueta">En revisión (no está en cronograma AD) — clic para revisar</div></div>
-  `;
+  $("statCards").innerHTML =
+    construirStatCard(equiposUsuarioValidados.length, "Equipos totales — clic para ver el listado", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true }) +
+    construirStatCard(equiposLenovo, "Equipos Lenovo — clic para ver el listado", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true }) +
+    construirStatCard(equiposPropios, "Equipos propios — clic para ver el listado", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true }) +
+    construirStatCard(totalEmpresas, "Empresas — clic para ver el desglose", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true }) +
+    construirStatCard(impresoras.length, "Impresoras Canon — clic para ver el catálogo", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true }) +
+    construirStatCard(totalServidores, "Servidores — clic para ver el desglose", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true }) +
+    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD) — clic para revisar", { id: "tarjetaEnRevision", clickable: true, secundaria: true });
+
+  if (!statCardsAnimadas) {
+    statCardsAnimadas = true;
+    document.querySelectorAll("#statCards .numero").forEach(animarNumeroStatCard);
+  }
 
   const filaHtml = (nombre, cantidad, campo) => {
     const clickable = !!campo;

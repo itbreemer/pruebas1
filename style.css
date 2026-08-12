@@ -92,15 +92,41 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .stat-card {
   background: #fff;
   border: 1px solid var(--borde);
+  border-top: 3px solid var(--borde);
   border-radius: 10px;
   padding: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.stat-card .numero { font-size: 1.6rem; font-weight: 700; color: var(--azul); }
+.stat-card .numero {
+  font-size: 1.6rem; font-weight: 700; color: var(--azul);
+  font-variant-numeric: tabular-nums;
+}
 .stat-card .etiqueta { font-size: 0.82rem; color: #6b7280; margin-top: 2px; }
-.stat-card-secundaria { border-style: dashed; background: #f8fafc; }
+.stat-card-secundaria { border-style: dashed; background: #fef3e2; border-top-color: #b45309; }
 .stat-card-secundaria .numero { color: #b45309; }
 .stat-card.clickable { cursor: pointer; }
-.stat-card.clickable:hover { background: #fef3e2; }
+.stat-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -8px rgba(22, 41, 79, 0.35);
+}
+
+.stat-card.color-azul { background: var(--azul-claro); }
+.stat-card.color-azul .numero { color: var(--azul); }
+
+.stat-card.color-indigo { background: #e8e6fb; border-top-color: #4338ca; }
+.stat-card.color-indigo .numero { color: #4338ca; }
+
+.stat-card.color-verde { background: #dcfce7; border-top-color: #15803d; }
+.stat-card.color-verde .numero { color: #15803d; }
+
+.stat-card.color-fucsia { background: #fbe3ef; border-top-color: #a3336f; }
+.stat-card.color-fucsia .numero { color: #a3336f; }
+
+.stat-card.color-teal { background: #ccfbf1; border-top-color: #0f766e; }
+.stat-card.color-teal .numero { color: #0f766e; }
+
+.stat-card.color-slate { background: #e2e8f0; border-top-color: #334155; }
+.stat-card.color-slate .numero { color: #334155; }
 
 .tablero-conteo {
   background: #fff;
