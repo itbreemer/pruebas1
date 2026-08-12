@@ -69,28 +69,60 @@ function irOpener(nombreFuncion, ...args) {
 $("bloque-lenovo").addEventListener("click", () => irOpener("irAEquiposLenovo"));
 $("bloque-propios").addEventListener("click", () => irOpener("irAEquiposPropios"));
 $("bloque-riolsa").addEventListener("click", () => irOpener("irAEquiposRiolsaTodos"));
-$("fila-impresoras-bn").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "B/N"));
-$("fila-impresoras-color").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Colores"));
-$("fila-impresoras-plotter").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Plotter"));
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function topUbicaciones(lista, max = 4) {
+  const conteo = new Map();
+  lista.forEach((p) => {
+    const u = (p.ubicacion || "").trim() || "Sin ubicación";
+    conteo.set(u, (conteo.get(u) || 0) + 1);
+  });
+  return [...conteo.entries()].sort((a, b) => b[1] - a[1]).slice(0, max);
+}
+
+function construirDetalle(idContenedor, lista, tipoValor) {
+  const top = topUbicaciones(lista);
+  const filasHtml = top
+    .map(([u, n]) => `<div class="detalle-fila"><span>${esc(u)}</span><strong>${n}</strong></div>`)
+    .join("");
+  $(idContenedor).innerHTML = `${filasHtml}<button type="button" class="detalle-link" data-tipo="${esc(tipoValor)}">Ver catálogo completo →</button>`;
+}
+
+document.querySelectorAll(".impresora-card .cabecera-imp").forEach((cabecera) => {
+  cabecera.addEventListener("click", () => {
+    cabecera.closest(".impresora-card").classList.toggle("abierta");
+  });
+});
+
+document.addEventListener("click", (ev) => {
+  const link = ev.target.closest(".detalle-link");
+  if (link) {
+    ev.stopPropagation();
+    irOpener("irACatalogoImpresorasFiltrado", "tipo", link.dataset.tipo);
+  }
+});
 
 function pintarImpresoras() {
   const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  const bn = catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length;
-  const color = catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length;
-  const plotter = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length;
-  const total = bn + color + plotter;
+  const listaBn = catalogo.filter((p) => (p.tipo || "").trim() === "B/N");
+  const listaColor = catalogo.filter((p) => (p.tipo || "").trim() === "Colores");
+  const listaPlotter = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter");
+  const total = listaBn.length + listaColor.length + listaPlotter.length;
   const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
-  animarNumero($("impresoras-total-general"), total);
-  animarNumero($("impresoras-bn-total"), bn);
-  animarNumero($("impresoras-color-total"), color);
-  animarNumero($("impresoras-plotter-total"), plotter);
-  $("impresoras-bn-pct").textContent = `${pct(bn)}%`;
-  $("impresoras-color-pct").textContent = `${pct(color)}%`;
-  $("impresoras-plotter-pct").textContent = `${pct(plotter)}%`;
-  $("seg-bn").style.width = `${pct(bn)}%`;
-  $("seg-color").style.width = `${pct(color)}%`;
-  $("seg-plotter").style.width = `${pct(plotter)}%`;
+  animarNumero($("impresoras-bn-total"), listaBn.length);
+  animarNumero($("impresoras-color-total"), listaColor.length);
+  animarNumero($("impresoras-plotter-total"), listaPlotter.length);
+  $("impresoras-bn-pct").textContent = `${pct(listaBn.length)}%`;
+  $("impresoras-color-pct").textContent = `${pct(listaColor.length)}%`;
+  $("impresoras-plotter-pct").textContent = `${pct(listaPlotter.length)}%`;
+  $("impresoras-bn-barra").style.width = `${pct(listaBn.length)}%`;
+  $("impresoras-color-barra").style.width = `${pct(listaColor.length)}%`;
+  $("impresoras-plotter-barra").style.width = `${pct(listaPlotter.length)}%`;
+
+  construirDetalle("detalle-impresoras-bn", listaBn, "B/N");
+  construirDetalle("detalle-impresoras-color", listaColor, "Colores");
+  construirDetalle("detalle-impresoras-plotter", listaPlotter, "Plotter");
 }
 
 function renderTodo(equipos) {
