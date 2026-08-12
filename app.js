@@ -1540,15 +1540,11 @@ function pintarPanelConDona({ idDona, idLista, datosTop, total, hex, modo, campo
     return `${paleta[i]} ${desde}% ${acc}%`;
   });
 
-  const [nombreTop, valorTop] = datosTop[0];
-  const pctTop = Math.round((valorTop / total) * 100);
-
   $(idDona).innerHTML = `
     <div class="dona-wrap">
       <div class="dona" style="--dona-gradient: ${paradas.join(", ")}"></div>
       <div class="dona-total"><span class="num">${total}</span></div>
     </div>
-    <div class="dona-caption"><strong>${pctTop}%</strong> ${esc(nombreTop)}</div>
   `;
 
   $(idLista).innerHTML = datosTop
