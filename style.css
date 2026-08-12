@@ -90,12 +90,15 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
   margin-bottom: 20px;
 }
 .stat-card {
+  position: relative;
   background: #fff;
   border: 1px solid var(--borde);
   border-top: 3px solid var(--borde);
   border-radius: 10px;
   padding: 16px;
+  padding-right: 50px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
 }
 .stat-card .numero {
   font-size: 1.6rem; font-weight: 700; color: var(--azul);
@@ -109,24 +112,64 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
   transform: translateY(-2px);
   box-shadow: 0 6px 16px -8px rgba(22, 41, 79, 0.35);
 }
+.stat-card.clickable:hover .icono {
+  transform: scale(1.1) rotate(-6deg);
+}
+
+.stat-card .icono {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+.stat-card .icono svg { width: 18px; height: 18px; }
 
 .stat-card.color-azul { background: var(--azul-claro); }
 .stat-card.color-azul .numero { color: var(--azul); }
+.stat-card.color-azul .icono { color: var(--azul); }
 
 .stat-card.color-indigo { background: #e8e6fb; border-top-color: #4338ca; }
 .stat-card.color-indigo .numero { color: #4338ca; }
+.stat-card.color-indigo .icono { color: #4338ca; }
 
 .stat-card.color-verde { background: #dcfce7; border-top-color: #15803d; }
 .stat-card.color-verde .numero { color: #15803d; }
+.stat-card.color-verde .icono { color: #15803d; }
 
 .stat-card.color-fucsia { background: #fbe3ef; border-top-color: #a3336f; }
 .stat-card.color-fucsia .numero { color: #a3336f; }
+.stat-card.color-fucsia .icono { color: #a3336f; }
 
 .stat-card.color-teal { background: #ccfbf1; border-top-color: #0f766e; }
 .stat-card.color-teal .numero { color: #0f766e; }
+.stat-card.color-teal .icono { color: #0f766e; }
 
 .stat-card.color-slate { background: #e2e8f0; border-top-color: #334155; }
 .stat-card.color-slate .numero { color: #334155; }
+.stat-card.color-slate .icono { color: #334155; }
+
+.stat-card-secundaria .icono { color: #b45309; }
+
+.stat-cards.animar .stat-card { animation: statCardIn 0.4s ease both; }
+.stat-cards.animar .stat-card:nth-child(1) { animation-delay: 0s; }
+.stat-cards.animar .stat-card:nth-child(2) { animation-delay: 0.05s; }
+.stat-cards.animar .stat-card:nth-child(3) { animation-delay: 0.1s; }
+.stat-cards.animar .stat-card:nth-child(4) { animation-delay: 0.15s; }
+.stat-cards.animar .stat-card:nth-child(5) { animation-delay: 0.2s; }
+.stat-cards.animar .stat-card:nth-child(6) { animation-delay: 0.25s; }
+.stat-cards.animar .stat-card:nth-child(7) { animation-delay: 0.3s; }
+@keyframes statCardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .tablero-conteo {
   background: #fff;

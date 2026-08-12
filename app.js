@@ -1396,14 +1396,24 @@ function animarNumeroStatCard(el) {
   requestAnimationFrame(paso);
 }
 
+const ICONOS_STAT_CARD = {
+  pc: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1"></rect><line x1="8" y1="20" x2="16" y2="20"></line><line x1="12" y1="16" x2="12" y2="20"></line></svg>`,
+  laptop: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="10" rx="1"></rect><line x1="2" y1="19" x2="22" y2="19"></line></svg>`,
+  impresora: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7,8 7,3 17,3 17,8"></polyline><rect x="5" y="8" width="14" height="7" rx="1"></rect><rect x="8" y="15" width="8" height="5"></rect></svg>`,
+  edificio: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18"></rect><rect x="8" y="6" width="3" height="3"></rect><rect x="13" y="6" width="3" height="3"></rect><rect x="8" y="11" width="3" height="3"></rect><rect x="13" y="11" width="3" height="3"></rect></svg>`,
+  servidor: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="6" rx="1"></rect><rect x="4" y="10" width="16" height="6" rx="1"></rect><rect x="4" y="17" width="16" height="4" rx="1"></rect></svg>`,
+  alerta: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6"></circle><line x1="21" y1="21" x2="15" y2="15"></line></svg>`,
+};
+
 function construirStatCard(valor, etiqueta, opts = {}) {
-  const { id = "", claseColor = "", clickable = false, secundaria = false } = opts;
+  const { id = "", claseColor = "", clickable = false, secundaria = false, icono = "" } = opts;
   const clases = ["stat-card", claseColor, clickable ? "clickable" : "", secundaria ? "stat-card-secundaria" : ""]
     .filter(Boolean)
     .join(" ");
   const idAttr = id ? ` id="${id}"` : "";
   const valorMostrado = statCardsAnimadas ? valor : 0;
-  return `<div${idAttr} class="${clases}"><div class="numero" data-valor-final="${valor}">${valorMostrado}</div><div class="etiqueta">${etiqueta}</div></div>`;
+  const iconoHtml = icono ? `<div class="icono">${ICONOS_STAT_CARD[icono] || ""}</div>` : "";
+  return `<div${idAttr} class="${clases}">${iconoHtml}<div class="numero" data-valor-final="${valor}">${valorMostrado}</div><div class="etiqueta">${etiqueta}</div></div>`;
 }
 
 function irATodosLosEquipos() {
@@ -1467,16 +1477,17 @@ function renderTablero() {
   const totalServidores = equipos.filter(esServidor).length;
 
   $("statCards").innerHTML =
-    construirStatCard(equiposUsuarioValidados.length, "Equipos totales — clic para ver el listado", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true }) +
-    construirStatCard(equiposLenovo, "Equipos Lenovo — clic para ver el listado", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true }) +
-    construirStatCard(equiposPropios, "Equipos propios — clic para ver el listado", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true }) +
-    construirStatCard(totalEmpresas, "Empresas — clic para ver el desglose", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true }) +
-    construirStatCard(impresoras.length, "Impresoras Canon — clic para ver el catálogo", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true }) +
-    construirStatCard(totalServidores, "Servidores — clic para ver el desglose", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true }) +
-    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD) — clic para revisar", { id: "tarjetaEnRevision", clickable: true, secundaria: true });
+    construirStatCard(equiposUsuarioValidados.length, "Equipos totales — clic para ver el listado", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true, icono: "pc" }) +
+    construirStatCard(equiposLenovo, "Equipos Lenovo — clic para ver el listado", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true, icono: "laptop" }) +
+    construirStatCard(equiposPropios, "Equipos propios — clic para ver el listado", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true, icono: "pc" }) +
+    construirStatCard(totalEmpresas, "Empresas — clic para ver el desglose", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true, icono: "edificio" }) +
+    construirStatCard(impresoras.length, "Impresoras Canon — clic para ver el catálogo", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora" }) +
+    construirStatCard(totalServidores, "Servidores — clic para ver el desglose", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true, icono: "servidor" }) +
+    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD) — clic para revisar", { id: "tarjetaEnRevision", clickable: true, secundaria: true, icono: "alerta" });
 
   if (!statCardsAnimadas) {
     statCardsAnimadas = true;
+    $("statCards").classList.add("animar");
     document.querySelectorAll("#statCards .numero").forEach(animarNumeroStatCard);
   }
 
