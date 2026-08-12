@@ -1859,6 +1859,10 @@ $("btnDashboard").addEventListener("click", () => {
   window.open("dashboard.html?v=20260811i", "dashboardInventarioTI", "width=1280,height=900");
 });
 
+$("btnPbiActa").addEventListener("click", () => {
+  window.open("powerbi_export.json?v=20260812a", "_blank");
+});
+
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
 $("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
 $("btnCancelarIngreso").addEventListener("click", cerrarModalIngreso);
