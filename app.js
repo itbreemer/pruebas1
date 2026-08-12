@@ -926,7 +926,7 @@ function imprimirDesdeEdicion() {
     accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
     declarante: equipo.nombreEmpleado,
     tecnico: TECNICO_ACTUAL || "Sin identificar",
-    jefe: "Gustavo Garcia",
+    jefe: "Gustavo A. García Avila",
     observaciones: equipo.comentarios || "",
     numeroForma: siguienteNumeroForma(),
   });
@@ -1040,7 +1040,7 @@ function abrirModalActa() {
   $("actaDeclarante").value = "";
   $("actaObservaciones").value = "";
   $("actaTecnico").value = TECNICO_ACTUAL || "Sin identificar";
-  $("actaJefe").value = "Gustavo Garcia";
+  $("actaJefe").value = "Gustavo A. García Avila";
   $("actaEstado").textContent = "Escribe o selecciona el Nombre en Red de un equipo ya registrado para autocompletar el acta.";
   $("actaEstado").className = "acta-estado";
   $("modalActaOverlay").classList.add("open");
@@ -1195,7 +1195,7 @@ function generarIngresoCompleto() {
     accion: "Entrega",
     declarante: nombreEmpleado,
     tecnico,
-    jefe: "Gustavo Garcia",
+    jefe: "Gustavo A. García Avila",
     observaciones: $("ingresoObservaciones").value.trim(),
     numeroForma: siguienteNumeroForma(),
     fechaEntrega: $("ingresoFechaEntrega").value,
@@ -1859,9 +1859,7 @@ $("btnDashboard").addEventListener("click", () => {
   window.open("dashboard.html?v=20260811i", "dashboardInventarioTI", "width=1280,height=900");
 });
 
-$("btnPbiActa").addEventListener("click", () => {
-  window.open("powerbi_export.json?v=20260812a", "_blank");
-});
+$("btnPbiActa").addEventListener("click", abrirModalActa);
 
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
 $("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
