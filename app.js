@@ -1406,14 +1406,15 @@ const ICONOS_STAT_CARD = {
 };
 
 function construirStatCard(valor, etiqueta, opts = {}) {
-  const { id = "", claseColor = "", clickable = false, secundaria = false, icono = "" } = opts;
+  const { id = "", claseColor = "", clickable = false, secundaria = false, icono = "", titulo = "" } = opts;
   const clases = ["stat-card", claseColor, clickable ? "clickable" : "", secundaria ? "stat-card-secundaria" : ""]
     .filter(Boolean)
     .join(" ");
   const idAttr = id ? ` id="${id}"` : "";
+  const tituloAttr = titulo ? ` title="${titulo}"` : "";
   const valorMostrado = statCardsAnimadas ? valor : 0;
   const iconoHtml = icono ? `<div class="icono">${ICONOS_STAT_CARD[icono] || ""}</div>` : "";
-  return `<div${idAttr} class="${clases}">${iconoHtml}<div class="numero" data-valor-final="${valor}">${valorMostrado}</div><div class="etiqueta">${etiqueta}</div></div>`;
+  return `<div${idAttr} class="${clases}"${tituloAttr}>${iconoHtml}<div class="numero" data-valor-final="${valor}">${valorMostrado}</div><div class="etiqueta">${etiqueta}</div></div>`;
 }
 
 function irATodosLosEquipos() {
@@ -1477,13 +1478,13 @@ function renderTablero() {
   const totalServidores = equipos.filter(esServidor).length;
 
   $("statCards").innerHTML =
-    construirStatCard(equiposUsuarioValidados.length, "Equipos totales — clic para ver el listado", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true, icono: "pc" }) +
-    construirStatCard(equiposLenovo, "Equipos Lenovo — clic para ver el listado", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true, icono: "laptop" }) +
-    construirStatCard(equiposPropios, "Equipos propios — clic para ver el listado", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true, icono: "pc" }) +
-    construirStatCard(totalEmpresas, "Empresas — clic para ver el desglose", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true, icono: "edificio" }) +
-    construirStatCard(impresoras.length, "Impresoras Canon — clic para ver el catálogo", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora" }) +
-    construirStatCard(totalServidores, "Servidores — clic para ver el desglose", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true, icono: "servidor" }) +
-    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD) — clic para revisar", { id: "tarjetaEnRevision", clickable: true, secundaria: true, icono: "alerta" });
+    construirStatCard(equiposUsuarioValidados.length, "Equipos totales", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true, icono: "pc", titulo: "Ver el listado completo" }) +
+    construirStatCard(equiposLenovo, "Equipos Lenovo", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true, icono: "laptop", titulo: "Ver equipos Lenovo" }) +
+    construirStatCard(equiposPropios, "Equipos propios", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true, icono: "pc", titulo: "Ver equipos propios" }) +
+    construirStatCard(totalEmpresas, "Empresas", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true, icono: "edificio", titulo: "Ver desglose por empresa" }) +
+    construirStatCard(impresoras.length, "Impresoras Canon", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora", titulo: "Ver catálogo de impresoras" }) +
+    construirStatCard(totalServidores, "Servidores", { id: "tarjetaServidores", claseColor: "color-slate", clickable: true, icono: "servidor", titulo: "Ver desglose de servidores" }) +
+    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD)", { id: "tarjetaEnRevision", clickable: true, secundaria: true, icono: "alerta", titulo: "Ver equipos en revisión" });
 
   if (!statCardsAnimadas) {
     statCardsAnimadas = true;
