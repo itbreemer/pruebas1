@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812g">
+<link rel="stylesheet" href="style.css?v=20260812h">
 </head>
 <body>
 
@@ -93,22 +93,6 @@
           </div>
         </div>
 
-        <h3 class="subseccion-titulo">Servidores (Infraestructura, aparte del inventario de usuarios)</h3>
-        <div class="tablero-grid">
-          <div class="tablero-panel">
-            <h3>Por Tipo</h3>
-            <div id="tableroServidoresTipo" class="tablero-lista"></div>
-          </div>
-          <div class="tablero-panel">
-            <h3>Por Empresa (top 8)</h3>
-            <div id="tableroServidoresEmpresa" class="tablero-lista"></div>
-          </div>
-          <div class="tablero-panel">
-            <h3>Por Status (top 8)</h3>
-            <div id="tableroServidoresStatus" class="tablero-lista"></div>
-          </div>
-        </div>
-
         <h3 class="subseccion-titulo">Impresoras Canon</h3>
         <div class="tablero-grid">
           <div class="tablero-panel">
@@ -122,6 +106,22 @@
           <div class="tablero-panel">
             <h3>Por Departamento (top 8)</h3>
             <div id="tableroImpresorasDepartamento" class="tablero-lista"></div>
+          </div>
+        </div>
+
+        <h3 class="subseccion-titulo" id="tituloSeccionServidores">Servidores (Infraestructura, aparte del inventario de usuarios)</h3>
+        <div class="tablero-grid">
+          <div class="tablero-panel">
+            <h3>Por Tipo</h3>
+            <div id="tableroServidoresTipo" class="tablero-lista"></div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Por Empresa (top 8)</h3>
+            <div id="tableroServidoresEmpresa" class="tablero-lista"></div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Por Status (top 8)</h3>
+            <div id="tableroServidoresStatus" class="tablero-lista"></div>
           </div>
         </div>
       </section>
@@ -768,12 +768,12 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812g"></script>
+<script src="data.js?v=20260812h"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812g"></script>
+<script src="app.js?v=20260812h"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812g"></script>
+<script type="module" src="firestore-sync.js?v=20260812h"></script>
 </body>
 </html>

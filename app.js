@@ -1446,7 +1446,7 @@ function irAImpresorasVista() {
 function irAServidoresPanel() {
   cambiarVista("tablero");
   requestAnimationFrame(() => {
-    document.querySelector(".subseccion-titulo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    $("tituloSeccionServidores")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
