@@ -71,58 +71,85 @@ $("bloque-propios").addEventListener("click", () => irOpener("irAEquiposPropios"
 $("bloque-riolsa").addEventListener("click", () => irOpener("irAEquiposRiolsaTodos"));
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-function topUbicaciones(lista, max = 4) {
-  const conteo = new Map();
-  lista.forEach((p) => {
-    const u = (p.ubicacion || "").trim() || "Sin ubicación";
-    conteo.set(u, (conteo.get(u) || 0) + 1);
-  });
-  return [...conteo.entries()].sort((a, b) => b[1] - a[1]).slice(0, max);
+/* ---------- Paleta contrastada (misma logica que el tablero principal) ---------- */
+function hexARgb(hex) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
-
-function construirDetalle(idContenedor, lista, tipoValor) {
-  const top = topUbicaciones(lista);
-  const filasHtml = top
-    .map(([u, n]) => `<div class="detalle-fila"><span>${esc(u)}</span><strong>${n}</strong></div>`)
-    .join("");
-  $(idContenedor).innerHTML = `${filasHtml}<button type="button" class="detalle-link" data-tipo="${esc(tipoValor)}">Ver catálogo completo →</button>`;
+function rgbAHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4;
+    }
+    h *= 60;
+  }
+  return { h, s: s * 100, l: l * 100 };
 }
-
-document.querySelectorAll(".impresora-card .cabecera-imp").forEach((cabecera) => {
-  cabecera.addEventListener("click", () => {
-    cabecera.closest(".impresora-card").classList.toggle("abierta");
-  });
-});
+function hslAHex(h, s, l) {
+  h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const toHex = (v) => Math.round((v + m) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+function generarPaleta(hex, n) {
+  const { h, s, l } = rgbAHsl(hexARgb(hex).r, hexARgb(hex).g, hexARgb(hex).b);
+  const colores = [];
+  for (let i = 0; i < n; i++) {
+    colores.push(hslAHex(h + i * 18, Math.max(42, s - i * 5), Math.min(80, l + i * 11)));
+  }
+  return colores;
+}
 
 document.addEventListener("click", (ev) => {
-  const link = ev.target.closest(".detalle-link");
-  if (link) {
-    ev.stopPropagation();
-    irOpener("irACatalogoImpresorasFiltrado", "tipo", link.dataset.tipo);
-  }
+  const fila = ev.target.closest(".leyenda-item-clickable");
+  if (fila) irOpener("irACatalogoImpresorasFiltrado", "tipo", fila.dataset.tipo);
 });
 
 function pintarImpresoras() {
   const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  const listaBn = catalogo.filter((p) => (p.tipo || "").trim() === "B/N");
-  const listaColor = catalogo.filter((p) => (p.tipo || "").trim() === "Colores");
-  const listaPlotter = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter");
-  const total = listaBn.length + listaColor.length + listaPlotter.length;
-  const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
+  const datos = [
+    ["B/N", catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length],
+    ["Colores", catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length],
+    ["Plotter", catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length],
+  ].filter(([, n]) => n > 0);
+  const total = datos.reduce((s, [, n]) => s + n, 0);
+  const paleta = generarPaleta("#6d3fa0", datos.length);
 
-  animarNumero($("impresoras-bn-total"), listaBn.length);
-  animarNumero($("impresoras-color-total"), listaColor.length);
-  animarNumero($("impresoras-plotter-total"), listaPlotter.length);
-  $("impresoras-bn-pct").textContent = `${pct(listaBn.length)}%`;
-  $("impresoras-color-pct").textContent = `${pct(listaColor.length)}%`;
-  $("impresoras-plotter-pct").textContent = `${pct(listaPlotter.length)}%`;
-  $("impresoras-bn-barra").style.width = `${pct(listaBn.length)}%`;
-  $("impresoras-color-barra").style.width = `${pct(listaColor.length)}%`;
-  $("impresoras-plotter-barra").style.width = `${pct(listaPlotter.length)}%`;
+  let acc = 0;
+  const paradas = datos.map(([, valor], i) => {
+    const desde = (acc / total) * 100;
+    acc += valor;
+    const hasta = (acc / total) * 100;
+    return `${paleta[i]} ${desde}% ${hasta}%`;
+  });
+  $("impresoras-donut").style.background = `conic-gradient(${paradas.join(", ")})`;
+  animarNumero($("impresoras-total"), total);
 
-  construirDetalle("detalle-impresoras-bn", listaBn, "B/N");
-  construirDetalle("detalle-impresoras-color", listaColor, "Colores");
-  construirDetalle("detalle-impresoras-plotter", listaPlotter, "Plotter");
+  $("impresoras-leyenda").innerHTML = datos
+    .map(
+      ([nombre, valor], i) => `
+    <div class="leyenda-item leyenda-item-clickable" data-tipo="${esc(nombre)}">
+      <span class="punto" style="background:${paleta[i]}"></span>${esc(nombre)}<strong>${valor}</strong>
+    </div>`
+    )
+    .join("");
 }
 
 function renderTodo(equipos) {
