@@ -125,49 +125,6 @@ function pintarImpresoras() {
   construirDetalle("detalle-impresoras-plotter", listaPlotter, "Plotter");
 }
 
-function tiempoRelativo(iso) {
-  const fecha = new Date(iso);
-  if (isNaN(fecha.getTime())) return "";
-  const minutos = Math.floor((Date.now() - fecha.getTime()) / 60000);
-  if (minutos < 1) return "hace un momento";
-  if (minutos < 60) return `hace ${minutos} min`;
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24) return `hace ${horas} h`;
-  const dias = Math.floor(horas / 24);
-  if (dias < 30) return `hace ${dias} d`;
-  return fecha.toLocaleDateString("es-GT");
-}
-
-function pintarActividad(equipos) {
-  const recientes = equipos
-    .filter((e) => nonEmpty(e.ultimaModificacion) && nonEmpty(e.nombreRed))
-    .sort((a, b) => (b.ultimaModificacion || "").localeCompare(a.ultimaModificacion || ""))
-    .slice(0, 6);
-
-  const contenedor = $("lista-actividad");
-  if (!recientes.length) {
-    contenedor.innerHTML = `<p class="vacio-actividad">Sin registros recientes.</p>`;
-    return;
-  }
-  contenedor.innerHTML = recientes
-    .map(
-      (e) => `
-    <div class="fila-actividad" data-nombre-red="${esc(e.nombreRed)}">
-      <div class="info">
-        <span class="nombre">${esc(e.nombreRed)}</span>
-        <span class="sub">${esc(e.nombreEmpleado || e.empresa || "Sin dato")}</span>
-      </div>
-      <span class="tiempo">${esc(tiempoRelativo(e.ultimaModificacion))}</span>
-    </div>`
-    )
-    .join("");
-}
-
-document.addEventListener("click", (ev) => {
-  const filaAct = ev.target.closest(".fila-actividad");
-  if (filaAct) irOpener("irAListaEquiposFiltrada", "nombreRed", filaAct.dataset.nombreRed);
-});
-
 function renderTodo(equipos) {
   const noServidor = equipos.filter((e) => !esServidor(e));
   const validados = noServidor.filter((e) => !esEnRevision(e));
@@ -183,8 +140,6 @@ function renderTodo(equipos) {
   // Bloque 3: Equipos RIOLSA, todos (validados + en revision), sin servidor
   const riolsa = noServidor.filter(esRiolsa);
   pintarBloque("riolsa", riolsa.filter(esPC).length, riolsa.filter(esLaptop).length);
-
-  pintarActividad(equipos);
 
   $("fecha-corte").textContent = `Actualizado ${new Date().toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}`;
 }

@@ -202,30 +202,11 @@
   #envoltorio.cargado .bloques:nth-of-type(2) .bloque:nth-child(1) { animation-delay: 0.18s; }
   #envoltorio.cargado .bloques:nth-of-type(2) .bloque:nth-child(2) { animation-delay: 0.24s; }
   #envoltorio.cargado .bloques:nth-of-type(2) .bloque:nth-child(3) { animation-delay: 0.3s; }
-  #envoltorio.cargado .bloque.actividad { animation-delay: 0.36s; }
   @keyframes aparecer {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .bloque.actividad { margin-top: 16px; }
-  .lista-actividad { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
-  .fila-actividad {
-    display: flex; justify-content: space-between; align-items: center; gap: 14px;
-    padding: 10px 8px; margin: 0 -8px; border-radius: 9px; cursor: pointer; transition: background 0.12s ease;
-  }
-  .fila-actividad:hover { background: var(--fila-hover); }
-  .fila-actividad .info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .fila-actividad .nombre {
-    font-size: 0.86rem; font-weight: 650; color: var(--texto);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .fila-actividad .sub {
-    font-size: 0.76rem; color: var(--texto-tenue);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .fila-actividad .tiempo { font-size: 0.76rem; color: var(--texto-tenue); flex: none; font-variant-numeric: tabular-nums; }
-  .vacio-actividad { font-size: 0.84rem; color: var(--texto-tenue); padding: 8px 0 0; margin: 0; }
 </style>
 </head>
 <body>
@@ -332,15 +313,9 @@
     </div>
   </div>
 
-  <div class="bloque actividad" id="bloque-actividad">
-    <p class="titulo">Actividad reciente</p>
-    <p class="nota">Últimos equipos actualizados en el sistema</p>
-    <div class="lista-actividad" id="lista-actividad"></div>
-  </div>
-
 </div>
 
-<script src="impresoras.js?v=20260811e"></script>
-<script type="module" src="dashboard.js?v=20260811e"></script>
+<script src="impresoras.js?v=20260811f"></script>
+<script type="module" src="dashboard.js?v=20260811f"></script>
 </body>
 </html>
