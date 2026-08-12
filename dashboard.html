@@ -31,6 +31,7 @@
     --borde: #e2e6ef;
     --texto: #16223a;
     --texto-tenue: #5b6478;
+    --fila-hover: rgba(22, 41, 79, 0.045);
     --sombra: 0 1px 2px rgba(22, 41, 79, 0.06), 0 8px 24px -12px rgba(22, 41, 79, 0.18);
   }
 
@@ -43,6 +44,7 @@
       --rosa-700: #e8a0c6; --rosa-500: #d972a8; --rosa-100: #3a1f2e;
       --coral-700: #f0a595; --coral-500: #e07a63; --coral-100: #34160f;
       --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
+      --fila-hover: rgba(255, 255, 255, 0.06);
       --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
     }
   }
@@ -54,6 +56,7 @@
     --rosa-700: #e8a0c6; --rosa-500: #d972a8; --rosa-100: #3a1f2e;
     --coral-700: #f0a595; --coral-500: #e07a63; --coral-100: #34160f;
     --fondo: #0b1526; --superficie: #101d34; --borde: #223353; --texto: #eef2f8; --texto-tenue: #9caac4;
+    --fila-hover: rgba(255, 255, 255, 0.06);
     --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
   }
 
@@ -101,12 +104,9 @@
   }
   .bloque.clickable:hover::after { opacity: 1; }
 
-  .bloque.lenovo { --acento: var(--azul-700); --acento2: var(--azul-500); --acento-bg: var(--azul-100); }
-  .bloque.propios { --acento: var(--verde-700); --acento2: var(--verde-500); --acento-bg: var(--verde-100); }
-  .bloque.riolsa { --acento: var(--ambar-700); --acento2: var(--ambar-500); --acento-bg: var(--ambar-100); }
-  .bloque.impresoras-bn { --acento: var(--morado-700); --acento2: var(--morado-500); --acento-bg: var(--morado-100); }
-  .bloque.impresoras-color { --acento: var(--rosa-700); --acento2: var(--rosa-500); --acento-bg: var(--rosa-100); }
-  .bloque.impresoras-plotter { --acento: var(--coral-700); --acento2: var(--coral-500); --acento-bg: var(--coral-100); }
+  .bloque.lenovo { --acento: var(--azul-700); --acento2: var(--azul-500); }
+  .bloque.propios { --acento: var(--verde-700); --acento2: var(--verde-500); }
+  .bloque.riolsa { --acento: var(--ambar-700); --acento2: var(--ambar-500); }
 
   .bloque .titulo { font-size: 0.85rem; font-weight: 700; color: var(--texto-tenue); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; }
   .bloque .nota { font-size: 0.78rem; color: var(--texto-tenue); margin: 0 0 14px; }
@@ -139,6 +139,35 @@
   .leyenda-item strong {
     margin-left: auto; font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
     font-variant-numeric: tabular-nums; font-size: 0.92rem; font-weight: 700;
+  }
+
+  .bloque.bloque-impresoras { --acento: var(--morado-700); }
+  .bloque-impresoras .total { margin-bottom: 4px; }
+
+  .barra-apilada {
+    display: flex; height: 14px; border-radius: 7px; overflow: hidden;
+    background: var(--borde); margin: 14px 0 16px;
+  }
+  .barra-apilada .segmento { transition: width 0.5s ease; min-width: 0; }
+  .seg-bn { background: var(--morado-500); }
+  .seg-color { background: var(--rosa-500); }
+  .seg-plotter { background: var(--coral-500); }
+
+  .lista-impresoras { display: flex; flex-direction: column; gap: 2px; }
+  .fila-impresora {
+    display: grid; grid-template-columns: 12px 1fr 44px 46px; align-items: center; gap: 12px;
+    padding: 9px 8px; margin: 0 -8px; border-radius: 9px; cursor: pointer; transition: background 0.12s ease;
+  }
+  .fila-impresora:hover { background: var(--fila-hover); }
+  .fila-impresora .punto { width: 10px; height: 10px; border-radius: 50%; }
+  .punto-bn { background: var(--morado-500); }
+  .punto-color { background: var(--rosa-500); }
+  .punto-plotter { background: var(--coral-500); }
+  .fila-impresora .etiqueta { font-size: 0.86rem; color: var(--texto); font-weight: 600; }
+  .fila-impresora .pct { font-size: 0.76rem; color: var(--texto-tenue); text-align: right; }
+  .fila-impresora .valor {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace; font-variant-numeric: tabular-nums;
+    font-size: 0.92rem; font-weight: 700; text-align: right;
   }
 
   .nota-pie {
@@ -218,29 +247,40 @@
     </div>
   </div>
 
-  <div class="bloques" style="margin-top: 4px;">
-    <div class="bloque impresoras-bn clickable" id="bloque-impresoras-bn" title="Ver impresoras B/N en el catálogo">
-      <p class="titulo">Impresoras Canon B/N</p>
-      <p class="nota">Impresión monocromática</p>
-      <div class="total" id="impresoras-bn-total">—</div>
+  <div class="bloque bloque-impresoras" style="margin-top: 4px;">
+    <p class="titulo">Impresoras Canon</p>
+    <p class="nota">Total del parque de impresión</p>
+    <div class="total" id="impresoras-total-general">—</div>
+    <div class="barra-apilada">
+      <span class="segmento seg-bn" id="seg-bn"></span>
+      <span class="segmento seg-color" id="seg-color"></span>
+      <span class="segmento seg-plotter" id="seg-plotter"></span>
     </div>
-
-    <div class="bloque impresoras-color clickable" id="bloque-impresoras-color" title="Ver impresoras a color en el catálogo">
-      <p class="titulo">Impresoras Canon Colores</p>
-      <p class="nota">Impresión a color</p>
-      <div class="total" id="impresoras-color-total">—</div>
-    </div>
-
-    <div class="bloque impresoras-plotter clickable" id="bloque-impresoras-plotter" title="Ver plotters en el catálogo">
-      <p class="titulo">Plotters</p>
-      <p class="nota">Gran formato</p>
-      <div class="total" id="impresoras-plotter-total">—</div>
+    <div class="lista-impresoras">
+      <div class="fila-impresora" id="fila-impresoras-bn" title="Ver impresoras B/N en el catálogo">
+        <span class="punto punto-bn"></span>
+        <span class="etiqueta">Impresoras Canon B/N</span>
+        <span class="pct" id="impresoras-bn-pct">—</span>
+        <span class="valor" id="impresoras-bn-total">—</span>
+      </div>
+      <div class="fila-impresora" id="fila-impresoras-color" title="Ver impresoras a color en el catálogo">
+        <span class="punto punto-color"></span>
+        <span class="etiqueta">Impresoras Canon Colores</span>
+        <span class="pct" id="impresoras-color-pct">—</span>
+        <span class="valor" id="impresoras-color-total">—</span>
+      </div>
+      <div class="fila-impresora" id="fila-impresoras-plotter" title="Ver plotters en el catálogo">
+        <span class="punto punto-plotter"></span>
+        <span class="etiqueta">Plotters</span>
+        <span class="pct" id="impresoras-plotter-pct">—</span>
+        <span class="valor" id="impresoras-plotter-total">—</span>
+      </div>
     </div>
   </div>
 
 </div>
 
-<script src="impresoras.js?v=20260811b"></script>
-<script type="module" src="dashboard.js?v=20260811b"></script>
+<script src="impresoras.js?v=20260811c"></script>
+<script type="module" src="dashboard.js?v=20260811c"></script>
 </body>
 </html>

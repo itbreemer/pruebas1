@@ -69,15 +69,28 @@ function irOpener(nombreFuncion, ...args) {
 $("bloque-lenovo").addEventListener("click", () => irOpener("irAEquiposLenovo"));
 $("bloque-propios").addEventListener("click", () => irOpener("irAEquiposPropios"));
 $("bloque-riolsa").addEventListener("click", () => irOpener("irAEquiposRiolsaTodos"));
-$("bloque-impresoras-bn").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "B/N"));
-$("bloque-impresoras-color").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Colores"));
-$("bloque-impresoras-plotter").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Plotter"));
+$("fila-impresoras-bn").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "B/N"));
+$("fila-impresoras-color").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Colores"));
+$("fila-impresoras-plotter").addEventListener("click", () => irOpener("irACatalogoImpresorasFiltrado", "tipo", "Plotter"));
 
 function pintarImpresoras() {
   const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  animarNumero($("impresoras-bn-total"), catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length);
-  animarNumero($("impresoras-color-total"), catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length);
-  animarNumero($("impresoras-plotter-total"), catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length);
+  const bn = catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length;
+  const color = catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length;
+  const plotter = catalogo.filter((p) => (p.tipo || "").trim() === "Plotter").length;
+  const total = bn + color + plotter;
+  const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
+  animarNumero($("impresoras-total-general"), total);
+  animarNumero($("impresoras-bn-total"), bn);
+  animarNumero($("impresoras-color-total"), color);
+  animarNumero($("impresoras-plotter-total"), plotter);
+  $("impresoras-bn-pct").textContent = `${pct(bn)}%`;
+  $("impresoras-color-pct").textContent = `${pct(color)}%`;
+  $("impresoras-plotter-pct").textContent = `${pct(plotter)}%`;
+  $("seg-bn").style.width = `${pct(bn)}%`;
+  $("seg-color").style.width = `${pct(color)}%`;
+  $("seg-plotter").style.width = `${pct(plotter)}%`;
 }
 
 function renderTodo(equipos) {
