@@ -1010,12 +1010,34 @@ function cerrarModalCodigo() {
   $("modalCodigoOverlay").classList.remove("open");
 }
 
+function codigoExistente(idUsuario, idActual) {
+  const idU = (idUsuario || "").trim().toLowerCase();
+  if (!idU) return null;
+  return codigosData.find((c) => c.id !== idActual && (c.idUsuario || "").trim().toLowerCase() === idU) || null;
+}
+
 function onSubmitCodigo(e) {
   e.preventDefault();
+  const esNuevo = !$("codId").value.trim();
   const data = {};
   CODIGO_FIELD_IDS.forEach((idCampo) => {
     data[CODIGO_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
   });
+
+  // Solo se valida al crear un registro nuevo: el catalogo importado del
+  // Excel ya trae miles de IDs repetidos de forma legitima (historial de
+  // reasignaciones), asi que exigir unicidad al editar esos registros
+  // bloquearia guardar cosas que llevan años asi sin ser un error real.
+  if (esNuevo) {
+    const existente = codigoExistente(data.idUsuario, data.id);
+    if (existente) {
+      alert(
+        `El ID "${data.idUsuario}" ya está en uso por ${existente.nombre || "otro usuario"} (clave ${existente.clave || "N/A"}, ${existente.origen || "sin departamento"}). Usa otro ID o edita ese registro existente en vez de crear uno nuevo.`
+      );
+      return;
+    }
+  }
+
   data.ultimaModificacion = new Date().toISOString().slice(0, 16);
 
   let guardado;
