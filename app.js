@@ -16,10 +16,10 @@ const IMPRESORA_CAMPO_POR_ID = {
   impEmpresa: "empresa", impDepartamento: "departamento", impUbicacion: "ubicacion", impActivoFijo: "activoFijo",
 };
 
-const CODIGO_FIELD_IDS = ["codId", "codIdUsuario", "codNombre", "codClave", "codObservacion", "codOrigen", "codAgregadoPor"];
+const CODIGO_FIELD_IDS = ["codId", "codIdUsuario", "codNombre", "codClave", "codAgregadoPor"];
 const CODIGO_CAMPO_POR_ID = {
   codId: "id", codIdUsuario: "idUsuario", codNombre: "nombre", codClave: "clave",
-  codObservacion: "observacion", codOrigen: "origen", codAgregadoPor: "agregadoPor",
+  codAgregadoPor: "agregadoPor",
 };
 
 let impresorasData = [];
@@ -620,12 +620,6 @@ function valoresUnicosImpresoras(campo) {
   );
 }
 
-function valoresUnicosCodigos(campo) {
-  return [...new Set(codigosData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, "es")
-  );
-}
-
 function poblarFiltrosYDatalists() {
   poblarSelect($("filtroEmpresa"), valoresUnicos("empresa"), "Todas las empresas");
   poblarSelect($("filtroStatus"), valoresUnicos("status"), "Todos los status");
@@ -693,14 +687,6 @@ function poblarFiltrosYDatalists() {
       opt.value = v;
       dl.appendChild(opt);
     });
-  });
-
-  const dlCodOrigen = $("dl-codOrigen");
-  dlCodOrigen.innerHTML = "";
-  valoresUnicosCodigos("origen").forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    dlCodOrigen.appendChild(opt);
   });
 
   ["dl-nombreRedActa", "dl-nombreRedIngreso"].forEach((dlId) => {
@@ -1009,10 +995,12 @@ function abrirModalCodigo(codigo) {
       const campo = CODIGO_CAMPO_POR_ID[idCampo];
       if (codigo[campo] !== undefined) $(idCampo).value = codigo[campo];
     });
+    $("codAgregadoPor").value = codigo.agregadoPor || TECNICO_ACTUAL || "Sin identificar";
     $("btnEliminarModalCodigo").style.display = "";
   } else {
     $("modalCodigoTitulo").textContent = "Nuevo código de usuario";
     $("codId").value = "";
+    $("codAgregadoPor").value = TECNICO_ACTUAL || "Sin identificar";
     $("btnEliminarModalCodigo").style.display = "none";
   }
   $("modalCodigoOverlay").classList.add("open");

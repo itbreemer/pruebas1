@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812n">
+<link rel="stylesheet" href="style.css?v=20260812o">
 </head>
 <body>
 
@@ -704,17 +704,8 @@
         </div>
         <div class="glpi-col">
           <div class="glpi-row">
-            <label for="codObservacion">Correo / Observación</label>
-            <input type="text" id="codObservacion">
-          </div>
-          <div class="glpi-row">
-            <label for="codOrigen">Departamento (origen)</label>
-            <input type="text" id="codOrigen" list="dl-codOrigen">
-            <datalist id="dl-codOrigen"></datalist>
-          </div>
-          <div class="glpi-row">
             <label for="codAgregadoPor">Agregado por</label>
-            <input type="text" id="codAgregadoPor">
+            <input type="text" id="codAgregadoPor" readonly required>
           </div>
         </div>
       </div>
@@ -929,15 +920,15 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812n"></script>
+<script src="data.js?v=20260812o"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812n"></script>
+<script src="app.js?v=20260812o"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812n"></script>
-<script type="module" src="impresoras-sync.js?v=20260812n"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260812n"></script>
+<script type="module" src="firestore-sync.js?v=20260812o"></script>
+<script type="module" src="impresoras-sync.js?v=20260812o"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260812o"></script>
 </body>
 </html>
