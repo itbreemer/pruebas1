@@ -122,8 +122,7 @@ document.addEventListener("click", (ev) => {
   if (fila) irOpener("irACatalogoImpresorasFiltrado", "tipo", fila.dataset.tipo);
 });
 
-function pintarImpresoras() {
-  const catalogo = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+function pintarImpresoras(catalogo) {
   const datos = [
     ["B/N", catalogo.filter((p) => (p.tipo || "").trim() === "B/N").length],
     ["Colores", catalogo.filter((p) => (p.tipo || "").trim() === "Colores").length],
@@ -181,7 +180,8 @@ onAuthStateChanged(auth, (user) => {
   $("estadoCarga").style.display = "none";
   $("envoltorio").style.display = "";
   $("envoltorio").classList.add("cargado");
-  pintarImpresoras();
+  const catalogoEstatico = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  pintarImpresoras(catalogoEstatico);
   onSnapshot(
     collection(db, "equipos"),
     (snapshot) => {
@@ -195,4 +195,10 @@ onAuthStateChanged(auth, (user) => {
       $("envoltorio").style.display = "none";
     }
   );
+  onSnapshot(collection(db, "impresoras"), (snapshot) => {
+    if (snapshot.empty) return;
+    const lista = [];
+    snapshot.forEach((d) => lista.push(d.data()));
+    pintarImpresoras(lista);
+  });
 });

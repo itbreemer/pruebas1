@@ -1,8 +1,21 @@
 const STORAGE_KEY = "equiposTI_v2";
 const CONTADOR_KEY = "actaContador_v1";
+const IMPRESORAS_STORAGE_KEY = "impresorasTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
+
+const IMPRESORA_FIELD_IDS = [
+  "impId", "impTipo", "impTipoEquipoImp", "impModelo", "impSerial", "impIp",
+  "impGpr", "impCodigoPrinter", "impEmpresa", "impDepartamento", "impUbicacion", "impActivoFijo",
+];
+const IMPRESORA_CAMPO_POR_ID = {
+  impId: "id", impTipo: "tipo", impTipoEquipoImp: "tipoEquipoImp", impModelo: "modelo",
+  impSerial: "serial", impIp: "ip", impGpr: "gpr", impCodigoPrinter: "codigoPrinter",
+  impEmpresa: "empresa", impDepartamento: "departamento", impUbicacion: "ubicacion", impActivoFijo: "activoFijo",
+};
+
+let impresorasData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -387,6 +400,71 @@ function sincronizarEliminacion(id) {
   }
 }
 
+/* ---------- Catálogo de impresoras (editable, ver impresoras-sync.js) ---------- */
+
+function cargarImpresoras() {
+  const raw = localStorage.getItem(IMPRESORAS_STORAGE_KEY);
+  if (raw) {
+    try {
+      impresorasData = JSON.parse(raw);
+      return;
+    } catch {
+      impresorasData = [];
+    }
+  }
+  // Primera vez que corre en este navegador: se siembra desde el catálogo
+  // estático (impresoras.js) para no perder los datos que ya existían ahí.
+  const semilla = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  impresorasData = semilla.map((p, i) => ({ ...p, id: p.id || `semilla-${i}` }));
+  guardarImpresoras();
+}
+
+function guardarImpresoras() {
+  localStorage.setItem(IMPRESORAS_STORAGE_KEY, JSON.stringify(impresorasData));
+}
+
+function obtenerImpresorasActuales() {
+  return impresorasData;
+}
+
+function establecerImpresorasDesdeSync(remotas) {
+  const remotasPorId = new Map(remotas.map((p) => [p.id, p]));
+  const combinadas = [];
+  const idsVistos = new Set();
+
+  impresorasData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remota = remotasPorId.get(local.id);
+    if (!remota || (local.ultimaModificacion || "") > (remota.ultimaModificacion || "")) {
+      combinadas.push(local);
+      sincronizarImpresora(local);
+    } else {
+      combinadas.push(remota);
+    }
+  });
+
+  remotas.forEach((remota) => {
+    if (!idsVistos.has(remota.id)) combinadas.push(remota);
+  });
+
+  impresorasData = combinadas;
+  guardarImpresoras();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarImpresora(impresora) {
+  if (window.FirestoreSyncImpresoras && typeof window.FirestoreSyncImpresoras.guardarImpresora === "function") {
+    window.FirestoreSyncImpresoras.guardarImpresora(impresora);
+  }
+}
+
+function sincronizarEliminacionImpresora(id) {
+  if (window.FirestoreSyncImpresoras && typeof window.FirestoreSyncImpresoras.eliminarImpresora === "function") {
+    window.FirestoreSyncImpresoras.eliminarImpresora(id);
+  }
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -463,6 +541,12 @@ function valoresUnicos(campo) {
   );
 }
 
+function valoresUnicosImpresoras(campo) {
+  return [...new Set(impresorasData.map((p) => (p[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
 function poblarFiltrosYDatalists() {
   poblarSelect($("filtroEmpresa"), valoresUnicos("empresa"), "Todas las empresas");
   poblarSelect($("filtroStatus"), valoresUnicos("status"), "Todos los status");
@@ -509,6 +593,23 @@ function poblarFiltrosYDatalists() {
     const dl = $(dlId);
     dl.innerHTML = "";
     valoresUnicos(campo).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+  });
+
+  const datalistMapImpresoras = {
+    "dl-impTipoEquipoImp": "tipoEquipoImp",
+    "dl-impModelo": "modelo",
+    "dl-impEmpresa": "empresa",
+    "dl-impDepartamento": "departamento",
+    "dl-impUbicacion": "ubicacion",
+  };
+  Object.entries(datalistMapImpresoras).forEach(([dlId, campo]) => {
+    const dl = $(dlId);
+    dl.innerHTML = "";
+    valoresUnicosImpresoras(campo).forEach((v) => {
       const opt = document.createElement("option");
       opt.value = v;
       dl.appendChild(opt);
@@ -747,6 +848,67 @@ function eliminarActual() {
   cerrarModal();
   poblarFiltrosYDatalists();
   render();
+  refrescarVistasSecundarias();
+}
+
+/* ---------- Modal de impresoras (nueva / editar) ---------- */
+
+function abrirModalImpresora(impresora) {
+  $("formImpresora").reset();
+  if (impresora) {
+    $("modalImpresoraTitulo").textContent = `Editar impresora — ${impresora.modelo || impresora.serial || ""}`;
+    IMPRESORA_FIELD_IDS.forEach((idCampo) => {
+      const campo = IMPRESORA_CAMPO_POR_ID[idCampo];
+      if (impresora[campo] !== undefined) $(idCampo).value = impresora[campo];
+    });
+    $("btnEliminarModalImpresora").style.display = "";
+  } else {
+    $("modalImpresoraTitulo").textContent = "Nueva impresora";
+    $("impId").value = "";
+    $("impTipo").value = "B/N";
+    $("btnEliminarModalImpresora").style.display = "none";
+  }
+  $("modalImpresoraOverlay").classList.add("open");
+}
+
+function cerrarModalImpresora() {
+  $("modalImpresoraOverlay").classList.remove("open");
+}
+
+function onSubmitImpresora(e) {
+  e.preventDefault();
+  const data = {};
+  IMPRESORA_FIELD_IDS.forEach((idCampo) => {
+    data[IMPRESORA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardada;
+  if (data.id) {
+    const idx = impresorasData.findIndex((p) => p.id === data.id);
+    if (idx !== -1) impresorasData[idx] = { ...impresorasData[idx], ...data };
+    guardada = impresorasData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    impresorasData.push(data);
+    guardada = data;
+  }
+  guardarImpresoras();
+  sincronizarImpresora(guardada);
+  cerrarModalImpresora();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function eliminarImpresoraActual() {
+  const id = $("impId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar esta impresora de forma permanente?")) return;
+  impresorasData = impresorasData.filter((p) => p.id !== id);
+  guardarImpresoras();
+  sincronizarEliminacionImpresora(id);
+  cerrarModalImpresora();
+  poblarFiltrosYDatalists();
   refrescarVistasSecundarias();
 }
 
@@ -1590,7 +1752,7 @@ function renderTablero() {
     $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
   }
 
-  const impresoras = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
+  const impresoras = impresorasData;
 
   $("statCards").innerHTML =
     construirStatCard(equiposUsuarioValidados.length, "Equipos totales", { id: "tarjetaTotales", claseColor: "color-azul", clickable: true, icono: "pc", titulo: "Ver el listado completo" }) +
@@ -1852,8 +2014,7 @@ const vistaCatalogoMonitores = crearVistaLista({
 });
 
 function obtenerCatalogoImpresoras() {
-  const lista = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  const ordenada = [...lista].sort((a, b) => (a.departamento || "").localeCompare(b.departamento || ""));
+  const ordenada = [...impresorasData].sort((a, b) => (a.departamento || "").localeCompare(b.departamento || ""));
   return ordenada.map((p) => ({
     impresora: p,
     celdas: `
@@ -1881,6 +2042,7 @@ const vistaCatalogoImpresoras = crearVistaLista({
       .join(" ")
       .toLowerCase()
       .includes(t),
+  alClicFila: (r) => abrirModalImpresora(r.impresora),
 });
 
 function obtenerImpresoras() {
@@ -1969,6 +2131,12 @@ $("btnEliminarModal").addEventListener("click", eliminarActual);
 $("btnImprimirDesdeModal").addEventListener("click", imprimirDesdeEdicion);
 $("formEquipo").addEventListener("submit", onSubmit);
 
+$("btnNuevaImpresora").addEventListener("click", () => abrirModalImpresora(null));
+$("btnCerrarModalImpresora").addEventListener("click", cerrarModalImpresora);
+$("btnCancelarImpresora").addEventListener("click", cerrarModalImpresora);
+$("btnEliminarModalImpresora").addEventListener("click", eliminarImpresoraActual);
+$("formImpresora").addEventListener("submit", onSubmitImpresora);
+
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
 $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
@@ -1976,7 +2144,7 @@ $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
 $("btnDashboard").addEventListener("click", () => {
-  window.open("dashboard.html?v=20260811j", "dashboardInventarioTI", "width=1280,height=900");
+  window.open("dashboard.html?v=20260811k", "dashboardInventarioTI", "width=1280,height=900");
 });
 
 $("btnVerTodosDepartamentos").addEventListener("click", () => irACatalogoImpresorasFiltrado(null, ""));
@@ -2007,6 +2175,7 @@ $("btnUltimo").addEventListener("click", () => {
 });
 
 cargarDatos();
+cargarImpresoras();
 poblarFiltrosYDatalists();
 render();
 renderTablero();

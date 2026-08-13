@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812l">
+<link rel="stylesheet" href="style.css?v=20260812m">
 </head>
 <body>
 
@@ -277,6 +277,7 @@
         <p class="subseccion-nota">Impresoras multifuncionales compartidas por departamento; no están asignadas a un equipo de cómputo específico.</p>
         <section class="toolbar">
           <input type="text" id="buscador_catalogoImpresoras" placeholder="Buscar por IP, serial, modelo, departamento, ubicación, empresa...">
+          <button type="button" id="btnNuevaImpresora" class="btn btn-primary">+ Nueva impresora</button>
         </section>
         <section class="tabla-wrap">
           <table class="tabla">
@@ -564,6 +565,88 @@
   </div>
 </div>
 
+<!-- Modal de nueva impresora / edición de impresora -->
+<div id="modalImpresoraOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalImpresoraTitulo">Nueva impresora</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalImpresora" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formImpresora" class="modal-body">
+      <input type="hidden" id="impId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="impTipo">Tipo</label>
+            <select id="impTipo" required>
+              <option value="B/N">B/N</option>
+              <option value="Colores">Colores</option>
+              <option value="Plotter">Plotter</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="impTipoEquipoImp">Tipo de equipo</label>
+            <input type="text" id="impTipoEquipoImp" list="dl-impTipoEquipoImp" placeholder="Multifuncional">
+            <datalist id="dl-impTipoEquipoImp"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="impModelo">Modelo</label>
+            <input type="text" id="impModelo" list="dl-impModelo">
+            <datalist id="dl-impModelo"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="impSerial">Serial</label>
+            <input type="text" id="impSerial">
+          </div>
+          <div class="glpi-row">
+            <label for="impIp">IP</label>
+            <input type="text" id="impIp">
+          </div>
+          <div class="glpi-row">
+            <label for="impGpr">GPR</label>
+            <input type="text" id="impGpr">
+          </div>
+          <div class="glpi-row">
+            <label for="impCodigoPrinter">Código Printer</label>
+            <input type="text" id="impCodigoPrinter">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="impEmpresa">Empresa</label>
+            <input type="text" id="impEmpresa" list="dl-impEmpresa">
+            <datalist id="dl-impEmpresa"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="impDepartamento">Departamento</label>
+            <input type="text" id="impDepartamento" list="dl-impDepartamento">
+            <datalist id="dl-impDepartamento"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="impUbicacion">Ubicación (planta/módulo)</label>
+            <input type="text" id="impUbicacion" list="dl-impUbicacion">
+            <datalist id="dl-impUbicacion"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="impActivoFijo">Activo Fijo</label>
+            <input type="text" id="impActivoFijo" placeholder="No Tiene">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalImpresora" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarImpresora" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal de generación rápida de Acta -->
 <div id="modalActaOverlay" class="modal-overlay no-print">
   <div class="modal modal-acta">
@@ -763,12 +846,13 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812l"></script>
+<script src="data.js?v=20260812m"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812l"></script>
+<script src="app.js?v=20260812m"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812l"></script>
+<script type="module" src="firestore-sync.js?v=20260812m"></script>
+<script type="module" src="impresoras-sync.js?v=20260812m"></script>
 </body>
 </html>
