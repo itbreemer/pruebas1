@@ -1,6 +1,7 @@
 const STORAGE_KEY = "equiposTI_v2";
 const CONTADOR_KEY = "actaContador_v1";
 const IMPRESORAS_STORAGE_KEY = "impresorasTI_v1";
+const CODIGOS_STORAGE_KEY = "codigosImpresionTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -15,7 +16,14 @@ const IMPRESORA_CAMPO_POR_ID = {
   impEmpresa: "empresa", impDepartamento: "departamento", impUbicacion: "ubicacion", impActivoFijo: "activoFijo",
 };
 
+const CODIGO_FIELD_IDS = ["codId", "codIdUsuario", "codNombre", "codClave", "codObservacion", "codOrigen", "codAgregadoPor"];
+const CODIGO_CAMPO_POR_ID = {
+  codId: "id", codIdUsuario: "idUsuario", codNombre: "nombre", codClave: "clave",
+  codObservacion: "observacion", codOrigen: "origen", codAgregadoPor: "agregadoPor",
+};
+
 let impresorasData = [];
+let codigosData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -465,6 +473,71 @@ function sincronizarEliminacionImpresora(id) {
   }
 }
 
+/* ---------- Códigos de usuario para impresión/escaneo/copia (ver codigos-impresion-sync.js) ---------- */
+/* El ID de usuario y la clave NO son únicos por diseño (el mismo nombre puede
+   tener varios registros con distinto ID/clave en el Excel de origen), así
+   que se usa un "id" interno aparte para identificar cada registro. */
+
+function cargarCodigos() {
+  const raw = localStorage.getItem(CODIGOS_STORAGE_KEY);
+  if (raw) {
+    try {
+      codigosData = JSON.parse(raw);
+      return;
+    } catch {
+      codigosData = [];
+    }
+  }
+  const semilla = typeof CATALOGO_CODIGOS_IMPRESION !== "undefined" && Array.isArray(CATALOGO_CODIGOS_IMPRESION) ? CATALOGO_CODIGOS_IMPRESION : [];
+  codigosData = semilla.map((c, i) => ({ ...c, id: c.id || `semilla-${i}` }));
+  guardarCodigos();
+}
+
+function guardarCodigos() {
+  localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosData));
+}
+
+function obtenerCodigosActuales() {
+  return codigosData;
+}
+
+function establecerCodigosDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((c) => [c.id, c]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  codigosData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarCodigo(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  codigosData = combinados;
+  guardarCodigos();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarCodigo(codigo) {
+  if (window.FirestoreSyncCodigos && typeof window.FirestoreSyncCodigos.guardarCodigo === "function") {
+    window.FirestoreSyncCodigos.guardarCodigo(codigo);
+  }
+}
+
+function sincronizarEliminacionCodigo(id) {
+  if (window.FirestoreSyncCodigos && typeof window.FirestoreSyncCodigos.eliminarCodigo === "function") {
+    window.FirestoreSyncCodigos.eliminarCodigo(id);
+  }
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -547,6 +620,12 @@ function valoresUnicosImpresoras(campo) {
   );
 }
 
+function valoresUnicosCodigos(campo) {
+  return [...new Set(codigosData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
 function poblarFiltrosYDatalists() {
   poblarSelect($("filtroEmpresa"), valoresUnicos("empresa"), "Todas las empresas");
   poblarSelect($("filtroStatus"), valoresUnicos("status"), "Todos los status");
@@ -614,6 +693,14 @@ function poblarFiltrosYDatalists() {
       opt.value = v;
       dl.appendChild(opt);
     });
+  });
+
+  const dlCodOrigen = $("dl-codOrigen");
+  dlCodOrigen.innerHTML = "";
+  valoresUnicosCodigos("origen").forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    dlCodOrigen.appendChild(opt);
   });
 
   ["dl-nombreRedActa", "dl-nombreRedIngreso"].forEach((dlId) => {
@@ -909,6 +996,64 @@ function eliminarImpresoraActual() {
   sincronizarEliminacionImpresora(id);
   cerrarModalImpresora();
   poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+/* ---------- Modal de códigos de usuario (nuevo / editar) ---------- */
+
+function abrirModalCodigo(codigo) {
+  $("formCodigo").reset();
+  if (codigo) {
+    $("modalCodigoTitulo").textContent = `Editar código — ${codigo.nombre || ""}`;
+    CODIGO_FIELD_IDS.forEach((idCampo) => {
+      const campo = CODIGO_CAMPO_POR_ID[idCampo];
+      if (codigo[campo] !== undefined) $(idCampo).value = codigo[campo];
+    });
+    $("btnEliminarModalCodigo").style.display = "";
+  } else {
+    $("modalCodigoTitulo").textContent = "Nuevo código de usuario";
+    $("codId").value = "";
+    $("btnEliminarModalCodigo").style.display = "none";
+  }
+  $("modalCodigoOverlay").classList.add("open");
+}
+
+function cerrarModalCodigo() {
+  $("modalCodigoOverlay").classList.remove("open");
+}
+
+function onSubmitCodigo(e) {
+  e.preventDefault();
+  const data = {};
+  CODIGO_FIELD_IDS.forEach((idCampo) => {
+    data[CODIGO_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (data.id) {
+    const idx = codigosData.findIndex((c) => c.id === data.id);
+    if (idx !== -1) codigosData[idx] = { ...codigosData[idx], ...data };
+    guardado = codigosData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    codigosData.push(data);
+    guardado = data;
+  }
+  guardarCodigos();
+  sincronizarCodigo(guardado);
+  cerrarModalCodigo();
+  refrescarVistasSecundarias();
+}
+
+function eliminarCodigoActual() {
+  const id = $("codId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar este código de forma permanente?")) return;
+  codigosData = codigosData.filter((c) => c.id !== id);
+  guardarCodigos();
+  sincronizarEliminacionCodigo(id);
+  cerrarModalCodigo();
   refrescarVistasSecundarias();
 }
 
@@ -1381,6 +1526,7 @@ function refrescarVistasSecundarias() {
   vistaCatalogoMonitores.render();
   vistaImpresoras.render();
   vistaCatalogoImpresoras.render();
+  vistaCodigos.render();
   vistaDispositivos.render();
   vistaContratos.render();
 }
@@ -2045,6 +2191,36 @@ const vistaCatalogoImpresoras = crearVistaLista({
   alClicFila: (r) => abrirModalImpresora(r.impresora),
 });
 
+function obtenerCodigos() {
+  return codigosData.map((c) => ({
+    codigo: c,
+    celdas: `
+      <td>${esc(c.idUsuario)}</td>
+      <td>${esc(c.nombre)}</td>
+      <td>${esc(c.clave)}</td>
+      <td>${esc(c.observacion)}</td>
+      <td>${esc(c.origen)}</td>
+      <td>${esc(c.agregadoPor)}</td>
+    `,
+  }));
+}
+
+const vistaCodigos = crearVistaLista({
+  prefix: "codigos",
+  columnas: 6,
+  obtenerFilas: obtenerCodigos,
+  // Busqueda amigable: cada palabra escrita (nombre, apellido, ID o clave, en
+  // cualquier orden) tiene que aparecer en algun lado del registro, no
+  // necesariamente en ese orden ni todo junto.
+  filtrar: (r, t) => {
+    const texto = [r.codigo.idUsuario, r.codigo.nombre, r.codigo.clave, r.codigo.observacion, r.codigo.origen, r.codigo.agregadoPor]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalCodigo(r.codigo),
+});
+
 function obtenerImpresoras() {
   return equipos
     .filter(
@@ -2137,6 +2313,12 @@ $("btnCancelarImpresora").addEventListener("click", cerrarModalImpresora);
 $("btnEliminarModalImpresora").addEventListener("click", eliminarImpresoraActual);
 $("formImpresora").addEventListener("submit", onSubmitImpresora);
 
+$("btnNuevoCodigo").addEventListener("click", () => abrirModalCodigo(null));
+$("btnCerrarModalCodigo").addEventListener("click", cerrarModalCodigo);
+$("btnCancelarCodigo").addEventListener("click", cerrarModalCodigo);
+$("btnEliminarModalCodigo").addEventListener("click", eliminarCodigoActual);
+$("formCodigo").addEventListener("submit", onSubmitCodigo);
+
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
 $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
@@ -2176,6 +2358,7 @@ $("btnUltimo").addEventListener("click", () => {
 
 cargarDatos();
 cargarImpresoras();
+cargarCodigos();
 poblarFiltrosYDatalists();
 render();
 renderTablero();

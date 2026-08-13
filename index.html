@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812m">
+<link rel="stylesheet" href="style.css?v=20260812n">
 </head>
 <body>
 
@@ -305,6 +305,35 @@
           <span id="infoPagina_catalogoImpresoras"></span>
           <button id="btnSiguiente_catalogoImpresoras">&rsaquo;</button>
           <button id="btnUltimo_catalogoImpresoras">&raquo;</button>
+        </section>
+
+        <h3 class="subseccion-titulo">Códigos de usuario para impresión, escaneo y copia</h3>
+        <p class="subseccion-nota">Busca por nombre, apellido, ID o clave — no importa el orden ni si escribes solo una parte. Puede haber nombres repetidos con distinto ID/clave; son registros separados.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_codigos" placeholder="Buscar por nombre, apellido, ID o clave...">
+          <button type="button" id="btnNuevoCodigo" class="btn btn-primary">+ Nuevo usuario</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre Completo</th>
+                <th>Clave</th>
+                <th>Correo / Observación</th>
+                <th>Departamento (origen)</th>
+                <th>Agregado por</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_codigos"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_codigos">&laquo;</button>
+          <button id="btnAnterior_codigos">&lsaquo;</button>
+          <span id="infoPagina_codigos"></span>
+          <button id="btnSiguiente_codigos">&rsaquo;</button>
+          <button id="btnUltimo_codigos">&raquo;</button>
         </section>
       </section>
 
@@ -647,6 +676,60 @@
   </div>
 </div>
 
+<!-- Modal de nuevo código de usuario / edición -->
+<div id="modalCodigoOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalCodigoTitulo">Nuevo código de usuario</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalCodigo" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formCodigo" class="modal-body">
+      <input type="hidden" id="codId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="codIdUsuario">ID de usuario</label>
+            <input type="text" id="codIdUsuario" required>
+          </div>
+          <div class="glpi-row">
+            <label for="codNombre">Nombre completo</label>
+            <input type="text" id="codNombre" required>
+          </div>
+          <div class="glpi-row">
+            <label for="codClave">Clave</label>
+            <input type="text" id="codClave" required>
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="codObservacion">Correo / Observación</label>
+            <input type="text" id="codObservacion">
+          </div>
+          <div class="glpi-row">
+            <label for="codOrigen">Departamento (origen)</label>
+            <input type="text" id="codOrigen" list="dl-codOrigen">
+            <datalist id="dl-codOrigen"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="codAgregadoPor">Agregado por</label>
+            <input type="text" id="codAgregadoPor">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalCodigo" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarCodigo" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal de generación rápida de Acta -->
 <div id="modalActaOverlay" class="modal-overlay no-print">
   <div class="modal modal-acta">
@@ -846,13 +929,15 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812m"></script>
+<script src="data.js?v=20260812n"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
+<script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812m"></script>
+<script src="app.js?v=20260812n"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812m"></script>
-<script type="module" src="impresoras-sync.js?v=20260812m"></script>
+<script type="module" src="firestore-sync.js?v=20260812n"></script>
+<script type="module" src="impresoras-sync.js?v=20260812n"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260812n"></script>
 </body>
 </html>
