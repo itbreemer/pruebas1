@@ -1662,10 +1662,12 @@ function renderTablero() {
     idDona: "tableroImpresorasEmpresaDona", idLista: "tableroImpresorasEmpresa", campo: "empresa", atributoCampo: "data-campo-imp",
     datosTop: contarImpresorasPor("empresa"), total: impresoras.length, hex: "#b45309", modo: "A",
   });
+  const departamentosImpresoras = contarImpresorasPor("departamento");
   pintarPanelConDona({
     idDona: "tableroImpresorasDepartamentoDona", idLista: "tableroImpresorasDepartamento", campo: "departamento", atributoCampo: "data-campo-imp",
-    datosTop: contarImpresorasPor("departamento").slice(0, 8), total: impresoras.length, hex: "#334155", modo: "B",
+    datosTop: departamentosImpresoras.slice(0, 8), total: impresoras.length, hex: "#334155", modo: "B",
   });
+  $("btnVerTodosDepartamentos").textContent = `Ver los ${departamentosImpresoras.length} departamentos →`;
 }
 
 function irACatalogoImpresorasFiltrado(campo, valor) {
@@ -1851,7 +1853,8 @@ const vistaCatalogoMonitores = crearVistaLista({
 
 function obtenerCatalogoImpresoras() {
   const lista = typeof CATALOGO_IMPRESORAS !== "undefined" && Array.isArray(CATALOGO_IMPRESORAS) ? CATALOGO_IMPRESORAS : [];
-  return lista.map((p) => ({
+  const ordenada = [...lista].sort((a, b) => (a.departamento || "").localeCompare(b.departamento || ""));
+  return ordenada.map((p) => ({
     impresora: p,
     celdas: `
       <td>${esc(p.tipoEquipoImp)}</td>
@@ -1975,6 +1978,8 @@ $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 $("btnDashboard").addEventListener("click", () => {
   window.open("dashboard.html?v=20260811j", "dashboardInventarioTI", "width=1280,height=900");
 });
+
+$("btnVerTodosDepartamentos").addEventListener("click", () => irACatalogoImpresorasFiltrado(null, ""));
 
 $("btnPbiActa").addEventListener("click", abrirModalActa);
 

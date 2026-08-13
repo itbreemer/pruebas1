@@ -228,6 +228,12 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .panel-cuerpo .tablero-lista { flex: 1; min-width: 0; }
 .panel-dona { flex: none; display: flex; flex-direction: column; align-items: center; }
 
+.panel-ver-todos {
+  display: block; width: 100%; margin-top: 12px; padding: 8px; border: none; border-top: 1px solid var(--borde);
+  background: none; color: var(--azul); font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;
+}
+.panel-ver-todos:hover { background: var(--fila-hover); }
+
 .dona-wrap { position: relative; width: 92px; height: 92px; flex: none; }
 .dona {
   width: 100%; height: 100%; border-radius: 50%;
