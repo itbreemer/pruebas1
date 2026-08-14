@@ -1582,6 +1582,16 @@ function casilla(marcada, texto) {
   return `<span class="anexo-check"><span class="caja${marcada ? " marcada" : ""}">${marcada ? "✓" : ""}</span>${texto}</span>`;
 }
 
+// El formulario de Claro divide el correo en dos casillas separadas por un
+// "@" literal impreso en el formato (usuario @ dominio); cuando esta vacio
+// el dominio se marca con un guion "-", tal como viene en el documento.
+function campoCorreo(etiqueta, correoCompleto) {
+  const partes = (correoCompleto || "").split("@");
+  const usuario = (partes[0] || "").trim();
+  const dominio = (partes[1] || "").trim() || "-";
+  return `<div class="anexo-campo"><span class="lbl">${etiqueta}</span><span class="val">${esc(usuario)}</span><span class="lbl">@</span><span class="val" style="flex:0 0 90px;">${esc(dominio)}</span></div>`;
+}
+
 function anexoServiciosMovilesHTML(contrato, lineas) {
   const sumaLineas = lineas.reduce((s, l) => s + (Number(l.tarifaPlan) || 0), 0);
   const totalMensual = contrato.totalMensual ? Number(contrato.totalMensual) : sumaLineas;
@@ -1655,7 +1665,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <div class="anexo-campo"><span class="lbl">Nombre del Contacto:</span><span class="val"></span></div>
           <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
         </div>
-        <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+        ${campoCorreo("Correo Electrónico:", "")}
       </div>
 
       <div class="anexo-seccion">Servicios Cloud</div>
@@ -1670,7 +1680,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
           <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
         </div>
-        <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+        ${campoCorreo("Correo Electrónico:", "")}
       </div>
 
       <div class="anexo-seccion">Planes de Telefonía Móvil</div>
@@ -1757,7 +1767,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         <div class="anexo-campo"><span class="lbl">Nombre responsable del Portal:</span><span class="val"></span></div>
         <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
       </div>
-      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      ${campoCorreo("Correo Electrónico:", "")}
 
       <div class="anexo-seccion">Gestor de Comunicaciones / AVI</div>
       <div class="anexo-checks">
@@ -1771,7 +1781,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
         <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
       </div>
-      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      ${campoCorreo("Correo Electrónico:", "")}
 
       <div class="anexo-seccion">Coordinador del Servicio ante Telgua</div>
       <div class="anexo-campo">Yo EL CLIENTE Designo a:</div>
@@ -1783,7 +1793,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         <div class="anexo-campo"><span class="lbl">Documento de identificación:</span><span class="val"></span></div>
         <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
       </div>
-      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      ${campoCorreo("Correo Electrónico:", "")}
       <p class="anexo-condiciones-texto">
         Con la finalidad de agilizar y facilitar la tramitación post venta que surja derivados del cumplimiento del
         presente Contrato, para que pueda gestionar los trámites como: Remplazo de sim, bloqueo de servicios por robo,
