@@ -732,6 +732,9 @@ main .btn-primary:hover { background: #163158; }
 
 .anexo-aceptacion { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.74rem; }
 .anexo-firma-linea { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; width: 220px; text-align: center; }
+.anexo-firma-fila { margin-top: 16px; font-size: 0.82rem; }
+.anexo-firma-fila .val { min-width: 160px; flex: 0 0 auto; }
+.anexo-firma-fila.anexo-campo-doble .anexo-campo:last-child .val { min-width: 260px; flex: 1; }
 
 .anexo-lineas-pagina { page: anexo-lineas; }
 .anexo-tabla-chica { font-size: 0.58rem; }

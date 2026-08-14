@@ -1970,10 +1970,14 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         firma.
       </p>
 
-      <div class="anexo-aceptacion">
-        <span><strong>Lugar y Fecha:</strong> Guatemala, ${esc(contrato.fechaFirma)}</span>
-        <span><strong>Nombre de Ejecutivo:</strong> ${esc(contrato.ejecutivoVentas)}</span>
-        <span class="anexo-firma-linea">Firma del Cliente</span>
+      <div class="anexo-campo anexo-firma-fila">
+        <span class="lbl"><strong>Lugar y Fecha:</strong></span>
+        <span class="val">Guatemala</span>
+        <span class="val">${esc(contrato.fechaFirma)}</span>
+      </div>
+      <div class="anexo-campo-doble anexo-firma-fila">
+        <div class="anexo-campo"><span class="lbl"><strong>Nombre de Ejecutivo:</strong></span><span class="val">${esc(contrato.ejecutivoVentas)}</span></div>
+        <div class="anexo-campo"><span class="lbl"><strong>Firma del Cliente:</strong></span><span class="val"></span></div>
       </div>
 
       <div class="salto-pagina anexo-lineas-pagina">
