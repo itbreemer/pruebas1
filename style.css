@@ -61,6 +61,7 @@ body {
 }
 .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
 .nav-item.active { background: var(--azul-claro); color: var(--azul); font-weight: 600; }
+.nav-sub-item { padding-left: 44px; font-size: 0.82rem; color: #a9b8d8; }
 
 .app-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
