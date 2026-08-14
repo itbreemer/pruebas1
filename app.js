@@ -1618,7 +1618,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
   return `
     <div class="anexo-movil">
       <div class="anexo-movil-header">
-        <div class="anexo-movil-logo">Claro</div>
+        <div class="anexo-movil-logo">${typeof LOGO_CLARO_B64 !== "undefined" ? `<img src="${LOGO_CLARO_B64}" alt="Claro">` : "Claro"}</div>
         <div class="anexo-movil-titulo">Anexo de servicios Móviles</div>
         <div class="anexo-movil-version">V 1.0</div>
       </div>
