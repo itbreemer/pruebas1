@@ -22,6 +22,7 @@ const TECNICOS_POR_CORREO = {
   "victor@inventario-ti.local": "Victor Morales",
   "eder@inventario-ti.local": "Eder Rosales",
   "gustavo@inventario-ti.local": "Gustavo Garcia",
+  "estefani@inventario-ti.local": "Estefani Flores",
 };
 
 const app = initializeApp(firebaseConfig);
