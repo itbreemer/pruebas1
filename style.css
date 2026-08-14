@@ -675,6 +675,7 @@ main .btn-primary:hover { background: #163158; }
   @page { size: letter landscape; margin: 8mm; }
   @page tarjeta-vertical { size: letter portrait; margin: 38mm 14mm 14mm 14mm; }
   @page anexo-movil { size: letter portrait; margin: 10mm; }
+  @page anexo-lineas { size: letter landscape; margin: 8mm; }
 }
 
 /* ============ Anexo de Servicios Móviles (impresión, mismo formato de Claro) ============ */
@@ -723,6 +724,10 @@ main .btn-primary:hover { background: #163158; }
 
 .anexo-aceptacion { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.74rem; }
 .anexo-firma-linea { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; width: 220px; text-align: center; }
+
+.anexo-lineas-pagina { page: anexo-lineas; }
+.anexo-tabla-chica { font-size: 0.58rem; }
+.anexo-tabla-chica th, .anexo-tabla-chica td { padding: 2px 3px; }
 
 /* ---------- Login (Firebase Auth) ---------- */
 .login-overlay {

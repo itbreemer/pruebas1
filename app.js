@@ -1598,6 +1598,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <td class="num">Q 0</td>
           <td>${esc(l.plan)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
         </tr>`
     )
@@ -1964,23 +1966,31 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         <span class="anexo-firma-linea">Firma del Cliente</span>
       </div>
 
-      <div class="salto-pagina"></div>
-      <div class="anexo-campo"><strong>${esc(contrato.empresa)}</strong></div>
-      <div class="anexo-campo"><span class="lbl" style="font-size:0.62rem;">NOMBRE EMPRESA/NOMBRE TITULAR</span></div>
-      <table class="anexo-tabla">
-        <thead>
-          <tr><th>#</th><th>No. de Teléfono</th><th>Modelo Aparato</th><th>IMEI</th><th>ESN</th><th>Costo del Equipo</th><th>Plan de Voz / Internet / AVL's</th><th>Tarifa del Plan</th><th>Tarifa Total</th></tr>
-        </thead>
-        <tbody>${filasLineas || '<tr><td colspan="9" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
-        <tfoot>
-          <tr><td colspan="8">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
-          <tr><td colspan="8">NEGOCIACIÓN</td><td class="num"></td></tr>
-          <tr><td colspan="8">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
-        </tfoot>
-      </table>
-      <div class="anexo-aceptacion">
-        <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
-        <span class="anexo-firma-linea">Gerencia Mercado Corporativo País</span>
+      <div class="salto-pagina anexo-lineas-pagina">
+        <div class="anexo-campo"><strong>${esc(contrato.empresa)}</strong></div>
+        <div class="anexo-campo"><span class="lbl" style="font-size:0.62rem;">NOMBRE EMPRESA/NOMBRE TITULAR</span></div>
+        <table class="anexo-tabla anexo-tabla-chica">
+          <thead>
+            <tr>
+              <th>#</th><th>No. de Teléfono</th><th>Modelo Aparato</th><th>IMEI</th><th>ESN</th><th>Costo del Equipo</th>
+              <th>Plan de Voz / Internet / AVL's</th><th>Tarifa del Plan</th><th>Tipo de servicio Cloud</th>
+              <th>Servicio Cloud</th><th>Correo Spacesuite</th><th>Spacesuite</th><th>Correo Empresarial</th>
+              <th>Apps Corp</th><th>Navegación de Apps</th><th>Suitcase</th><th>Pentcloud</th>
+              <th>Llamadas Ilimitadas Claro</th><th>Paquete Preferencial Roaming</th><th>Claro Directo</th>
+              <th>VPN</th><th>AVI/Desvío a Prepago</th><th>Descuento Automático</th><th>Tarifa Total</th>
+            </tr>
+          </thead>
+          <tbody>${filasLineas || '<tr><td colspan="24" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
+          <tfoot>
+            <tr><td colspan="23">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
+            <tr><td colspan="23">NEGOCIACIÓN</td><td class="num"></td></tr>
+            <tr><td colspan="23">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
+          </tfoot>
+        </table>
+        <div class="anexo-aceptacion">
+          <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
+          <span class="anexo-firma-linea">Gerencia Mercado Corporativo País</span>
+        </div>
       </div>
     </div>
   `;
