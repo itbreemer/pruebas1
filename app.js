@@ -2,6 +2,8 @@ const STORAGE_KEY = "equiposTI_v2";
 const CONTADOR_KEY = "actaContador_v1";
 const IMPRESORAS_STORAGE_KEY = "impresorasTI_v1";
 const CODIGOS_STORAGE_KEY = "codigosImpresionTI_v1";
+const CONTRATOS_MOVILES_STORAGE_KEY = "contratosMovilesTI_v1";
+const LINEAS_MOVILES_STORAGE_KEY = "lineasMovilesTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -22,8 +24,33 @@ const CODIGO_CAMPO_POR_ID = {
   codAgregadoPor: "agregadoPor",
 };
 
+const CONTRATO_MOVIL_FIELD_IDS = [
+  "cmId", "cmOperador", "cmEmpresa", "cmNit", "cmRepresentanteLegal", "cmCategoriaCliente",
+  "cmTipoGestion", "cmPlanContratado", "cmCantidadLineas", "cmPlazoContrato", "cmTotalMensual",
+  "cmFechaFirma", "cmEjecutivoVentas", "cmObservaciones",
+];
+const CONTRATO_MOVIL_CAMPO_POR_ID = {
+  cmId: "id", cmOperador: "operador", cmEmpresa: "empresa", cmNit: "nit",
+  cmRepresentanteLegal: "representanteLegal", cmCategoriaCliente: "categoriaCliente",
+  cmTipoGestion: "tipoGestion", cmPlanContratado: "planContratado", cmCantidadLineas: "cantidadLineas",
+  cmPlazoContrato: "plazoContrato", cmTotalMensual: "totalMensual", cmFechaFirma: "fechaFirma",
+  cmEjecutivoVentas: "ejecutivoVentas", cmObservaciones: "observaciones",
+};
+
+const LINEA_MOVIL_FIELD_IDS = [
+  "lmId", "lmNumero", "lmModelo", "lmImei", "lmIccidEsn", "lmPlan", "lmTarifaPlan",
+  "lmUsuarioAsignado", "lmCorreoCorporativo", "lmEmpresa", "lmEstado",
+];
+const LINEA_MOVIL_CAMPO_POR_ID = {
+  lmId: "id", lmNumero: "numero", lmModelo: "modelo", lmImei: "imei", lmIccidEsn: "iccidEsn",
+  lmPlan: "plan", lmTarifaPlan: "tarifaPlan", lmUsuarioAsignado: "usuarioAsignado",
+  lmCorreoCorporativo: "correoCorporativo", lmEmpresa: "empresa", lmEstado: "estado",
+};
+
 let impresorasData = [];
 let codigosData = [];
+let contratosMovilesData = [];
+let lineasMovilesData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -538,6 +565,149 @@ function sincronizarEliminacionCodigo(id) {
   }
 }
 
+/* ---------- Contratos móviles (ver contratos-moviles-sync.js) ---------- */
+
+const SEMILLA_CONTRATOS_MOVILES = [
+  {
+    operador: "Claro", empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", nit: "8538380-5",
+    representanteLegal: "ANDRE EMANUEL LARIOS MURALLES", categoriaCliente: "Corporaciones",
+    tipoGestion: "Traspaso", planContratado: "G-EMPRESAS SMART 25GB", cantidadLineas: 6,
+    plazoContrato: "18 meses", totalMensual: 1254.00, fechaFirma: "2026-07-22",
+    ejecutivoVentas: "Marinez Cahuec", observaciones: "Traspaso y renovación",
+  },
+];
+
+function cargarContratosMoviles() {
+  const raw = localStorage.getItem(CONTRATOS_MOVILES_STORAGE_KEY);
+  if (raw) {
+    try {
+      contratosMovilesData = JSON.parse(raw);
+      return;
+    } catch {
+      contratosMovilesData = [];
+    }
+  }
+  contratosMovilesData = SEMILLA_CONTRATOS_MOVILES.map((c, i) => ({ ...c, id: c.id || `semilla-cm-${i}` }));
+  guardarContratosMoviles();
+}
+
+function guardarContratosMoviles() {
+  localStorage.setItem(CONTRATOS_MOVILES_STORAGE_KEY, JSON.stringify(contratosMovilesData));
+}
+
+function obtenerContratosMovilesActuales() {
+  return contratosMovilesData;
+}
+
+function establecerContratosMovilesDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((c) => [c.id, c]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  contratosMovilesData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarContratoMovil(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  contratosMovilesData = combinados;
+  guardarContratosMoviles();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarContratoMovil(contrato) {
+  if (window.FirestoreSyncContratosMoviles && typeof window.FirestoreSyncContratosMoviles.guardarContratoMovil === "function") {
+    window.FirestoreSyncContratosMoviles.guardarContratoMovil(contrato);
+  }
+}
+
+function sincronizarEliminacionContratoMovil(id) {
+  if (window.FirestoreSyncContratosMoviles && typeof window.FirestoreSyncContratosMoviles.eliminarContratoMovil === "function") {
+    window.FirestoreSyncContratosMoviles.eliminarContratoMovil(id);
+  }
+}
+
+/* ---------- Control de líneas móviles (ver lineas-moviles-sync.js) ---------- */
+
+const SEMILLA_LINEAS_MOVILES = [
+  { numero: "50241760441", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50247396226", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50254111683", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50254111824", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50256942785", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50256968642", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+];
+
+function cargarLineasMoviles() {
+  const raw = localStorage.getItem(LINEAS_MOVILES_STORAGE_KEY);
+  if (raw) {
+    try {
+      lineasMovilesData = JSON.parse(raw);
+      return;
+    } catch {
+      lineasMovilesData = [];
+    }
+  }
+  lineasMovilesData = SEMILLA_LINEAS_MOVILES.map((l, i) => ({ ...l, id: l.id || `semilla-lm-${i}` }));
+  guardarLineasMoviles();
+}
+
+function guardarLineasMoviles() {
+  localStorage.setItem(LINEAS_MOVILES_STORAGE_KEY, JSON.stringify(lineasMovilesData));
+}
+
+function obtenerLineasMovilesActuales() {
+  return lineasMovilesData;
+}
+
+function establecerLineasMovilesDesdeSync(remotas) {
+  const remotasPorId = new Map(remotas.map((l) => [l.id, l]));
+  const combinadas = [];
+  const idsVistos = new Set();
+
+  lineasMovilesData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remota = remotasPorId.get(local.id);
+    if (!remota || (local.ultimaModificacion || "") > (remota.ultimaModificacion || "")) {
+      combinadas.push(local);
+      sincronizarLineaMovil(local);
+    } else {
+      combinadas.push(remota);
+    }
+  });
+
+  remotas.forEach((remota) => {
+    if (!idsVistos.has(remota.id)) combinadas.push(remota);
+  });
+
+  lineasMovilesData = combinadas;
+  guardarLineasMoviles();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarLineaMovil(linea) {
+  if (window.FirestoreSyncLineasMoviles && typeof window.FirestoreSyncLineasMoviles.guardarLineaMovil === "function") {
+    window.FirestoreSyncLineasMoviles.guardarLineaMovil(linea);
+  }
+}
+
+function sincronizarEliminacionLineaMovil(id) {
+  if (window.FirestoreSyncLineasMoviles && typeof window.FirestoreSyncLineasMoviles.eliminarLineaMovil === "function") {
+    window.FirestoreSyncLineasMoviles.eliminarLineaMovil(id);
+  }
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -620,6 +790,18 @@ function valoresUnicosImpresoras(campo) {
   );
 }
 
+function valoresUnicosContratosMoviles(campo) {
+  return [...new Set(contratosMovilesData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
+function valoresUnicosLineasMoviles(campo) {
+  return [...new Set(lineasMovilesData.map((l) => (l[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
 function poblarFiltrosYDatalists() {
   poblarSelect($("filtroEmpresa"), valoresUnicos("empresa"), "Todas las empresas");
   poblarSelect($("filtroStatus"), valoresUnicos("status"), "Todos los status");
@@ -683,6 +865,37 @@ function poblarFiltrosYDatalists() {
     const dl = $(dlId);
     dl.innerHTML = "";
     valoresUnicosImpresoras(campo).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+  });
+
+  const datalistMapContratosMoviles = {
+    "dl-cmOperador": "operador",
+    "dl-cmEmpresa": "empresa",
+    "dl-cmPlanContratado": "planContratado",
+  };
+  Object.entries(datalistMapContratosMoviles).forEach(([dlId, campo]) => {
+    const dl = $(dlId);
+    dl.innerHTML = "";
+    valoresUnicosContratosMoviles(campo).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+  });
+
+  const datalistMapLineasMoviles = {
+    "dl-lmModelo": "modelo",
+    "dl-lmPlan": "plan",
+    "dl-lmUsuarioAsignado": "usuarioAsignado",
+    "dl-lmEmpresa": "empresa",
+  };
+  Object.entries(datalistMapLineasMoviles).forEach(([dlId, campo]) => {
+    const dl = $(dlId);
+    dl.innerHTML = "";
+    valoresUnicosLineasMoviles(campo).forEach((v) => {
       const opt = document.createElement("option");
       opt.value = v;
       dl.appendChild(opt);
@@ -1064,6 +1277,125 @@ function eliminarCodigoActual() {
   guardarCodigos();
   sincronizarEliminacionCodigo(id);
   cerrarModalCodigo();
+  refrescarVistasSecundarias();
+}
+
+/* ---------- Modal de contratos móviles (nuevo / editar) ---------- */
+
+function abrirModalContratoMovil(contrato) {
+  $("formContratoMovil").reset();
+  if (contrato) {
+    $("modalContratoMovilTitulo").textContent = `Editar contrato móvil — ${contrato.empresa || ""}`;
+    CONTRATO_MOVIL_FIELD_IDS.forEach((idCampo) => {
+      const campo = CONTRATO_MOVIL_CAMPO_POR_ID[idCampo];
+      if (contrato[campo] !== undefined) $(idCampo).value = contrato[campo];
+    });
+    $("btnEliminarModalContratoMovil").style.display = "";
+  } else {
+    $("modalContratoMovilTitulo").textContent = "Nuevo contrato móvil";
+    $("cmId").value = "";
+    $("btnEliminarModalContratoMovil").style.display = "none";
+  }
+  $("modalContratoMovilOverlay").classList.add("open");
+}
+
+function cerrarModalContratoMovil() {
+  $("modalContratoMovilOverlay").classList.remove("open");
+}
+
+function onSubmitContratoMovil(e) {
+  e.preventDefault();
+  const data = {};
+  CONTRATO_MOVIL_FIELD_IDS.forEach((idCampo) => {
+    data[CONTRATO_MOVIL_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (data.id) {
+    const idx = contratosMovilesData.findIndex((c) => c.id === data.id);
+    if (idx !== -1) contratosMovilesData[idx] = { ...contratosMovilesData[idx], ...data };
+    guardado = contratosMovilesData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    contratosMovilesData.push(data);
+    guardado = data;
+  }
+  guardarContratosMoviles();
+  sincronizarContratoMovil(guardado);
+  cerrarModalContratoMovil();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function eliminarContratoMovilActual() {
+  const id = $("cmId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar este contrato móvil de forma permanente?")) return;
+  contratosMovilesData = contratosMovilesData.filter((c) => c.id !== id);
+  guardarContratosMoviles();
+  sincronizarEliminacionContratoMovil(id);
+  cerrarModalContratoMovil();
+  refrescarVistasSecundarias();
+}
+
+/* ---------- Modal de líneas móviles (nueva / editar) ---------- */
+
+function abrirModalLineaMovil(linea) {
+  $("formLineaMovil").reset();
+  if (linea) {
+    $("modalLineaMovilTitulo").textContent = `Editar línea — ${linea.numero || ""}`;
+    LINEA_MOVIL_FIELD_IDS.forEach((idCampo) => {
+      const campo = LINEA_MOVIL_CAMPO_POR_ID[idCampo];
+      if (linea[campo] !== undefined) $(idCampo).value = linea[campo];
+    });
+    $("btnEliminarModalLineaMovil").style.display = "";
+  } else {
+    $("modalLineaMovilTitulo").textContent = "Nueva línea móvil";
+    $("lmId").value = "";
+    $("lmEstado").value = "Activa";
+    $("btnEliminarModalLineaMovil").style.display = "none";
+  }
+  $("modalLineaMovilOverlay").classList.add("open");
+}
+
+function cerrarModalLineaMovil() {
+  $("modalLineaMovilOverlay").classList.remove("open");
+}
+
+function onSubmitLineaMovil(e) {
+  e.preventDefault();
+  const data = {};
+  LINEA_MOVIL_FIELD_IDS.forEach((idCampo) => {
+    data[LINEA_MOVIL_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardada;
+  if (data.id) {
+    const idx = lineasMovilesData.findIndex((l) => l.id === data.id);
+    if (idx !== -1) lineasMovilesData[idx] = { ...lineasMovilesData[idx], ...data };
+    guardada = lineasMovilesData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    lineasMovilesData.push(data);
+    guardada = data;
+  }
+  guardarLineasMoviles();
+  sincronizarLineaMovil(guardada);
+  cerrarModalLineaMovil();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function eliminarLineaMovilActual() {
+  const id = $("lmId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar esta línea móvil de forma permanente?")) return;
+  lineasMovilesData = lineasMovilesData.filter((l) => l.id !== id);
+  guardarLineasMoviles();
+  sincronizarEliminacionLineaMovil(id);
+  cerrarModalLineaMovil();
   refrescarVistasSecundarias();
 }
 
@@ -1539,6 +1871,8 @@ function refrescarVistasSecundarias() {
   vistaCodigos.render();
   vistaDispositivos.render();
   vistaContratos.render();
+  vistaContratosMoviles.render();
+  vistaLineasMoviles.render();
 }
 
 function cambiarVista(nombre) {
@@ -1566,6 +1900,8 @@ function cambiarVista(nombre) {
   }
   else if (nombre === "dispositivos") vistaDispositivos.render();
   else if (nombre === "contratos") vistaContratos.render();
+  else if (nombre === "contratosMoviles") vistaContratosMoviles.render();
+  else if (nombre === "lineasMoviles") vistaLineasMoviles.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -2231,6 +2567,63 @@ const vistaCodigos = crearVistaLista({
   alClicFila: (r) => abrirModalCodigo(r.codigo),
 });
 
+function obtenerContratosMoviles() {
+  return contratosMovilesData.map((c) => ({
+    contrato: c,
+    celdas: `
+      <td>${esc(c.empresa)}</td>
+      <td>${esc(c.operador)}</td>
+      <td>${esc(c.tipoGestion)}</td>
+      <td>${esc(c.planContratado)}</td>
+      <td>${esc(c.plazoContrato)}</td>
+      <td>${esc(c.cantidadLineas)}</td>
+      <td>${c.totalMensual ? "Q " + Number(c.totalMensual).toFixed(2) : ""}</td>
+      <td>${esc(c.fechaFirma)}</td>
+    `,
+  }));
+}
+
+const vistaContratosMoviles = crearVistaLista({
+  prefix: "contratosMoviles",
+  columnas: 8,
+  obtenerFilas: obtenerContratosMoviles,
+  filtrar: (r, t) => {
+    const texto = [r.contrato.empresa, r.contrato.operador, r.contrato.nit, r.contrato.planContratado, r.contrato.tipoGestion, r.contrato.representanteLegal]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalContratoMovil(r.contrato),
+});
+
+function obtenerLineasMoviles() {
+  return lineasMovilesData.map((l) => ({
+    linea: l,
+    celdas: `
+      <td>${esc(l.numero)}</td>
+      <td>${esc(l.modelo)}</td>
+      <td>${esc(l.plan)}</td>
+      <td>${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
+      <td>${esc(l.usuarioAsignado)}</td>
+      <td>${esc(l.empresa)}</td>
+      <td>${esc(l.estado)}</td>
+    `,
+  }));
+}
+
+const vistaLineasMoviles = crearVistaLista({
+  prefix: "lineasMoviles",
+  columnas: 7,
+  obtenerFilas: obtenerLineasMoviles,
+  filtrar: (r, t) => {
+    const texto = [r.linea.numero, r.linea.modelo, r.linea.usuarioAsignado, r.linea.empresa, r.linea.plan, r.linea.imei, r.linea.iccidEsn]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalLineaMovil(r.linea),
+});
+
 function obtenerImpresoras() {
   return equipos
     .filter(
@@ -2329,6 +2722,18 @@ $("btnCancelarCodigo").addEventListener("click", cerrarModalCodigo);
 $("btnEliminarModalCodigo").addEventListener("click", eliminarCodigoActual);
 $("formCodigo").addEventListener("submit", onSubmitCodigo);
 
+$("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
+$("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
+$("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
+$("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);
+$("formContratoMovil").addEventListener("submit", onSubmitContratoMovil);
+
+$("btnNuevaLineaMovil").addEventListener("click", () => abrirModalLineaMovil(null));
+$("btnCerrarModalLineaMovil").addEventListener("click", cerrarModalLineaMovil);
+$("btnCancelarLineaMovil").addEventListener("click", cerrarModalLineaMovil);
+$("btnEliminarModalLineaMovil").addEventListener("click", eliminarLineaMovilActual);
+$("formLineaMovil").addEventListener("submit", onSubmitLineaMovil);
+
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
 $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
@@ -2369,6 +2774,8 @@ $("btnUltimo").addEventListener("click", () => {
 cargarDatos();
 cargarImpresoras();
 cargarCodigos();
+cargarContratosMoviles();
+cargarLineasMoviles();
 poblarFiltrosYDatalists();
 render();
 renderTablero();

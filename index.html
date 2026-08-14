@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260812p">
+<link rel="stylesheet" href="style.css?v=20260812q">
 </head>
 <body>
 
@@ -34,6 +34,8 @@
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
       <button type="button" class="nav-item" data-vista="dispositivos" data-titulo="Dispositivos">📶 Dispositivos</button>
       <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
+      <button type="button" class="nav-item" data-vista="contratosMoviles" data-titulo="Contratos Móviles">📱 Contratos Móviles</button>
+      <button type="button" class="nav-item" data-vista="lineasMoviles" data-titulo="Control Líneas Móviles">📞 Control Líneas Móviles</button>
     </nav>
   </aside>
 
@@ -391,6 +393,69 @@
           <button id="btnUltimo_contratos">&raquo;</button>
         </section>
       </section>
+
+      <!-- Contratos Móviles -->
+      <section id="vista-contratosMoviles" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_contratosMoviles" placeholder="Buscar por empresa, operador, plan, NIT...">
+          <button type="button" id="btnNuevoContratoMovil" class="btn btn-primary">+ Nuevo contrato móvil</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Operador</th>
+                <th>Gestión</th>
+                <th>Plan</th>
+                <th>Plazo</th>
+                <th>Líneas</th>
+                <th>Total Mensual</th>
+                <th>Fecha Firma</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_contratosMoviles"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_contratosMoviles">&laquo;</button>
+          <button id="btnAnterior_contratosMoviles">&lsaquo;</button>
+          <span id="infoPagina_contratosMoviles"></span>
+          <button id="btnSiguiente_contratosMoviles">&rsaquo;</button>
+          <button id="btnUltimo_contratosMoviles">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Control Líneas Móviles -->
+      <section id="vista-lineasMoviles" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_lineasMoviles" placeholder="Buscar por número, modelo, usuario, empresa...">
+          <button type="button" id="btnNuevaLineaMovil" class="btn btn-primary">+ Nueva línea</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Modelo</th>
+                <th>Plan</th>
+                <th>Tarifa</th>
+                <th>Usuario Asignado</th>
+                <th>Empresa</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_lineasMoviles"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_lineasMoviles">&laquo;</button>
+          <button id="btnAnterior_lineasMoviles">&lsaquo;</button>
+          <span id="infoPagina_lineasMoviles"></span>
+          <button id="btnSiguiente_lineasMoviles">&rsaquo;</button>
+          <button id="btnUltimo_lineasMoviles">&raquo;</button>
+        </section>
+      </section>
     </main>
   </div>
 </div>
@@ -721,6 +786,172 @@
   </div>
 </div>
 
+<!-- Modal de contrato móvil (nuevo / editar) -->
+<div id="modalContratoMovilOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalContratoMovilTitulo">Nuevo contrato móvil</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalContratoMovil" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formContratoMovil" class="modal-body">
+      <input type="hidden" id="cmId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="cmOperador">Operador</label>
+            <input type="text" id="cmOperador" list="dl-cmOperador" placeholder="Claro, Tigo...">
+            <datalist id="dl-cmOperador"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="cmEmpresa">Empresa</label>
+            <input type="text" id="cmEmpresa" list="dl-cmEmpresa">
+            <datalist id="dl-cmEmpresa"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="cmNit">NIT</label>
+            <input type="text" id="cmNit">
+          </div>
+          <div class="glpi-row">
+            <label for="cmRepresentanteLegal">Representante Legal</label>
+            <input type="text" id="cmRepresentanteLegal">
+          </div>
+          <div class="glpi-row">
+            <label for="cmCategoriaCliente">Categoría de Cliente</label>
+            <input type="text" id="cmCategoriaCliente" placeholder="Corporaciones">
+          </div>
+          <div class="glpi-row">
+            <label for="cmTipoGestion">Tipo de Gestión</label>
+            <input type="text" id="cmTipoGestion" list="dl-cmTipoGestion" placeholder="Traspaso, Nuevo, Renovación...">
+            <datalist id="dl-cmTipoGestion">
+              <option value="Nuevo"></option>
+              <option value="Traspaso"></option>
+              <option value="Renovación"></option>
+            </datalist>
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="cmPlanContratado">Plan Contratado</label>
+            <input type="text" id="cmPlanContratado" list="dl-cmPlanContratado" placeholder="G-EMPRESAS SMART 25GB">
+            <datalist id="dl-cmPlanContratado"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="cmCantidadLineas">Cantidad de Líneas</label>
+            <input type="number" id="cmCantidadLineas" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="cmPlazoContrato">Plazo de Contrato</label>
+            <input type="text" id="cmPlazoContrato" placeholder="18 meses">
+          </div>
+          <div class="glpi-row">
+            <label for="cmTotalMensual">Total Mensual (Q)</label>
+            <input type="number" id="cmTotalMensual" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="cmFechaFirma">Fecha de Firma</label>
+            <input type="date" id="cmFechaFirma">
+          </div>
+          <div class="glpi-row">
+            <label for="cmEjecutivoVentas">Ejecutivo de Ventas</label>
+            <input type="text" id="cmEjecutivoVentas">
+          </div>
+          <div class="glpi-row">
+            <label for="cmObservaciones">Observaciones</label>
+            <input type="text" id="cmObservaciones" placeholder="Traspaso y renovación">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalContratoMovil" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarContratoMovil" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de línea móvil (nueva / editar) -->
+<div id="modalLineaMovilOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalLineaMovilTitulo">Nueva línea móvil</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalLineaMovil" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formLineaMovil" class="modal-body">
+      <input type="hidden" id="lmId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="lmNumero">Número de Teléfono</label>
+            <input type="text" id="lmNumero" required>
+          </div>
+          <div class="glpi-row">
+            <label for="lmModelo">Modelo de Aparato</label>
+            <input type="text" id="lmModelo" list="dl-lmModelo">
+            <datalist id="dl-lmModelo"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmImei">IMEI</label>
+            <input type="text" id="lmImei">
+          </div>
+          <div class="glpi-row">
+            <label for="lmIccidEsn">ICCID / ESN</label>
+            <input type="text" id="lmIccidEsn">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="lmPlan">Plan de Voz/Internet</label>
+            <input type="text" id="lmPlan" list="dl-lmPlan">
+            <datalist id="dl-lmPlan"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmTarifaPlan">Tarifa del Plan (Q)</label>
+            <input type="number" id="lmTarifaPlan" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="lmUsuarioAsignado">Usuario Asignado</label>
+            <input type="text" id="lmUsuarioAsignado" list="dl-lmUsuarioAsignado">
+            <datalist id="dl-lmUsuarioAsignado"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmCorreoCorporativo">Correo Corporativo</label>
+            <input type="text" id="lmCorreoCorporativo">
+          </div>
+          <div class="glpi-row">
+            <label for="lmEmpresa">Empresa</label>
+            <input type="text" id="lmEmpresa" list="dl-lmEmpresa">
+            <datalist id="dl-lmEmpresa"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmEstado">Estado</label>
+            <select id="lmEstado">
+              <option value="Activa">Activa</option>
+              <option value="Suspendida">Suspendida</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalLineaMovil" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarLineaMovil" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal de generación rápida de Acta -->
 <div id="modalActaOverlay" class="modal-overlay no-print">
   <div class="modal modal-acta">
@@ -920,15 +1151,17 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260812p"></script>
+<script src="data.js?v=20260812q"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260812p"></script>
+<script src="app.js?v=20260812q"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260812p"></script>
-<script type="module" src="impresoras-sync.js?v=20260812p"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260812p"></script>
+<script type="module" src="firestore-sync.js?v=20260812q"></script>
+<script type="module" src="impresoras-sync.js?v=20260812q"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260812q"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260812q"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260812q"></script>
 </body>
 </html>
