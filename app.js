@@ -2017,6 +2017,22 @@ function imprimirContratoMovil() {
   window.print();
 }
 
+function imprimirFormatoAdhesionMovil() {
+  const empresaBuscada = ($("empresaImprimirLineas").value || "").trim().toLowerCase();
+  if (!empresaBuscada) {
+    alert("Escribe o selecciona la empresa que quieres imprimir.");
+    return;
+  }
+  const contrato = contratosMovilesData.find((c) => (c.empresa || "").trim().toLowerCase() === empresaBuscada);
+  if (!contrato) {
+    alert("No se encontró un contrato móvil con ese nombre de empresa. Verifica que coincida con el registrado en Contratos Móviles.");
+    return;
+  }
+  const lineas = lineasMovilesData.filter((l) => (l.empresa || "").trim().toLowerCase() === empresaBuscada);
+  $("printArea").innerHTML = anexoServiciosMovilesHTML(contrato, lineas);
+  window.print();
+}
+
 function imprimirDesdeEdicion() {
   const equipo = {};
   FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
@@ -3173,6 +3189,7 @@ $("formCodigo").addEventListener("submit", onSubmitCodigo);
 
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
+$("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
 $("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);

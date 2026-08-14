@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813b">
+<link rel="stylesheet" href="style.css?v=20260813c">
 </head>
 <body>
 
@@ -430,6 +430,8 @@
       <section id="vista-lineasMoviles" class="vista">
         <section class="toolbar">
           <input type="text" id="buscador_lineasMoviles" placeholder="Buscar por número, modelo, usuario, empresa...">
+          <input type="text" id="empresaImprimirLineas" list="dl-cmEmpresa" placeholder="Empresa a imprimir..." style="max-width:260px;">
+          <button type="button" id="btnImprimirLineasMoviles" class="btn btn-outline">🖨️ Imprimir formato</button>
           <button type="button" id="btnNuevaLineaMovil" class="btn btn-primary">+ Nueva línea</button>
         </section>
         <section class="tabla-wrap">
@@ -1152,17 +1154,17 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813b"></script>
+<script src="data.js?v=20260813c"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813b"></script>
+<script src="app.js?v=20260813c"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813b"></script>
-<script type="module" src="impresoras-sync.js?v=20260813b"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813b"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813b"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813b"></script>
+<script type="module" src="firestore-sync.js?v=20260813c"></script>
+<script type="module" src="impresoras-sync.js?v=20260813c"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260813c"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260813c"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260813c"></script>
 </body>
 </html>
