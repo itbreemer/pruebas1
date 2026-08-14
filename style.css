@@ -686,7 +686,14 @@ main .btn-primary:hover { background: #163158; }
   max-width: 100%;
   margin: 0 auto;
   page: anexo-movil;
+  /* Forzar que los colores de fondo (bandas rojas, casillas marcadas) se
+     impriman siempre, sin depender de que el usuario active "Fondos e
+     imágenes" en el diálogo de impresión del navegador. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
 }
+.anexo-movil, .anexo-movil * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
 .anexo-movil-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .anexo-movil-logo { color: #d81e2c; font-weight: 800; font-size: 1.6rem; font-style: italic; }
 .anexo-movil-titulo { font-size: 1.5rem; font-weight: 700; text-align: center; flex: 1; }
