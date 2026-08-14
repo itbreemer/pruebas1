@@ -1802,6 +1802,11 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
 
       <div class="anexo-seccion">Observaciones</div>
       <div class="anexo-campo"><span class="val">${esc(contrato.observaciones)}</span></div>
+      <div class="anexo-campo"><span class="val"></span></div>
+      <div class="anexo-campo"><span class="val"></span></div>
+      <div class="anexo-campo"><span class="val"></span></div>
+      <div class="anexo-campo"><span class="val"></span></div>
+      <div class="anexo-campo"><span class="val"></span></div>
 
       <div class="anexo-condiciones-titulo">Condiciones Aplicables al servicio de Telefonía Móvil</div>
       <p class="anexo-condiciones-texto">
