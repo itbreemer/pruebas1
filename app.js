@@ -1588,15 +1588,17 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
 
   const filasLineas = lineas
     .map(
-      (l) => `
+      (l, i) => `
         <tr>
+          <td class="centro">${i + 1}</td>
           <td>${esc(l.numero)}</td>
           <td>${esc(l.modelo)}</td>
           <td>${esc(l.imei)}</td>
           <td>${esc(l.iccidEsn)}</td>
+          <td class="num">Q 0</td>
           <td>${esc(l.plan)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
-          <td>${esc(l.usuarioAsignado)}</td>
+          <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
         </tr>`
     )
     .join("");
@@ -1618,22 +1620,63 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       <div class="anexo-seccion">Información General</div>
       <div class="anexo-campos">
         <div class="anexo-campo"><span class="lbl">Nombre Completo / Razón Social:</span><span class="val">${esc(contrato.empresa)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Nombre Comercial:</span><span class="val"></span></div>
         <div class="anexo-campo-doble">
           <div class="anexo-campo"><span class="lbl">Nombre Representante Legal:</span><span class="val">${esc(contrato.representanteLegal)}</span></div>
-          <div class="anexo-campo"><span class="lbl">Cargo:</span><span class="val">Representante Legal</span></div>
+          <div class="anexo-campo"><span class="lbl">Cargo:</span><span class="val"></span></div>
         </div>
-        <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${esc(contrato.nit)}</span></div>
-        <div class="anexo-campo"><span class="lbl">Operador:</span><span class="val">${esc(contrato.operador)}</span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Salario:</span><span class="val"></span></div>
+          <div class="anexo-campo"><span class="lbl">Antigüedad:</span><span class="val"></span></div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Documento de Identificación:</span><span class="val"></span></div>
+          <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${esc(contrato.nit)}</span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Dirección:</span><span class="val"></span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Giro de Negocio:</span><span class="val"></span></div>
+          <div class="anexo-campo"><span class="lbl">Departamento / Ciudad:</span><span class="val"></span></div>
+        </div>
+        <div class="anexo-checks">
+          <span><strong>Presencia:</strong></span>
+          ${casilla(false, "MX")} ${casilla(false, "GT")} ${casilla(false, "SV")} ${casilla(false, "HD")}
+          ${casilla(false, "NIC")} ${casilla(false, "CR")} ${casilla(false, "PA")}
+          <span><strong>Colaboradores:</strong> <span class="anexo-campo"><span class="val"></span></span></span>
+          <span><strong>Sucursales / Oficinas:</strong> <span class="anexo-campo"><span class="val"></span></span></span>
+        </div>
       </div>
 
       <div class="anexo-seccion">Datos de envío de Facturación</div>
       <div class="anexo-campos">
-        <div class="anexo-campo"><span class="lbl">Nombre del Contacto:</span><span class="val"></span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Nombre del Contacto:</span><span class="val"></span></div>
+          <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      </div>
+
+      <div class="anexo-seccion">Servicios Cloud</div>
+      <div class="anexo-campos">
+        <div class="anexo-checks">
+          <span>${casilla(false, "Continúa con Claro Drive cargo a factura — SI")} ${casilla(false, "NO")}</span>
+        </div>
+        <div class="anexo-checks">
+          <span>${casilla(false, "Dar Baja a servicio Claro Drive — SI")} ${casilla(false, "NO")}</span>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
+          <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
+        </div>
         <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
       </div>
 
       <div class="anexo-seccion">Planes de Telefonía Móvil</div>
-      <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${esc(contrato.plazoContrato)}</span></div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${esc(contrato.plazoContrato)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Otros a:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-checks">${casilla(false, "Claro Cloud")}</div>
       <table class="anexo-tabla">
         <thead>
           <tr><th>Cantidad</th><th>Descripción</th><th>Total Mensual</th></tr>
@@ -1644,6 +1687,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
             <td>${esc(contrato.planContratado)}</td>
             <td class="num">Q ${totalMensual.toFixed(2)}</td>
           </tr>
+          <tr><td class="centro"></td><td></td><td class="num"></td></tr>
+          <tr><td class="centro"></td><td></td><td class="num"></td></tr>
         </tbody>
         <tfoot>
           <tr><td colspan="2">TOTAL</td><td class="num">Q ${totalMensual.toFixed(2)}</td></tr>
@@ -1651,24 +1696,97 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       </table>
 
       <div class="anexo-seccion">Planes de Internet Móvil</div>
-      <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">Otros</span></div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">Otros</span></div>
+        <div class="anexo-campo"><span class="lbl">Otros a:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-checks">${casilla(false, "Claro Cloud")}</div>
       <table class="anexo-tabla">
         <thead><tr><th>Cantidad</th><th>Descripción</th><th>Total Mensual</th></tr></thead>
-        <tbody><tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr></tbody>
+        <tbody>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
+        </tbody>
         <tfoot><tr><td colspan="2">TOTAL</td><td class="num">Q 0.00</td></tr></tfoot>
+      </table>
+
+      <div class="anexo-seccion">Planes de Navegación AVL / Telemetría</div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">-</span></div>
+        <div class="anexo-campo"><span class="lbl">Otros a:</span><span class="val"></span></div>
+      </div>
+      <table class="anexo-tabla">
+        <thead>
+          <tr>
+            <th>Cant.</th><th>Plan o paquete de Navegación</th><th>Cuota Mensual</th><th>Cuota Mensual Total</th>
+            <th>Llamadas Entrantes AVL</th><th>Llamadas Salientes AVL</th><th>SMS Entrantes AVL</th><th>SMS Salientes AVL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0.00</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
+          <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
+          <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="3">TOTAL</td><td class="num">Q 0.00</td><td colspan="4"></td></tr></tfoot>
       </table>
 
       <div class="anexo-seccion">Financiamiento de Equipos Móviles</div>
       <div class="anexo-checks">${casilla(false, "Aplica financiamiento equipo móvil")}</div>
+      <table class="anexo-tabla">
+        <thead>
+          <tr><th>Cant.</th><th>Equipos a Financiar</th><th>Valor de Equipo a Financiar</th><th>Plazo de Pago de Equipos</th><th>Valor mensual a Pagar</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
+          <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="4">TOTAL</td><td class="num">Q 0</td></tr></tfoot>
+      </table>
 
       <div class="anexo-seccion">Portal de Paquetes de Internet Adicional</div>
       <div class="anexo-checks">
         <span><strong>Cliente desea el servicio:</strong></span>
         ${casilla(true, "Sí")} ${casilla(false, "No")}
       </div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Nombre responsable del Portal:</span><span class="val"></span></div>
+        <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+
+      <div class="anexo-seccion">Gestor de Comunicaciones / AVI</div>
+      <div class="anexo-checks">
+        ${casilla(false, "Contratará el Gestor de Comunicaciones")}
+        <span><strong>Tarifa:</strong> Q <span class="anexo-campo"><span class="val"></span></span></span>
+        <span><strong>No. Líneas:</strong> <span class="anexo-campo"><span class="val"></span></span></span>
+        <span><strong>Total:</strong> Q <span class="anexo-campo"><span class="val"></span></span></span>
+      </div>
+      <div class="anexo-campo"><strong>Información del usuario Administrador</strong></div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
+        <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
 
       <div class="anexo-seccion">Coordinador del Servicio ante Telgua</div>
-      <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
+      <div class="anexo-campo">Yo EL CLIENTE Designo a:</div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
+        <div class="anexo-campo"><span class="lbl">Cargo:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-campo-doble">
+        <div class="anexo-campo"><span class="lbl">Documento de identificación:</span><span class="val"></span></div>
+        <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val"></span></div>
+      </div>
+      <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      <p class="anexo-condiciones-texto">
+        Con la finalidad de agilizar y facilitar la tramitación post venta que surja derivados del cumplimiento del
+        presente Contrato, para que pueda gestionar los trámites como: Remplazo de sim, bloqueo de servicios por robo,
+        agregar paquete de datos.
+      </p>
 
       <div class="anexo-seccion">Observaciones</div>
       <div class="anexo-campo"><span class="val">${esc(contrato.observaciones)}</span></div>
@@ -1847,17 +1965,23 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       </div>
 
       <div class="salto-pagina"></div>
-      <div class="anexo-seccion">Anexo de líneas — ${esc(contrato.empresa)}</div>
+      <div class="anexo-campo"><strong>${esc(contrato.empresa)}</strong></div>
+      <div class="anexo-campo"><span class="lbl" style="font-size:0.62rem;">NOMBRE EMPRESA/NOMBRE TITULAR</span></div>
       <table class="anexo-tabla">
         <thead>
-          <tr><th>No. de Teléfono</th><th>Modelo de Aparato</th><th>IMEI</th><th>ICCID/ESN</th><th>Plan de Voz/Internet</th><th>Tarifa del Plan</th><th>Usuario Asignado</th></tr>
+          <tr><th>#</th><th>No. de Teléfono</th><th>Modelo Aparato</th><th>IMEI</th><th>ESN</th><th>Costo del Equipo</th><th>Plan de Voz / Internet / AVL's</th><th>Tarifa del Plan</th><th>Tarifa Total</th></tr>
         </thead>
-        <tbody>${filasLineas || '<tr><td colspan="7" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
+        <tbody>${filasLineas || '<tr><td colspan="9" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
         <tfoot>
-          <tr><td colspan="5">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td><td></td></tr>
-          <tr><td colspan="5">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td><td></td></tr>
+          <tr><td colspan="8">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
+          <tr><td colspan="8">NEGOCIACIÓN</td><td class="num"></td></tr>
+          <tr><td colspan="8">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
         </tfoot>
       </table>
+      <div class="anexo-aceptacion">
+        <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
+        <span class="anexo-firma-linea">Gerencia Mercado Corporativo País</span>
+      </div>
     </div>
   `;
 }
