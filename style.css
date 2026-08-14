@@ -674,7 +674,55 @@ main .btn-primary:hover { background: #163158; }
   body { background: #fff; }
   @page { size: letter landscape; margin: 8mm; }
   @page tarjeta-vertical { size: letter portrait; margin: 38mm 14mm 14mm 14mm; }
+  @page anexo-movil { size: letter portrait; margin: 10mm; }
 }
+
+/* ============ Anexo de Servicios Móviles (impresión, mismo formato de Claro) ============ */
+.anexo-movil {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  font-size: 0.78rem;
+  max-width: 100%;
+  margin: 0 auto;
+  page: anexo-movil;
+}
+.anexo-movil-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.anexo-movil-logo { color: #d81e2c; font-weight: 800; font-size: 1.6rem; font-style: italic; }
+.anexo-movil-titulo { font-size: 1.5rem; font-weight: 700; text-align: center; flex: 1; }
+.anexo-movil-version { font-size: 0.75rem; text-align: right; }
+
+.anexo-cabecera { display: flex; gap: 20px; font-size: 0.78rem; margin-bottom: 4px; }
+.anexo-cabecera strong { font-weight: 700; }
+
+.anexo-seccion {
+  background: #b91c1c; color: #fff; font-weight: 700; text-align: center;
+  padding: 2px 6px; font-size: 0.78rem; margin-top: 6px;
+}
+.anexo-campos { display: flex; flex-direction: column; gap: 1px; }
+.anexo-campo { display: flex; gap: 4px; font-size: 0.76rem; padding: 1px 0; }
+.anexo-campo .lbl { white-space: nowrap; }
+.anexo-campo .val { border-bottom: 1px solid #000; flex: 1; min-height: 12px; padding: 0 4px; }
+.anexo-campo-doble { display: flex; gap: 16px; }
+.anexo-campo-doble .anexo-campo { flex: 1; }
+
+.anexo-checks { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.76rem; }
+.anexo-check { display: inline-flex; align-items: center; gap: 3px; }
+.anexo-check .caja { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; text-align: center; line-height: 10px; font-size: 0.7rem; }
+.anexo-check .caja.marcada { background: #000; color: #fff; }
+
+.anexo-tabla { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin: 4px 0; }
+.anexo-tabla th, .anexo-tabla td { border: 1px solid #999; padding: 3px 5px; }
+.anexo-tabla th { background: #ddd; font-weight: 700; text-align: center; }
+.anexo-tabla td.num { text-align: right; }
+.anexo-tabla td.centro { text-align: center; }
+.anexo-tabla tfoot td { font-weight: 700; }
+
+.anexo-condiciones-titulo { background: #b91c1c; color: #fff; font-weight: 700; text-align: center; padding: 2px 6px; font-size: 0.74rem; margin-top: 8px; }
+.anexo-condiciones-texto { font-size: 0.62rem; line-height: 1.25; text-align: justify; margin: 3px 0; }
+.anexo-condiciones-texto strong { font-weight: 700; }
+
+.anexo-aceptacion { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.74rem; }
+.anexo-firma-linea { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; width: 220px; text-align: center; }
 
 /* ---------- Login (Firebase Auth) ---------- */
 .login-overlay {

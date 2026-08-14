@@ -1568,6 +1568,309 @@ function renderActa(equipo, transaccion) {
   window.print();
 }
 
+/* ---------- Impresión: Anexo de Servicios Móviles (mismo formato que Claro) ---------- */
+/* Solo los campos que el contrato realmente trae con datos quedan dinamicos
+   (Informacion General, Facturacion, Planes de Telefonia Movil, Observaciones,
+   Aceptacion, y el detalle de lineas). Las secciones que en el formulario de
+   Claro casi siempre vienen vacias (Internet Movil, Navegacion AVL,
+   Financiamiento de Equipos, Portal de Paquetes, Gestor de Comunicaciones,
+   Coordinador ante Telgua) se dejan fijas/en blanco, igual que en el
+   documento original. El texto de condiciones es el mismo en todos los
+   contratos de Claro, transcrito tal cual del anexo oficial. */
+
+function casilla(marcada, texto) {
+  return `<span class="anexo-check"><span class="caja${marcada ? " marcada" : ""}">${marcada ? "✓" : ""}</span>${texto}</span>`;
+}
+
+function anexoServiciosMovilesHTML(contrato, lineas) {
+  const sumaLineas = lineas.reduce((s, l) => s + (Number(l.tarifaPlan) || 0), 0);
+  const totalMensual = contrato.totalMensual ? Number(contrato.totalMensual) : sumaLineas;
+
+  const filasLineas = lineas
+    .map(
+      (l) => `
+        <tr>
+          <td>${esc(l.numero)}</td>
+          <td>${esc(l.modelo)}</td>
+          <td>${esc(l.imei)}</td>
+          <td>${esc(l.iccidEsn)}</td>
+          <td>${esc(l.plan)}</td>
+          <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
+          <td>${esc(l.usuarioAsignado)}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `
+    <div class="anexo-movil">
+      <div class="anexo-movil-header">
+        <div class="anexo-movil-logo">Claro</div>
+        <div class="anexo-movil-titulo">Anexo de servicios Móviles</div>
+        <div class="anexo-movil-version">V 1.0</div>
+      </div>
+
+      <div class="anexo-cabecera">
+        <span><strong>Categoría de Cliente:</strong> ${esc(contrato.categoriaCliente)}</span>
+        <span><strong>Gestión:</strong> ${esc(contrato.tipoGestion)}</span>
+        <span><strong>Tipo de Cliente:</strong> Existente</span>
+      </div>
+
+      <div class="anexo-seccion">Información General</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo"><span class="lbl">Nombre Completo / Razón Social:</span><span class="val">${esc(contrato.empresa)}</span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Nombre Representante Legal:</span><span class="val">${esc(contrato.representanteLegal)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Cargo:</span><span class="val">Representante Legal</span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${esc(contrato.nit)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Operador:</span><span class="val">${esc(contrato.operador)}</span></div>
+      </div>
+
+      <div class="anexo-seccion">Datos de envío de Facturación</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo"><span class="lbl">Nombre del Contacto:</span><span class="val"></span></div>
+        <div class="anexo-campo"><span class="lbl">Correo Electrónico:</span><span class="val"></span></div>
+      </div>
+
+      <div class="anexo-seccion">Planes de Telefonía Móvil</div>
+      <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${esc(contrato.plazoContrato)}</span></div>
+      <table class="anexo-tabla">
+        <thead>
+          <tr><th>Cantidad</th><th>Descripción</th><th>Total Mensual</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="centro">${esc(contrato.cantidadLineas)}</td>
+            <td>${esc(contrato.planContratado)}</td>
+            <td class="num">Q ${totalMensual.toFixed(2)}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="2">TOTAL</td><td class="num">Q ${totalMensual.toFixed(2)}</td></tr>
+        </tfoot>
+      </table>
+
+      <div class="anexo-seccion">Planes de Internet Móvil</div>
+      <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">Otros</span></div>
+      <table class="anexo-tabla">
+        <thead><tr><th>Cantidad</th><th>Descripción</th><th>Total Mensual</th></tr></thead>
+        <tbody><tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr></tbody>
+        <tfoot><tr><td colspan="2">TOTAL</td><td class="num">Q 0.00</td></tr></tfoot>
+      </table>
+
+      <div class="anexo-seccion">Financiamiento de Equipos Móviles</div>
+      <div class="anexo-checks">${casilla(false, "Aplica financiamiento equipo móvil")}</div>
+
+      <div class="anexo-seccion">Portal de Paquetes de Internet Adicional</div>
+      <div class="anexo-checks">
+        <span><strong>Cliente desea el servicio:</strong></span>
+        ${casilla(true, "Sí")} ${casilla(false, "No")}
+      </div>
+
+      <div class="anexo-seccion">Coordinador del Servicio ante Telgua</div>
+      <div class="anexo-campo"><span class="lbl">Nombre:</span><span class="val"></span></div>
+
+      <div class="anexo-seccion">Observaciones</div>
+      <div class="anexo-campo"><span class="val">${esc(contrato.observaciones)}</span></div>
+
+      <div class="salto-pagina"></div>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables al servicio de Telefonía Móvil</div>
+      <p class="anexo-condiciones-texto">
+        <strong>LLAMADAS ILIMITADAS:</strong> el paquete de llamadas ilimitadas que EL CLIENTE contrata, le permite hablar
+        ilimitadamente todos los días y en cualquier horario a Líneas Fijas Residenciales CLARO y líneas móviles Claro.
+        Al contratarlo, el servicio quedará activo 24 horas después de la activación del plan contratado. En caso no
+        desee continuar con el servicio, puede solicitar la desactivación antes de su fecha de corte en nuestros
+        Centros de Servicios al Cliente así también no se puede desactivar si están incluidos en el contrato o vienen
+        incluidos en el plan contratado.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>BENEFICIO SIN FRONTERAS CENTRO AMERICA Y NORTEAMERICA:</strong> Al contar con el beneficio de Sin
+        Fronteras Centroamérica y Sin Fronteras Norteamérica, los servicios de voz, SMS y navegación contratados dentro
+        del plan pueden ser utilizados desde Canadá hasta Panamá, sin incluir Belice para su uso desde (servicio roaming)
+        y hacia (larga distancia internacional) los países con precios y tarifas de Guatemala. Para planes con servicios
+        ilimitados de voz y SMS, se presta únicamente para el ámbito del uso personal del cliente conforme a la política
+        de uso razonable incluida en la página Web de Claro en la parte Legal y Regulatorio. No incluye servicios
+        ilimitados de navegación como redes sociales ilimitadas, música ilimitada entre otros.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>BENEFICIO ROAMING SIN FRONTERAS AMÉRICA (SFA):</strong> Todos los planes con el beneficio SFA cuentan
+        con un bolsón asignado de mensajes de texto SMS y el uso del paquete de datos durante la estadía en los países
+        de cobertura (servicio roaming). No incluye llamadas ni mensajes de texto de larga distancia internacional, es
+        decir generados desde Guatemala hacia los países de cobertura del beneficio SFA.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>GROUP CALLING - VPN:</strong> Group Calling: VPN (Virtual Private Network) permite al cliente realizar
+        llamadas a los números CLARO contratados, a nombre de la misma Empresa / Corporación (móviles y fijos), de
+        forma gratuita, sin consumir minutos de su bolsón del plan contratado. Este plan de llamadas ilimitadas entre
+        los móviles contratados se habilitará y comenzará a aplicar 48 hrs. después de activado el servicio de
+        telefonía móvil.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>PLANES POSTPAGO DE VOZ:</strong> Servicio de telefonía móvil Postpago de voz que le brinda a EL CLIENTE
+        una bolsa de minutos definida, de acuerdo al plan contratado por una renta mensual específica.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>MENSAJES DE TEXTO:</strong> Paquete de SMS que adquiere el cliente que le permite el envío de mensajes
+        de texto desde su móvil hacia otro de la red CLARO. Aplica únicamente y exclusivamente para consumo nacional y
+        regional (No incluyen marcaciones cortas o promociones).
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>INTERNET MÓVIL:</strong> La Navegación en la red que EL CLIENTE haga a nivel Regional se facturará a
+        tarifa local en los países de México, Guatemala, El Salvador, Honduras, Nicaragua, Costa Rica y Panamá. La
+        Navegación Internacional se limita a los países incluidos en la Región más los países incluidos en el plan
+        elegido. Todo el plan con paquete de navegación al llegar a su límite del plan contratado se bloqueará,
+        pudiendo EL CLIENTE comprar paquete de datos adicionales en nuestros diferentes portales para seguir navegando.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables a Roaming/Larga Distancia</div>
+      <p class="anexo-condiciones-texto">
+        EL CLIENTE Corporativo que por su buen récord como CLIENTE, TELGUA le asigna el rango "VIP" y que acepte el
+        cargo mensual de una cuota adicional al servicio de plan de voz PostPago, conforme al tarifario establecido por
+        TELGUA, gozará de tarifas preferenciales de Roaming por un plazo inicial de prestación del servicio de 18 MESES,
+        contado a partir de la firma del contrato. Si El Cliente decide dar por terminado en forma anticipada el plazo
+        inicial, deberá pagar a TELGUA, el monto que falte por cancelar hasta el total cumplimiento del plazo. El
+        Cliente acepta y solicita que, vencido el plazo inicial del contrato, TELGUA le siga proporcionando el servicio
+        sin necesidad de solicitar su prórroga por escrito. Si posteriormente desea dar de baja el servicio EL CLIENTE
+        deberá solicitarlo por escrito a TELGUA debiendo cancelar hasta la última cuota de servicio efectivamente
+        prestado. El servicio de Roaming preferencial aplicará en Centroamérica, Estados Unidos y en los países con
+        presencia CLARO que se le indique en el momento de la cotización.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables a la Compra-Venta de Equipos a Plazos</div>
+      <p class="anexo-condiciones-texto">
+        <strong>FORMA DE PAGO.</strong> Las cuotas de los equipos financiados que adquiera EL CLIENTE se cargarán
+        mensualmente, adicional al monto del servicio telefónico, conforme al plan que el cliente haya adquirido. EL
+        CLIENTE en forma expresa, voluntaria y unilateral manifiesta RECONOCERSE LISO Y LLANO DEUDOR DE TELGUA hasta
+        por el monto total del precio del aparato telefónico y cuotas mensuales vencidas por concepto de servicio
+        telefónico y otros servicios varios de telecomunicaciones. <strong>GARANTÍA.</strong> En el caso de la garantía
+        se procederá conforme a lo indicado en el Anexo de prestación de Servicios que a cada equipo corresponda.
+        <strong>CANCELACIÓN.</strong> Si el comprador desea dar baja al servicio antes del vencimiento del plazo
+        estipulado en este contrato, deberá cancelar la totalidad del valor del equipo para que su solicitud proceda.
+        Si desea cancelar anticipadamente las cuotas faltantes podrá realizarlo dependiendo del caso. En el caso de
+        compra de equipo adquirido a plazos en pospago deberá realizar el pago, después de la primera facturación.
+        <strong>INCUMPLIMIENTO.</strong> En caso de incumplimiento en el pago, e independiente de la facultad de TELGUA
+        de exigirle al comprador el pago del saldo total del equipo, más el de la tasa de interés por mora, a través de
+        las acciones legales que corresponda, por este acto el comprador se compromete a devolver a TELGUA en perfecto
+        estado de funcionamiento, el equipo financiado, por el impago de al menos DOS (2) cuotas vencidas y
+        consecutivas, autorizando expresamente a TELGUA a recoger el equipo a través del personal o empresa que estime
+        conveniente o bien mediante entrega voluntaria que deberá hacer el comprador desee en agencias "Claro".
+        <strong>FACTURA DEL EQUIPO FINANCIADO.</strong> La factura del equipo se entrega al cliente al momento que este
+        recibe el mismo. Esta factura se emite por el monto total de la terminal móvil (incluye IVA), posteriormente
+        dentro de la factura mensual del servicio se detallará la cuota del financiamiento de la terminal llevando un
+        control de número de pagos y el nombre de la terminal financiada, tomar en cuenta que esta cuota cargada es NO
+        IVA.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables al Servicio de INTERNET MÓVIL</div>
+      <p class="anexo-condiciones-texto">
+        <strong>CARACTERÍSTICAS DEL SERVICIO Y PLAN INTERNET MÓVIL:</strong> El servicio de Internet Móvil que por este
+        acto contrato, Le permite a través de la configuración de un MODEM en una computadora portátil, el acceso a
+        Internet con velocidades de hasta 2 Mbps en 3G y hasta 5Mbps en 4G, en cualquier momento, sujeto a cobertura.
+        Acepto expresamente que dicho servicio puede adquirir paquetes adicionales desde el portal de compra de
+        paquetes adicionales (PCRF), los cuales serán cargados a mi factura mensual. Tiene únicamente cobertura de
+        datos en México, Guatemala, El Salvador, Honduras, Nicaragua, Costa Rica y Panamá. En caso EL CLIENTE desee
+        navegar en otro país, acepta que deberá pagar la totalidad de la transmisión de datos de acuerdo a la tarifa
+        vigente por Mb transmitido en roaming. <strong>Tarjeta SIM:</strong> (Subscriber Identity Module). La tarjeta
+        inteligente desmontable con un número específico asignado a TELGUA, puede ser adquirida por EL CLIENTE para su
+        utilización en un MODEM USB de su propiedad, en servicio pospago. Al contratarla, EL CLIENTE recibirá todas las
+        promociones y ofertas vigentes en el momento de su adquisición. De igual manera, le aplica lo relativo a las
+        condiciones generales del servicio, plazo mínimo inicial, cláusula indemnizatoria, intereses moratorios y
+        garantía de la tarjeta SIM conforme a los Términos y Condiciones de Telgua.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables al servicio de Navegación AVL / Telemetría</div>
+      <p class="anexo-condiciones-texto">
+        <strong>PLAN REGIONAL DE INTERNET MÓVIL AVL:</strong> El servicio de Internet Móvil AVL es un servicio con
+        acceso a Internet restringido, tasación de transacciones por byte, bloqueo del servicio al consumir el 100% de
+        la bolsa de megabytes (MB), a excepción del plan ilimitado, y perfil de velocidad 128kbps de subida y 64kbps de
+        bajada. <strong>NAVEGACIÓN:</strong> Internet Móvil AVL puede ser utilizado para carga y descarga de datos en
+        Guatemala, El Salvador, Honduras, Nicaragua y Costa Rica. <strong>RESTRICCIONES:</strong> Los planes de
+        Internet Móvil AVL tienen los servicios de telefonía, llamadas entrantes y salientes, y los servicios de
+        mensajería SMS entrantes y salientes, deshabilitados, se habilitará únicamente si se necesitaran con cargo
+        adicional en las llamadas y mensajes salientes como entrantes de acuerdo a las tarifas vigentes en el país. Los
+        kilobytes (KB) consumidos en países no incluidos tendrán un costo por KB según tarifario. EL CLIENTE deberá
+        proporcionar las direcciones IP y URL a las que desea que sus líneas se reporten para que TELGUA las configure
+        en su plataforma. La configuración de la dirección IP y URL, así como cualquier cambio de éstas, que se
+        soliciten a TELGUA se aplicarán un tiempo estimado de una semana. <strong>PAQUETE MÉXICO PANAMÁ:</strong> La
+        contratación del paquete México y Panamá agrega una bolsa de diez (10) megabytes al plan de Internet Móvil AVL
+        que puede ser utilizada para carga y descarga de datos en estos dos países. La transmisión de datos después de
+        consumir los 10MB tendrá costo por KB según tarifario HABILITACIÓN DE SERVICIOS RESTRINGIDOS En caso sea
+        requerido puede habilitarse los servicios de telefonía y mensajería en las líneas contratadas. Las llamadas
+        entrantes y salientes tendrán costo de acuerdo a tarifa vigente en el país; los mensajes salientes tendrán
+        costo de acuerdo a tarifa vigente en el país. CLARO no se responsabiliza por los consumos realizados en estas
+        líneas de estos servicios.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones Aplicables a Gestor de Comunicación AVI</div>
+      <p class="anexo-condiciones-texto">
+        EL CLIENTE acepta mediante la firma de este documento, el servicio de gestión y control de las líneas
+        digitales, fijas o móviles que le permite, según la categoría que elija, integrar sus líneas (las cuales se
+        detallan en hoja adjunta al presente contrato), cursar el tráfico entre sus propias líneas sin costo, tener
+        marcación abreviada personalizada, distribuir los minutos en forma personalizada (siempre que las líneas estén
+        dentro del mismo plan) y aplicar controles de llamadas por destino y horario, a través de una herramienta en
+        Internet. Para hacer uso del servicio TELGUA asignará un usuario y una contraseña a EL CLIENTE, a efecto de
+        poder ingresar al portal Web https://avi.claro.com.gt, desde cualquier terminal con exión a Internet. Los
+        servicios objeto del presente contrato pueden ser catalogados de la siguiente manera: 1. Estándar: Permite
+        administrar todas las características del servicio de Acceso Empresarial, y/o Líneas Fijas, y/o líneas móviles
+        (no posee controles, no recibe acceso a la definición de perfiles ni modificación de restricciones). 2.
+        Premium: Contiene las funciones estándar, y además permite controlar, el consumo (aplicable solo en los casos
+        de telefonía móvil con desvío a teléfonos prepago), destino y horario de las llamadas. <strong>VIGENCIA:</strong>
+        El servicio de valor agregado AVI, permanecerá vigente en tanto esté vigente el servicio de Acceso Empresarial
+        contratado y tenga líneas móviles, a pesar de ello lo podré dar por terminado en cualquier momento sin sanción
+        alguna, debiendo acudir previamente con el Ejecutivo de Ventas de TELGUA para suscribir los documentos
+        necesarios de terminación.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Aceptación</div>
+      <p class="anexo-condiciones-texto">
+        <strong>ACEPTACIÓN:</strong> EL CLIENTE, al firmar este documento acepta expresamente: a) Ser de los datos de
+        identificación consignados en este anexo; b) que TELGUA pueda corroborar la veracidad de toda la información
+        proporcionada por su persona, por cualquier medio legal, siendo responsable de lo relativo al delito de
+        perjurio en caso se llegara a constar que la información relacionada es falsa parcial o totalmente; c)
+        Autoriza expresa y voluntariamente a TELGUA para que sus datos personales o cualquier información recopilada
+        y/o proporcionada por su persona ante entidades públicas o privadas o la generada de relaciones contractuales,
+        crediticias o comerciales sean compartidas, difundidas, comercializadas o reportadas con empresas de cobro,
+        centrales de riesgo o con aquellas que distribuyen o comercializan con datos personales a efecto de verificar
+        la información proporcionada por su persona o bien para ser tratada, almacenada o transferida; d) que el
+        presente ANEXO DE SERVICIO incorpora los TÉRMINOS Y CONDICIONES GENERALES DE CONTRATACIÓN DE TELGUA ("TCG
+        CLIENTES"), los cuales he recibido de parte de TELGUA en este acto y que constituyen los aplicables de manera
+        general a la prestación de servicios de telecomunicaciones brindados por TELGUA; y e) haber leído el presente
+        anexo del servicio y bien impuesto de su contenido, objeto, validez y efectos legales, lo acepta, ratifica y
+        firma.
+      </p>
+
+      <div class="anexo-aceptacion">
+        <span><strong>Lugar y Fecha:</strong> Guatemala, ${esc(contrato.fechaFirma)}</span>
+        <span><strong>Nombre de Ejecutivo:</strong> ${esc(contrato.ejecutivoVentas)}</span>
+        <span class="anexo-firma-linea">Firma del Cliente</span>
+      </div>
+
+      <div class="salto-pagina"></div>
+      <div class="anexo-seccion">Anexo de líneas — ${esc(contrato.empresa)}</div>
+      <table class="anexo-tabla">
+        <thead>
+          <tr><th>No. de Teléfono</th><th>Modelo de Aparato</th><th>IMEI</th><th>ICCID/ESN</th><th>Plan de Voz/Internet</th><th>Tarifa del Plan</th><th>Usuario Asignado</th></tr>
+        </thead>
+        <tbody>${filasLineas || '<tr><td colspan="7" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
+        <tfoot>
+          <tr><td colspan="5">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td><td></td></tr>
+          <tr><td colspan="5">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+
+function imprimirContratoMovil() {
+  const data = {};
+  CONTRATO_MOVIL_FIELD_IDS.forEach((idCampo) => (data[CONTRATO_MOVIL_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim()));
+  const empresa = (data.empresa || "").trim().toLowerCase();
+  const lineas = lineasMovilesData.filter((l) => (l.empresa || "").trim().toLowerCase() === empresa);
+  $("printArea").innerHTML = anexoServiciosMovilesHTML(data, lineas);
+  window.print();
+}
+
 function imprimirDesdeEdicion() {
   const equipo = {};
   FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
@@ -2723,6 +3026,7 @@ $("btnEliminarModalCodigo").addEventListener("click", eliminarCodigoActual);
 $("formCodigo").addEventListener("submit", onSubmitCodigo);
 
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
+$("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);
