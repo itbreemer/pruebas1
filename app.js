@@ -682,15 +682,27 @@ const SEMILLA_CONTRATOS_MOVILES = [
 
 function cargarContratosMoviles() {
   const raw = localStorage.getItem(CONTRATOS_MOVILES_STORAGE_KEY);
+  const semilla = SEMILLA_CONTRATOS_MOVILES.map((c, i) => ({ ...c, id: c.id || `semilla-cm-${i}` }));
   if (raw) {
     try {
       contratosMovilesData = JSON.parse(raw);
+      // El navegador ya tenia datos guardados de una sesion anterior, asi que
+      // la semilla no se vuelve a cargar sola (solo pasa si esta vacio). Si se
+      // agregaron mas contratos a la semilla despues (import de un Excel
+      // nuevo), se agregan aqui los que todavia no existan localmente, sin
+      // tocar lo que ya se guardo o edito a mano.
+      const idsExistentes = new Set(contratosMovilesData.map((c) => c.id));
+      const nuevos = semilla.filter((c) => !idsExistentes.has(c.id));
+      if (nuevos.length) {
+        contratosMovilesData = contratosMovilesData.concat(nuevos);
+        guardarContratosMoviles();
+      }
       return;
     } catch {
       contratosMovilesData = [];
     }
   }
-  contratosMovilesData = SEMILLA_CONTRATOS_MOVILES.map((c, i) => ({ ...c, id: c.id || `semilla-cm-${i}` }));
+  contratosMovilesData = semilla;
   guardarContratosMoviles();
 }
 
@@ -946,15 +958,25 @@ const SEMILLA_LINEAS_MOVILES = [
 
 function cargarLineasMoviles() {
   const raw = localStorage.getItem(LINEAS_MOVILES_STORAGE_KEY);
+  const semilla = SEMILLA_LINEAS_MOVILES.map((l, i) => ({ ...l, id: l.id || `semilla-lm-${i}` }));
   if (raw) {
     try {
       lineasMovilesData = JSON.parse(raw);
+      // Igual que en cargarContratosMoviles: si ya habia datos guardados de
+      // antes, se agregan las lineas nuevas de la semilla (import de Excel)
+      // que todavia no existan localmente, sin tocar lo ya guardado/editado.
+      const idsExistentes = new Set(lineasMovilesData.map((l) => l.id));
+      const nuevas = semilla.filter((l) => !idsExistentes.has(l.id));
+      if (nuevas.length) {
+        lineasMovilesData = lineasMovilesData.concat(nuevas);
+        guardarLineasMoviles();
+      }
       return;
     } catch {
       lineasMovilesData = [];
     }
   }
-  lineasMovilesData = SEMILLA_LINEAS_MOVILES.map((l, i) => ({ ...l, id: l.id || `semilla-lm-${i}` }));
+  lineasMovilesData = semilla;
   guardarLineasMoviles();
 }
 
