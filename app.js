@@ -38,13 +38,23 @@ const CONTRATO_MOVIL_CAMPO_POR_ID = {
 };
 
 const LINEA_MOVIL_FIELD_IDS = [
-  "lmId", "lmNumero", "lmModelo", "lmImei", "lmIccidEsn", "lmPlan", "lmTarifaPlan",
-  "lmUsuarioAsignado", "lmCorreoCorporativo", "lmEmpresa", "lmEstado",
+  "lmId", "lmNumero", "lmModelo", "lmImei", "lmIccidEsn", "lmCostoEquipo", "lmPlan", "lmTarifaPlan",
+  "lmTipoServicioCloud", "lmServicioCloud", "lmCorreoSpacesuite", "lmSpacesuite",
+  "lmUsuarioAsignado", "lmCorreoCorporativo", "lmAppsCorp", "lmNavegacionApps", "lmSuitcase",
+  "lmPentcloud", "lmLlamadasIlimitadas", "lmPaqueteRoaming", "lmClaroDirecto", "lmVpn",
+  "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmEmpresa", "lmEstado",
 ];
 const LINEA_MOVIL_CAMPO_POR_ID = {
   lmId: "id", lmNumero: "numero", lmModelo: "modelo", lmImei: "imei", lmIccidEsn: "iccidEsn",
-  lmPlan: "plan", lmTarifaPlan: "tarifaPlan", lmUsuarioAsignado: "usuarioAsignado",
-  lmCorreoCorporativo: "correoCorporativo", lmEmpresa: "empresa", lmEstado: "estado",
+  lmCostoEquipo: "costoEquipo", lmPlan: "plan", lmTarifaPlan: "tarifaPlan",
+  lmTipoServicioCloud: "tipoServicioCloud", lmServicioCloud: "servicioCloud",
+  lmCorreoSpacesuite: "correoSpacesuite", lmSpacesuite: "spacesuite",
+  lmUsuarioAsignado: "usuarioAsignado", lmCorreoCorporativo: "correoCorporativo",
+  lmAppsCorp: "appsCorp", lmNavegacionApps: "navegacionApps", lmSuitcase: "suitcase",
+  lmPentcloud: "pentcloud", lmLlamadasIlimitadas: "llamadasIlimitadas",
+  lmPaqueteRoaming: "paqueteRoaming", lmClaroDirecto: "claroDirecto", lmVpn: "vpn",
+  lmAviDesvioPrepago: "aviDesvioPrepago", lmDescuentoAutomatico: "descuentoAutomatico",
+  lmEmpresa: "empresa", lmEstado: "estado",
 };
 
 let impresorasData = [];
@@ -1605,11 +1615,24 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <td>${esc(l.modelo)}</td>
           <td>${esc(l.imei)}</td>
           <td>${esc(l.iccidEsn)}</td>
-          <td class="num">Q 0</td>
+          <td class="num">${l.costoEquipo ? "Q " + Number(l.costoEquipo).toFixed(2) : "Q -"}</td>
           <td>${esc(l.plan)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
-          <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          <td class="centro">${esc(l.tipoServicioCloud)}</td>
+          <td class="centro">${esc(l.servicioCloud)}</td>
+          <td class="centro">${esc(l.correoSpacesuite)}</td>
+          <td class="centro">${esc(l.spacesuite)}</td>
+          <td class="centro">${esc(l.correoCorporativo)}</td>
+          <td class="centro">${esc(l.appsCorp)}</td>
+          <td class="centro">${esc(l.navegacionApps)}</td>
+          <td class="centro">${esc(l.suitcase)}</td>
+          <td class="centro">${esc(l.pentcloud)}</td>
+          <td class="centro">${esc(l.llamadasIlimitadas)}</td>
+          <td class="centro">${esc(l.paqueteRoaming)}</td>
+          <td class="centro">${esc(l.claroDirecto)}</td>
+          <td class="centro">${esc(l.vpn)}</td>
+          <td class="centro">${esc(l.aviDesvioPrepago)}</td>
+          <td class="centro">${esc(l.descuentoAutomatico)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
         </tr>`
     )
@@ -2022,8 +2045,8 @@ function imprimirContratoMovil() {
   window.print();
 }
 
-function imprimirFormatoAdhesionMovil() {
-  const empresaBuscada = ($("empresaImprimirLineas").value || "").trim().toLowerCase();
+function imprimirFormatoAdhesionMovilPorEmpresa(empresaTexto) {
+  const empresaBuscada = (empresaTexto || "").trim().toLowerCase();
   if (!empresaBuscada) {
     alert("Escribe o selecciona la empresa que quieres imprimir.");
     return;
@@ -2036,6 +2059,14 @@ function imprimirFormatoAdhesionMovil() {
   const lineas = lineasMovilesData.filter((l) => (l.empresa || "").trim().toLowerCase() === empresaBuscada);
   $("printArea").innerHTML = anexoServiciosMovilesHTML(contrato, lineas);
   window.print();
+}
+
+function imprimirFormatoAdhesionMovil() {
+  imprimirFormatoAdhesionMovilPorEmpresa($("empresaImprimirLineas").value);
+}
+
+function imprimirLineaMovilDesdeModal() {
+  imprimirFormatoAdhesionMovilPorEmpresa($("lmEmpresa").value);
 }
 
 function imprimirDesdeEdicion() {
@@ -3195,6 +3226,7 @@ $("formCodigo").addEventListener("submit", onSubmitCodigo);
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
+$("btnImprimirLineaMovil").addEventListener("click", imprimirLineaMovilDesdeModal);
 $("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);

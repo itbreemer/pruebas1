@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813d">
+<link rel="stylesheet" href="style.css?v=20260813e">
 </head>
 <body>
 
@@ -880,10 +880,11 @@
 
 <!-- Modal de línea móvil (nueva / editar) -->
 <div id="modalLineaMovilOverlay" class="modal-overlay no-print">
-  <div class="modal">
+  <div class="modal modal-ingreso">
     <div class="modal-header">
       <h2 id="modalLineaMovilTitulo">Nueva línea móvil</h2>
       <div class="modal-header-actions">
+        <button type="button" id="btnImprimirLineaMovil" class="btn btn-outline">🖨️ Imprimir</button>
         <button id="btnCerrarModalLineaMovil" class="btn-close">&times;</button>
       </div>
     </div>
@@ -905,8 +906,40 @@
             <input type="text" id="lmImei">
           </div>
           <div class="glpi-row">
-            <label for="lmIccidEsn">ICCID / ESN</label>
+            <label for="lmIccidEsn">ESN</label>
             <input type="text" id="lmIccidEsn">
+          </div>
+          <div class="glpi-row">
+            <label for="lmCostoEquipo">Costo del Equipo (Q)</label>
+            <input type="number" id="lmCostoEquipo" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="lmTipoServicioCloud">Tipo de servicio Cloud</label>
+            <input type="text" id="lmTipoServicioCloud">
+          </div>
+          <div class="glpi-row">
+            <label for="lmServicioCloud">Servicio Cloud</label>
+            <input type="text" id="lmServicioCloud">
+          </div>
+          <div class="glpi-row">
+            <label for="lmCorreoSpacesuite">Correo Spacesuite</label>
+            <input type="text" id="lmCorreoSpacesuite">
+          </div>
+          <div class="glpi-row">
+            <label for="lmSpacesuite">Spacesuite</label>
+            <select id="lmSpacesuite"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmAppsCorp">Apps Corp</label>
+            <select id="lmAppsCorp"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmNavegacionApps">Navegación de Apps</label>
+            <select id="lmNavegacionApps"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmSuitcase">Suitcase</label>
+            <select id="lmSuitcase"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
           </div>
         </div>
         <div class="glpi-col">
@@ -925,7 +958,7 @@
             <datalist id="dl-lmUsuarioAsignado"></datalist>
           </div>
           <div class="glpi-row">
-            <label for="lmCorreoCorporativo">Correo Corporativo</label>
+            <label for="lmCorreoCorporativo">Correo Empresarial</label>
             <input type="text" id="lmCorreoCorporativo">
           </div>
           <div class="glpi-row">
@@ -940,6 +973,34 @@
               <option value="Suspendida">Suspendida</option>
               <option value="Baja">Baja</option>
             </select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmPentcloud">Pentcloud</label>
+            <select id="lmPentcloud"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmLlamadasIlimitadas">Llamadas Ilimitadas Claro</label>
+            <select id="lmLlamadasIlimitadas"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmPaqueteRoaming">Paquete Preferencial Roaming</label>
+            <select id="lmPaqueteRoaming"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmClaroDirecto">Claro Directo</label>
+            <select id="lmClaroDirecto"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmVpn">VPN</label>
+            <select id="lmVpn"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmAviDesvioPrepago">AVI / Desvío a Prepago</label>
+            <select id="lmAviDesvioPrepago"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmDescuentoAutomatico">Descuento Automático</label>
+            <select id="lmDescuentoAutomatico"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
           </div>
         </div>
       </div>
@@ -1154,17 +1215,17 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813d"></script>
+<script src="data.js?v=20260813e"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813d"></script>
+<script src="app.js?v=20260813e"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813d"></script>
-<script type="module" src="impresoras-sync.js?v=20260813d"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813d"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813d"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813d"></script>
+<script type="module" src="firestore-sync.js?v=20260813e"></script>
+<script type="module" src="impresoras-sync.js?v=20260813e"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260813e"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260813e"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260813e"></script>
 </body>
 </html>
