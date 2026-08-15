@@ -40,21 +40,21 @@ const CONTRATO_MOVIL_CAMPO_POR_ID = {
 const LINEA_MOVIL_FIELD_IDS = [
   "lmId", "lmNumero", "lmModelo", "lmImei", "lmIccidEsn", "lmCostoEquipo", "lmPlan", "lmTarifaPlan",
   "lmTipoServicioCloud", "lmServicioCloud", "lmCorreoSpacesuite", "lmSpacesuite",
-  "lmUsuarioAsignado", "lmCorreoCorporativo", "lmAppsCorp", "lmNavegacionApps", "lmSuitcase",
+  "lmCorreoCorporativo", "lmAppsCorp", "lmNavegacionApps", "lmSuitcase",
   "lmPentcloud", "lmLlamadasIlimitadas", "lmPaqueteRoaming", "lmClaroDirecto", "lmVpn",
-  "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmTarifaTotal", "lmEmpresa", "lmEstado",
+  "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmTarifaTotal", "lmEmpresa",
 ];
 const LINEA_MOVIL_CAMPO_POR_ID = {
   lmId: "id", lmNumero: "numero", lmModelo: "modelo", lmImei: "imei", lmIccidEsn: "iccidEsn",
   lmCostoEquipo: "costoEquipo", lmPlan: "plan", lmTarifaPlan: "tarifaPlan",
   lmTipoServicioCloud: "tipoServicioCloud", lmServicioCloud: "servicioCloud",
   lmCorreoSpacesuite: "correoSpacesuite", lmSpacesuite: "spacesuite",
-  lmUsuarioAsignado: "usuarioAsignado", lmCorreoCorporativo: "correoCorporativo",
+  lmCorreoCorporativo: "correoCorporativo",
   lmAppsCorp: "appsCorp", lmNavegacionApps: "navegacionApps", lmSuitcase: "suitcase",
   lmPentcloud: "pentcloud", lmLlamadasIlimitadas: "llamadasIlimitadas",
   lmPaqueteRoaming: "paqueteRoaming", lmClaroDirecto: "claroDirecto", lmVpn: "vpn",
   lmAviDesvioPrepago: "aviDesvioPrepago", lmDescuentoAutomatico: "descuentoAutomatico",
-  lmTarifaTotal: "tarifaTotal", lmEmpresa: "empresa", lmEstado: "estado",
+  lmTarifaTotal: "tarifaTotal", lmEmpresa: "empresa",
 };
 
 let impresorasData = [];
@@ -899,7 +899,6 @@ function poblarFiltrosYDatalists() {
   const datalistMapLineasMoviles = {
     "dl-lmModelo": "modelo",
     "dl-lmPlan": "plan",
-    "dl-lmUsuarioAsignado": "usuarioAsignado",
     "dl-lmEmpresa": "empresa",
   };
   Object.entries(datalistMapLineasMoviles).forEach(([dlId, campo]) => {
@@ -1363,7 +1362,6 @@ function abrirModalLineaMovil(linea) {
   } else {
     $("modalLineaMovilTitulo").textContent = "Nueva línea móvil";
     $("lmId").value = "";
-    $("lmEstado").value = "Activa";
     $("btnEliminarModalLineaMovil").style.display = "none";
   }
   $("modalLineaMovilOverlay").classList.add("open");
