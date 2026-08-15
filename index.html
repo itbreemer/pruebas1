@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813j">
+<link rel="stylesheet" href="style.css?v=20260813k">
 </head>
 <body>
 
@@ -949,7 +949,8 @@
     <div class="modal-header">
       <h2 id="modalLineaMovilTitulo">Nueva línea móvil</h2>
       <div class="modal-header-actions">
-        <button type="button" id="btnImprimirLineaMovil" class="btn btn-outline">🖨️ Imprimir</button>
+        <button type="button" id="btnImprimirLineaMovil" class="btn btn-outline" title="Imprimir Anexo de Servicios Móviles (para Claro/Tigo)">🖨️ Anexo Claro</button>
+        <button type="button" id="btnImprimirHojaResponsabilidad" class="btn btn-outline" title="Imprimir Hoja de Responsabilidad interna">🖨️ Hoja Responsabilidad</button>
         <button id="btnCerrarModalLineaMovil" class="btn-close">&times;</button>
       </div>
     </div>
@@ -1057,6 +1058,80 @@
           <div class="glpi-row">
             <label for="lmDescuentoAutomatico">Descuento Automático</label>
             <select id="lmDescuentoAutomatico"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="ingreso-subtitulo">Datos para la Hoja de Responsabilidad</h3>
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="lmOperador">Operador</label>
+            <input type="text" id="lmOperador" list="dl-lmOperador" placeholder="Claro, Tigo...">
+            <datalist id="dl-lmOperador"><option value="Claro"></option><option value="Tigo"></option></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmMarca">Marca</label>
+            <input type="text" id="lmMarca" placeholder="Samsung">
+          </div>
+          <div class="glpi-row">
+            <label for="lmColor">Color</label>
+            <input type="text" id="lmColor">
+          </div>
+          <div class="glpi-row">
+            <label for="lmRam">RAM</label>
+            <input type="text" id="lmRam" placeholder="32GB">
+          </div>
+          <div class="glpi-row">
+            <label for="lmRom">ROM</label>
+            <input type="text" id="lmRom" placeholder="128GB">
+          </div>
+          <div class="glpi-row">
+            <label for="lmSerie">Serie</label>
+            <input type="text" id="lmSerie">
+          </div>
+          <div class="glpi-row">
+            <label for="lmEmpleadoNombre">Nombre del Empleado</label>
+            <input type="text" id="lmEmpleadoNombre">
+          </div>
+          <div class="glpi-row">
+            <label for="lmEmpleadoPuesto">Puesto del Empleado</label>
+            <input type="text" id="lmEmpleadoPuesto">
+          </div>
+          <div class="glpi-row">
+            <label for="lmDpiPasaporte">DPI / Pasaporte</label>
+            <input type="text" id="lmDpiPasaporte">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <label class="lock">Equipo anterior entregado (si aplica)</label>
+          <div class="glpi-row">
+            <label for="lmAnteriorMarca">Marca Anterior</label>
+            <input type="text" id="lmAnteriorMarca">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorModelo">Modelo Anterior</label>
+            <input type="text" id="lmAnteriorModelo">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorColor">Color Anterior</label>
+            <input type="text" id="lmAnteriorColor">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorRam">RAM Anterior</label>
+            <input type="text" id="lmAnteriorRam">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorRom">ROM Anterior</label>
+            <input type="text" id="lmAnteriorRom">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorSerie">Serie Anterior</label>
+            <input type="text" id="lmAnteriorSerie">
+          </div>
+          <div class="glpi-row">
+            <label for="lmAnteriorImei">IMEI Anterior</label>
+            <input type="text" id="lmAnteriorImei">
           </div>
         </div>
       </div>
@@ -1541,19 +1616,19 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813j"></script>
+<script src="data.js?v=20260813k"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813j"></script>
+<script src="app.js?v=20260813k"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813j"></script>
-<script type="module" src="impresoras-sync.js?v=20260813j"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813j"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813j"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813j"></script>
-<script type="module" src="contratos-oficina-sync.js?v=20260813j"></script>
-<script type="module" src="servicios-oficina-sync.js?v=20260813j"></script>
+<script type="module" src="firestore-sync.js?v=20260813k"></script>
+<script type="module" src="impresoras-sync.js?v=20260813k"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260813k"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260813k"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260813k"></script>
+<script type="module" src="contratos-oficina-sync.js?v=20260813k"></script>
+<script type="module" src="servicios-oficina-sync.js?v=20260813k"></script>
 </body>
 </html>

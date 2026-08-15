@@ -678,7 +678,31 @@ main .btn-primary:hover { background: #163158; }
   @page anexo-movil { size: letter portrait; margin: 10mm; }
   @page anexo-lineas { size: letter landscape; margin: 8mm; }
   @page anexo-oficina { size: letter portrait; margin: 10mm; }
+  @page hoja-resp { size: letter portrait; margin: 12mm; }
 }
+
+/* ============ Hoja de Responsabilidad por Línea y Equipo Telefónico ============ */
+.hoja-resp {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  font-size: 0.82rem;
+  max-width: 100%;
+  margin: 0 auto;
+  page: hoja-resp;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
+}
+.hoja-resp-header { font-weight: 700; text-align: center; font-size: 0.85rem; }
+.hoja-resp-titulo { font-weight: 700; text-align: center; font-size: 1.05rem; margin: 4px 0 12px; }
+.hoja-resp-memo { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.hoja-resp-memo td { border: 1px solid #999; padding: 4px 8px; vertical-align: top; }
+.hoja-resp-memo td.lbl { font-weight: 700; width: 110px; background: #f3f4f6; }
+.hoja-resp-condiciones { font-size: 0.78rem; line-height: 1.35; padding-left: 20px; margin: 4px 0 10px; }
+.hoja-resp-condiciones li { margin-bottom: 4px; }
+.hoja-resp-firmas { display: flex; align-items: flex-end; gap: 16px; margin-top: 26px; font-size: 0.8rem; }
+.hoja-resp-firmas .anexo-campo { flex: 1.5; white-space: nowrap; }
+.hoja-resp-firmas .firma-linea { flex: 1; text-align: center; }
 
 /* ============ Anexo de Servicios Móviles (impresión, mismo formato de Claro) ============ */
 .anexo-movil {

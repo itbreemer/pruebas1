@@ -45,6 +45,10 @@ const LINEA_MOVIL_FIELD_IDS = [
   "lmCorreoCorporativo", "lmAppsCorp", "lmNavegacionApps", "lmSuitcase",
   "lmPentcloud", "lmLlamadasIlimitadas", "lmPaqueteRoaming", "lmClaroDirecto", "lmVpn",
   "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmTarifaTotal", "lmEmpresa",
+  "lmOperador", "lmMarca", "lmColor", "lmRam", "lmRom", "lmSerie",
+  "lmEmpleadoNombre", "lmEmpleadoPuesto", "lmDpiPasaporte",
+  "lmAnteriorMarca", "lmAnteriorModelo", "lmAnteriorColor", "lmAnteriorRam",
+  "lmAnteriorRom", "lmAnteriorSerie", "lmAnteriorImei",
 ];
 const LINEA_MOVIL_CAMPO_POR_ID = {
   lmId: "id", lmNumero: "numero", lmModelo: "modelo", lmImei: "imei", lmIccidEsn: "iccidEsn",
@@ -57,6 +61,11 @@ const LINEA_MOVIL_CAMPO_POR_ID = {
   lmPaqueteRoaming: "paqueteRoaming", lmClaroDirecto: "claroDirecto", lmVpn: "vpn",
   lmAviDesvioPrepago: "aviDesvioPrepago", lmDescuentoAutomatico: "descuentoAutomatico",
   lmTarifaTotal: "tarifaTotal", lmEmpresa: "empresa",
+  lmOperador: "operador", lmMarca: "marca", lmColor: "color", lmRam: "ram", lmRom: "rom", lmSerie: "serie",
+  lmEmpleadoNombre: "empleadoNombre", lmEmpleadoPuesto: "empleadoPuesto", lmDpiPasaporte: "dpiPasaporte",
+  lmAnteriorMarca: "anteriorMarca", lmAnteriorModelo: "anteriorModelo", lmAnteriorColor: "anteriorColor",
+  lmAnteriorRam: "anteriorRam", lmAnteriorRom: "anteriorRom", lmAnteriorSerie: "anteriorSerie",
+  lmAnteriorImei: "anteriorImei",
 };
 
 const CONTRATO_OFICINA_FIELD_IDS = [
@@ -2420,6 +2429,124 @@ function imprimirLineaMovilDesdeModal() {
   imprimirFormatoAdhesionMovilPorEmpresa($("lmEmpresa").value);
 }
 
+/* ---------- Hoja de Responsabilidad por Línea y Equipo Telefónico (uso interno) ----------
+   A diferencia del Anexo de Servicios Móviles (que va hacia Claro/Tigo), este
+   documento es interno: el Departamento de TI se lo entrega al empleado como
+   acuse de recibo del celular corporativo. Mismo texto de condiciones y
+   cláusula de responsabilidad que ya usa la app en el Acta de equipo de
+   cómputo. */
+
+function hojaResponsabilidadHTML(linea) {
+  const fecha = formatearFecha(new Date().toISOString());
+  const tieneAnterior = [
+    linea.anteriorMarca, linea.anteriorModelo, linea.anteriorColor,
+    linea.anteriorRam, linea.anteriorRom, linea.anteriorSerie, linea.anteriorImei,
+  ].some((v) => (v || "").trim() !== "");
+
+  return `
+    <div class="hoja-resp">
+      <div class="hoja-resp-header">DEPARTAMENTO DE TECNOLOGIA E INFORMACION</div>
+      <div class="hoja-resp-titulo">HOJA DE RESPONSABILIDAD POR LÍNEA Y EQUIPO TELEFÓNICO</div>
+
+      <table class="hoja-resp-memo">
+        <tr><td class="lbl">Para:</td><td>${av(linea.empleadoNombre)}${linea.empleadoPuesto ? `<br>${esc(linea.empleadoPuesto)}` : ""}</td></tr>
+        <tr><td class="lbl">Empresa:</td><td>${av(linea.empresa)}</td></tr>
+        <tr><td class="lbl">De:</td><td>Departamento IT</td></tr>
+        <tr><td class="lbl">Fecha:</td><td>${fecha}</td></tr>
+        <tr><td class="lbl">Motivo:</td><td>Asignación de equipo ${av(linea.numero)} ${av(linea.operador)}</td></tr>
+      </table>
+
+      <p>Por el presente medio se hace la entrega del teléfono celular corporativo de la empresa <strong>${av(linea.operador)}</strong>.</p>
+
+      <div class="anexo-seccion">Datos del Equipo</div>
+      <table class="anexo-tabla">
+        <thead><tr><th>NUMERO</th><th>MARCA</th><th>MODELO</th><th>COLOR</th><th>RAM</th><th>ROM</th><th>SERIE</th><th>IMEI</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="centro">${av(linea.numero)}</td>
+            <td>${av(linea.marca)}</td>
+            <td>${av(linea.modelo)}</td>
+            <td class="centro">${av(linea.color)}</td>
+            <td class="centro">${av(linea.ram)}</td>
+            <td class="centro">${av(linea.rom)}</td>
+            <td class="centro">${av(linea.serie)}</td>
+            <td class="centro">${av(linea.imei)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="anexo-seccion">Plan Asignado</div>
+      <table class="anexo-tabla">
+        <thead><tr><th>MINUTOS</th><th>SMS</th><th>DATOS</th><th>TOTAL</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="centro">ILIMITADOS</td>
+            <td class="centro">ILIMITADOS</td>
+            <td class="centro">${av(linea.plan)}</td>
+            <td class="num">${(linea.tarifaTotal || linea.tarifaPlan) ? "Q " + Number(linea.tarifaTotal || linea.tarifaPlan).toFixed(2) : ""}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Condiciones de uso:</strong></p>
+      <ol class="hoja-resp-condiciones">
+        <li>El celular es propiedad de la corporación y debe ser entregado al momento de retirarse de la misma. La falta de entrega del celular se atenderá de acuerdo con las políticas y/o decisión de Gerencia General.</li>
+        <li>El empleado que exceda el plan asignado (minutos, mensajes, internet) pagará la diferencia, la cual les será descontada en planilla mensualmente en un mínimo de un (1) pago hasta un máximo de cuatro (4) meses.</li>
+        <li>Toda información almacenada (doctos, emails, fotos, etc.) en este celular corporativo es propiedad de la corporación. Por tanto, esta información puede ser requerida en cualquier momento por el personal de T.I.</li>
+        <li>El colaborador es responsable de cualquier daño o robo que le ocurra al equipo, pagando la totalidad o el deducible que sea determinado por el proveedor de CLARO / TIGO y el departamento de contabilidad.</li>
+        <li>Solicitamos mantener con clave, huella, patrón, PIN de acceso el dispositivo, para protección de la información almacenada en caso de robo o extravío.</li>
+        <li>Es responsabilidad del empleado la información que comparta con terceros (personas ajenas de la corporación) sin previa autorización de su Gerente de unidad.</li>
+      </ol>
+
+      <div class="anexo-seccion">Observaciones</div>
+      <p>${av(linea.observaciones)}</p>
+
+      <div class="anexo-seccion">El usuario entrega el equipo anterior de la siguiente manera:</div>
+      ${
+        tieneAnterior
+          ? `
+      <table class="anexo-tabla">
+        <tbody>
+          <tr><td class="lbl">Marca:</td><td>${av(linea.anteriorMarca)}</td><td class="lbl">Modelo:</td><td>${av(linea.anteriorModelo)}</td></tr>
+          <tr><td class="lbl">Color:</td><td>${av(linea.anteriorColor)}</td><td class="lbl">RAM:</td><td>${av(linea.anteriorRam)}</td></tr>
+          <tr><td class="lbl">ROM:</td><td>${av(linea.anteriorRom)}</td><td class="lbl">Serie:</td><td>${av(linea.anteriorSerie)}</td></tr>
+          <tr><td class="lbl">IMEI:</td><td colspan="3">${av(linea.anteriorImei)}</td></tr>
+        </tbody>
+      </table>`
+          : `<table class="anexo-tabla"><tbody>
+          <tr><td class="lbl">Marca:</td><td></td><td class="lbl">Modelo:</td><td></td></tr>
+          <tr><td class="lbl">Color:</td><td></td><td class="lbl">RAM:</td><td></td></tr>
+          <tr><td class="lbl">ROM:</td><td></td><td class="lbl">Serie:</td><td></td></tr>
+          <tr><td class="lbl">IMEI:</td><td colspan="3"></td></tr>
+        </tbody></table>`
+      }
+
+      <p class="clausula">
+        La entidad hace entrega al trabajador de bienes del inventario, propiedad de la empresa que aparece detallada
+        en este documento, el cual le es confiado para que sea utilizado exclusivamente para la ejecución de su
+        trabajo en calidad de depósito, estando obligado por ende a rendir cuentas de su uso, así como a devolverlo
+        en cualquier momento a su requerimiento, aceptando el trabajador que la inobservancia a lo antes estipulado,
+        constituirá falta, sujeta a la aplicación de medidas disciplinarias, sin perjuicio de las demás
+        responsabilidades, civiles, penales y de cualquier otra índole, en las que pueda incurrir el trabajador por
+        incumplimiento de lo antes estipulado.
+      </p>
+
+      <div class="hoja-resp-firmas">
+        <div class="anexo-campo"><span class="lbl">Nombre completo:</span><span class="val">${av(linea.empleadoNombre)}</span></div>
+        <div class="anexo-campo"><span class="lbl">DPI / Pasaporte:</span><span class="val">${av(linea.dpiPasaporte)}</span></div>
+        <div class="firma-linea">Firma</div>
+      </div>
+    </div>
+  `;
+}
+
+function imprimirHojaResponsabilidadDesdeModal() {
+  const linea = {};
+  LINEA_MOVIL_FIELD_IDS.forEach((idCampo) => (linea[LINEA_MOVIL_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim()));
+  $("printArea").innerHTML = hojaResponsabilidadHTML(linea);
+  window.print();
+}
+
 /* ---------- Anexo de Servicios Multimedia (impresión, mismo formato de Claro) ----------
    Igual que el Anexo de Servicios Móviles: cada seccion, casilla y columna del
    PDF original de Claro se imprime siempre, tenga o no dato capturado en el
@@ -3931,6 +4058,7 @@ $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMov
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
 $("btnImprimirLineaMovil").addEventListener("click", imprimirLineaMovilDesdeModal);
+$("btnImprimirHojaResponsabilidad").addEventListener("click", imprimirHojaResponsabilidadDesdeModal);
 $("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);
