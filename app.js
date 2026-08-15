@@ -4,6 +4,8 @@ const IMPRESORAS_STORAGE_KEY = "impresorasTI_v1";
 const CODIGOS_STORAGE_KEY = "codigosImpresionTI_v1";
 const CONTRATOS_MOVILES_STORAGE_KEY = "contratosMovilesTI_v1";
 const LINEAS_MOVILES_STORAGE_KEY = "lineasMovilesTI_v1";
+const CONTRATOS_OFICINA_STORAGE_KEY = "contratosOficinaTI_v1";
+const SERVICIOS_OFICINA_STORAGE_KEY = "serviciosOficinaTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -57,10 +59,51 @@ const LINEA_MOVIL_CAMPO_POR_ID = {
   lmTarifaTotal: "tarifaTotal", lmEmpresa: "empresa",
 };
 
+const CONTRATO_OFICINA_FIELD_IDS = [
+  "coId", "coEmpresa", "coNombreComercial", "coNit", "coCategoriaCliente", "coTipoGestion",
+  "coDireccion", "coDepartamentoCiudad", "coRepresentanteLegal", "coDocIdentificacion",
+  "coAntiguedad", "coSalario", "coContactoNombre", "coContactoTelefono", "coContactoCorreo",
+  "coPlazoContrato", "coTelefono", "coInstalacion1", "coInstalacion2", "coInstalacion3",
+  "coInstalacion4", "coInstalacion5", "coPaqueteContratar", "coTipoRed", "coSubTotal",
+  "coInstalacionCosto", "coRentaTotal", "coLineaFijaCantidad", "coLineaFijaDescripcion",
+  "coInternetPyme", "coTvPyme", "coServicioAdicional", "coTelevisoresAdicionales", "coEmailIptv",
+  "coActivarClaroDrive", "coActivarPagolo", "coIpPublica", "coDtaAdicional", "coDcxAdicional",
+  "coEquipoDthAdicional", "coAplicaFinanciamiento", "coEjecutivoVentas", "coFechaFirma",
+  "coCodigoMaestro", "coObservaciones",
+];
+const CONTRATO_OFICINA_CAMPO_POR_ID = {
+  coId: "id", coEmpresa: "empresa", coNombreComercial: "nombreComercial", coNit: "nit",
+  coCategoriaCliente: "categoriaCliente", coTipoGestion: "tipoGestion", coDireccion: "direccion",
+  coDepartamentoCiudad: "departamentoCiudad", coRepresentanteLegal: "representanteLegal",
+  coDocIdentificacion: "docIdentificacion", coAntiguedad: "antiguedad", coSalario: "salario",
+  coContactoNombre: "contactoNombre", coContactoTelefono: "contactoTelefono",
+  coContactoCorreo: "contactoCorreo", coPlazoContrato: "plazoContrato", coTelefono: "telefono",
+  coInstalacion1: "instalacion1", coInstalacion2: "instalacion2", coInstalacion3: "instalacion3",
+  coInstalacion4: "instalacion4", coInstalacion5: "instalacion5",
+  coPaqueteContratar: "paqueteContratar", coTipoRed: "tipoRed", coSubTotal: "subTotal",
+  coInstalacionCosto: "instalacionCosto", coRentaTotal: "rentaTotal",
+  coLineaFijaCantidad: "lineaFijaCantidad", coLineaFijaDescripcion: "lineaFijaDescripcion",
+  coInternetPyme: "internetPyme", coTvPyme: "tvPyme", coServicioAdicional: "servicioAdicional",
+  coTelevisoresAdicionales: "televisoresAdicionales", coEmailIptv: "emailIptv",
+  coActivarClaroDrive: "activarClaroDrive", coActivarPagolo: "activarPagolo",
+  coIpPublica: "ipPublica", coDtaAdicional: "dtaAdicional", coDcxAdicional: "dcxAdicional",
+  coEquipoDthAdicional: "equipoDthAdicional", coAplicaFinanciamiento: "aplicaFinanciamiento",
+  coEjecutivoVentas: "ejecutivoVentas", coFechaFirma: "fechaFirma",
+  coCodigoMaestro: "codigoMaestro", coObservaciones: "observaciones",
+};
+
+const SERVICIO_OFICINA_FIELD_IDS = ["soId", "soEmpresa", "soTipoServicio", "soCantidad", "soInstalacion", "soCuotaMensual"];
+const SERVICIO_OFICINA_CAMPO_POR_ID = {
+  soId: "id", soEmpresa: "empresa", soTipoServicio: "tipoServicio",
+  soCantidad: "cantidad", soInstalacion: "instalacion", soCuotaMensual: "cuotaMensual",
+};
+
 let impresorasData = [];
 let codigosData = [];
 let contratosMovilesData = [];
 let lineasMovilesData = [];
+let contratosOficinaData = [];
+let serviciosOficinaData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -718,6 +761,152 @@ function sincronizarEliminacionLineaMovil(id) {
   }
 }
 
+/* ---------- Contratos de oficina (ver contratos-oficina-sync.js) ---------- */
+
+const SEMILLA_CONTRATOS_OFICINA = [
+  {
+    empresa: "BREEMER, SOCIEDAD ANONIMA", nombreComercial: "BREEMER", nit: "8538380-5",
+    categoriaCliente: "Corporaciones", tipoGestion: "Renovación",
+    direccion: "CRT. AL PACIFICO KM 29.5, 8-22 URBANIZACION DEL SUR, AMATITLAN, GUATEMALA",
+    departamentoCiudad: "Guatemala", representanteLegal: "MARVIN DAVID SANCHEZ LOPEZ",
+    docIdentificacion: "2119 62066 0114",
+    contactoNombre: "ESTEFANI FLORES", contactoTelefono: "6633-6550 Ext. 108",
+    contactoCorreo: "Eflores@breemer.com.gt",
+    plazoContrato: "12 meses", telefono: "66338049",
+    instalacion1: "CRT. AL PACIFICO KM 30.5, AMATITLAN, GUATEMALA",
+    paqueteContratar: "Claro_PYME_One_Play", tipoRed: "COBRE",
+    subTotal: 105.00, instalacionCosto: 0, rentaTotal: 105.00,
+    lineaFijaCantidad: 1, lineaFijaDescripcion: "Ilimitadas a Claro",
+    activarClaroDrive: "Sí", activarPagolo: "No",
+    ejecutivoVentas: "Luis Barillas", fechaFirma: "2026-07-31",
+    codigoMaestro: "10291", observaciones: "RENOVACION LINEA 66338049",
+  },
+];
+
+function cargarContratosOficina() {
+  const raw = localStorage.getItem(CONTRATOS_OFICINA_STORAGE_KEY);
+  if (raw) {
+    try {
+      contratosOficinaData = JSON.parse(raw);
+      return;
+    } catch {
+      contratosOficinaData = [];
+    }
+  }
+  contratosOficinaData = SEMILLA_CONTRATOS_OFICINA.map((c, i) => ({ ...c, id: c.id || `semilla-co-${i}` }));
+  guardarContratosOficina();
+}
+
+function guardarContratosOficina() {
+  localStorage.setItem(CONTRATOS_OFICINA_STORAGE_KEY, JSON.stringify(contratosOficinaData));
+}
+
+function obtenerContratosOficinaActuales() {
+  return contratosOficinaData;
+}
+
+function establecerContratosOficinaDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((c) => [c.id, c]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  contratosOficinaData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarContratoOficina(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  contratosOficinaData = combinados;
+  guardarContratosOficina();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarContratoOficina(contrato) {
+  if (window.FirestoreSyncContratosOficina && typeof window.FirestoreSyncContratosOficina.guardarContratoOficina === "function") {
+    window.FirestoreSyncContratosOficina.guardarContratoOficina(contrato);
+  }
+}
+
+function sincronizarEliminacionContratoOficina(id) {
+  if (window.FirestoreSyncContratosOficina && typeof window.FirestoreSyncContratosOficina.eliminarContratoOficina === "function") {
+    window.FirestoreSyncContratosOficina.eliminarContratoOficina(id);
+  }
+}
+
+/* ---------- Servicios adicionales de oficina (ver servicios-oficina-sync.js) ---------- */
+
+const SEMILLA_SERVICIOS_OFICINA = [];
+
+function cargarServiciosOficina() {
+  const raw = localStorage.getItem(SERVICIOS_OFICINA_STORAGE_KEY);
+  if (raw) {
+    try {
+      serviciosOficinaData = JSON.parse(raw);
+      return;
+    } catch {
+      serviciosOficinaData = [];
+    }
+  }
+  serviciosOficinaData = SEMILLA_SERVICIOS_OFICINA.map((s, i) => ({ ...s, id: s.id || `semilla-so-${i}` }));
+  guardarServiciosOficina();
+}
+
+function guardarServiciosOficina() {
+  localStorage.setItem(SERVICIOS_OFICINA_STORAGE_KEY, JSON.stringify(serviciosOficinaData));
+}
+
+function obtenerServiciosOficinaActuales() {
+  return serviciosOficinaData;
+}
+
+function establecerServiciosOficinaDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((s) => [s.id, s]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  serviciosOficinaData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarServicioOficina(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  serviciosOficinaData = combinados;
+  guardarServiciosOficina();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarServicioOficina(servicio) {
+  if (window.FirestoreSyncServiciosOficina && typeof window.FirestoreSyncServiciosOficina.guardarServicioOficina === "function") {
+    window.FirestoreSyncServiciosOficina.guardarServicioOficina(servicio);
+  }
+}
+
+function sincronizarEliminacionServicioOficina(id) {
+  if (window.FirestoreSyncServiciosOficina && typeof window.FirestoreSyncServiciosOficina.eliminarServicioOficina === "function") {
+    window.FirestoreSyncServiciosOficina.eliminarServicioOficina(id);
+  }
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -808,6 +997,18 @@ function valoresUnicosContratosMoviles(campo) {
 
 function valoresUnicosLineasMoviles(campo) {
   return [...new Set(lineasMovilesData.map((l) => (l[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
+function valoresUnicosContratosOficina(campo) {
+  return [...new Set(contratosOficinaData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+}
+
+function valoresUnicosServiciosOficina(campo) {
+  return [...new Set(serviciosOficinaData.map((s) => (s[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
@@ -905,6 +1106,33 @@ function poblarFiltrosYDatalists() {
     const dl = $(dlId);
     dl.innerHTML = "";
     valoresUnicosLineasMoviles(campo).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+  });
+
+  const datalistMapContratosOficina = {
+    "dl-coEmpresa": "empresa",
+    "dl-coPaqueteContratar": "paqueteContratar",
+  };
+  Object.entries(datalistMapContratosOficina).forEach(([dlId, campo]) => {
+    const dl = $(dlId);
+    dl.innerHTML = "";
+    valoresUnicosContratosOficina(campo).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    });
+  });
+
+  const datalistMapServiciosOficina = {
+    "dl-soEmpresa": "empresa",
+  };
+  Object.entries(datalistMapServiciosOficina).forEach(([dlId, campo]) => {
+    const dl = $(dlId);
+    dl.innerHTML = "";
+    valoresUnicosServiciosOficina(campo).forEach((v) => {
       const opt = document.createElement("option");
       opt.value = v;
       dl.appendChild(opt);
@@ -1407,6 +1635,124 @@ function eliminarLineaMovilActual() {
   refrescarVistasSecundarias();
 }
 
+/* ---------- Modal de contrato de oficina (nuevo / editar) ---------- */
+
+function abrirModalContratoOficina(contrato) {
+  $("formContratoOficina").reset();
+  if (contrato) {
+    $("modalContratoOficinaTitulo").textContent = `Editar contrato de oficina — ${contrato.empresa || ""}`;
+    CONTRATO_OFICINA_FIELD_IDS.forEach((idCampo) => {
+      const campo = CONTRATO_OFICINA_CAMPO_POR_ID[idCampo];
+      if (contrato[campo] !== undefined) $(idCampo).value = contrato[campo];
+    });
+    $("btnEliminarModalContratoOficina").style.display = "";
+  } else {
+    $("modalContratoOficinaTitulo").textContent = "Nuevo contrato de oficina";
+    $("coId").value = "";
+    $("btnEliminarModalContratoOficina").style.display = "none";
+  }
+  $("modalContratoOficinaOverlay").classList.add("open");
+}
+
+function cerrarModalContratoOficina() {
+  $("modalContratoOficinaOverlay").classList.remove("open");
+}
+
+function onSubmitContratoOficina(e) {
+  e.preventDefault();
+  const data = {};
+  CONTRATO_OFICINA_FIELD_IDS.forEach((idCampo) => {
+    data[CONTRATO_OFICINA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (data.id) {
+    const idx = contratosOficinaData.findIndex((c) => c.id === data.id);
+    if (idx !== -1) contratosOficinaData[idx] = { ...contratosOficinaData[idx], ...data };
+    guardado = contratosOficinaData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    contratosOficinaData.push(data);
+    guardado = data;
+  }
+  guardarContratosOficina();
+  sincronizarContratoOficina(guardado);
+  cerrarModalContratoOficina();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function eliminarContratoOficinaActual() {
+  const id = $("coId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar este contrato de oficina de forma permanente?")) return;
+  contratosOficinaData = contratosOficinaData.filter((c) => c.id !== id);
+  guardarContratosOficina();
+  sincronizarEliminacionContratoOficina(id);
+  cerrarModalContratoOficina();
+  refrescarVistasSecundarias();
+}
+
+/* ---------- Modal de servicio adicional de oficina (nuevo / editar) ---------- */
+
+function abrirModalServicioOficina(servicio) {
+  $("formServicioOficina").reset();
+  if (servicio) {
+    $("modalServicioOficinaTitulo").textContent = `Editar servicio adicional — ${servicio.tipoServicio || ""}`;
+    SERVICIO_OFICINA_FIELD_IDS.forEach((idCampo) => {
+      const campo = SERVICIO_OFICINA_CAMPO_POR_ID[idCampo];
+      if (servicio[campo] !== undefined) $(idCampo).value = servicio[campo];
+    });
+    $("btnEliminarModalServicioOficina").style.display = "";
+  } else {
+    $("modalServicioOficinaTitulo").textContent = "Nuevo servicio adicional";
+    $("soId").value = "";
+    $("btnEliminarModalServicioOficina").style.display = "none";
+  }
+  $("modalServicioOficinaOverlay").classList.add("open");
+}
+
+function cerrarModalServicioOficina() {
+  $("modalServicioOficinaOverlay").classList.remove("open");
+}
+
+function onSubmitServicioOficina(e) {
+  e.preventDefault();
+  const data = {};
+  SERVICIO_OFICINA_FIELD_IDS.forEach((idCampo) => {
+    data[SERVICIO_OFICINA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (data.id) {
+    const idx = serviciosOficinaData.findIndex((s) => s.id === data.id);
+    if (idx !== -1) serviciosOficinaData[idx] = { ...serviciosOficinaData[idx], ...data };
+    guardado = serviciosOficinaData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    serviciosOficinaData.push(data);
+    guardado = data;
+  }
+  guardarServiciosOficina();
+  sincronizarServicioOficina(guardado);
+  cerrarModalServicioOficina();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function eliminarServicioOficinaActual() {
+  const id = $("soId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar este servicio adicional de forma permanente?")) return;
+  serviciosOficinaData = serviciosOficinaData.filter((s) => s.id !== id);
+  guardarServiciosOficina();
+  sincronizarEliminacionServicioOficina(id);
+  cerrarModalServicioOficina();
+  refrescarVistasSecundarias();
+}
+
 function formatearFecha(iso) {
   if (!iso) return "N/A";
   const d = new Date(iso);
@@ -1730,10 +2076,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           </tr>
           <tr><td class="centro"></td><td></td><td class="num"></td></tr>
           <tr><td class="centro"></td><td></td><td class="num"></td></tr>
+          <tr class="anexo-tabla-total"><td colspan="2">TOTAL</td><td class="num">Q ${totalMensual.toFixed(2)}</td></tr>
         </tbody>
-        <tfoot>
-          <tr><td colspan="2">TOTAL</td><td class="num">Q ${totalMensual.toFixed(2)}</td></tr>
-        </tfoot>
       </table>
 
       <div class="anexo-seccion">Planes de Internet Móvil</div>
@@ -1748,8 +2092,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
           <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
           <tr><td class="centro"></td><td></td><td class="num">Q 0.00</td></tr>
+          <tr class="anexo-tabla-total"><td colspan="2">TOTAL</td><td class="num">Q 0.00</td></tr>
         </tbody>
-        <tfoot><tr><td colspan="2">TOTAL</td><td class="num">Q 0.00</td></tr></tfoot>
       </table>
 
       <div class="anexo-seccion">Planes de Navegación AVL / Telemetría</div>
@@ -1768,8 +2112,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0.00</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
           <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
           <tr><td class="centro"></td><td>-</td><td class="num">Q -</td><td class="num">Q 0</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td><td class="centro">NO</td></tr>
+          <tr class="anexo-tabla-total"><td colspan="3">TOTAL</td><td class="num">Q 0.00</td><td colspan="4"></td></tr>
         </tbody>
-        <tfoot><tr><td colspan="3">TOTAL</td><td class="num">Q 0.00</td><td colspan="4"></td></tr></tfoot>
       </table>
 
       <div class="anexo-seccion">Financiamiento de Equipos Móviles</div>
@@ -1783,8 +2127,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
           <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
           <tr><td class="centro"></td><td></td><td class="num">Q 0</td><td class="centro">0</td><td class="num">Q 0.00</td></tr>
+          <tr class="anexo-tabla-total"><td colspan="4">TOTAL</td><td class="num">Q 0</td></tr>
         </tbody>
-        <tfoot><tr><td colspan="4">TOTAL</td><td class="num">Q 0</td></tr></tfoot>
       </table>
 
       <div class="anexo-seccion">Portal de Paquetes de Internet Adicional</div>
@@ -2026,12 +2370,12 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
               <th>VPN</th><th>AVI/Desvío a Prepago</th><th>Descuento Automático</th><th>Tarifa Total</th>
             </tr>
           </thead>
-          <tbody>${filasLineas || '<tr><td colspan="24" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}</tbody>
-          <tfoot>
-            <tr><td colspan="23">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
-            <tr><td colspan="23">NEGOCIACIÓN</td><td class="num"></td></tr>
-            <tr><td colspan="23">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
-          </tfoot>
+          <tbody>
+            ${filasLineas || '<tr><td colspan="24" class="centro">Sin líneas registradas para esta empresa.</td></tr>'}
+            <tr class="anexo-tabla-total"><td colspan="23">SUB TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
+            <tr class="anexo-tabla-total"><td colspan="23">NEGOCIACIÓN</td><td class="num"></td></tr>
+            <tr class="anexo-tabla-total"><td colspan="23">TOTAL</td><td class="num">Q ${sumaLineas.toFixed(2)}</td></tr>
+          </tbody>
         </table>
         <div class="anexo-aceptacion">
           <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
@@ -2074,6 +2418,302 @@ function imprimirFormatoAdhesionMovil() {
 
 function imprimirLineaMovilDesdeModal() {
   imprimirFormatoAdhesionMovilPorEmpresa($("lmEmpresa").value);
+}
+
+/* ---------- Anexo de Servicios Multimedia (impresión, mismo formato de Claro) ----------
+   Igual que el Anexo de Servicios Móviles: cada seccion, casilla y columna del
+   PDF original de Claro se imprime siempre, tenga o no dato capturado en el
+   sistema. Solo se llenan dinamicamente los campos que sí tenemos guardados. */
+
+function anexoServiciosMultimediaHTML(contrato, servicios) {
+  const sumaMensual = servicios.reduce((s, r) => s + (Number(r.cuotaMensual) || 0), 0);
+  const sumaInstalacion = servicios.reduce((s, r) => s + (Number(r.instalacion) || 0), 0);
+
+  const filasServicios = servicios
+    .map(
+      (s) => `
+        <tr>
+          <td class="centro">${av(s.cantidad)}</td>
+          <td>${av(s.tipoServicio)}</td>
+          <td class="num">${s.instalacion ? "Q " + Number(s.instalacion).toFixed(2) : ""}</td>
+          <td class="num">${s.cuotaMensual ? "Q " + Number(s.cuotaMensual).toFixed(2) : ""}</td>
+        </tr>`
+    )
+    .join("");
+  const filasVacias = Math.max(0, 4 - servicios.length);
+  const filasServiciosCompletas =
+    filasServicios + `<tr><td class="centro"></td><td></td><td class="num"></td><td class="num"></td></tr>`.repeat(filasVacias);
+
+  return `
+    <div class="anexo-oficina">
+      <div class="anexo-movil-header">
+        <div class="anexo-movil-logo">${typeof LOGO_CLARO_B64 !== "undefined" ? `<img src="${LOGO_CLARO_B64}" alt="Claro">` : "Claro"}</div>
+        <div class="anexo-movil-titulo">Anexo de Servicios Multimedia</div>
+        <div class="anexo-movil-version">V 5.3</div>
+      </div>
+
+      <div class="anexo-cabecera">
+        <span><strong>Categoría de Cliente:</strong> ${av(contrato.categoriaCliente)}</span>
+        <span><strong>Gestión:</strong> ${av(contrato.tipoGestion)}</span>
+        <span><strong>Tipo de Cliente:</strong> Existente</span>
+      </div>
+
+      <div class="anexo-seccion">Información General</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo"><span class="lbl">Nombre Completo/Razón Social:</span><span class="val">${av(contrato.empresa)}</span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Nombre Comercial:</span><span class="val">${av(contrato.nombreComercial)}</span></div>
+          <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${av(contrato.nit)}</span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Dirección:</span><span class="val">${av(contrato.direccion)}</span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Departamento / Ciudad:</span><span class="val">${av(contrato.departamentoCiudad)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Nombre Representante Legal:</span><span class="val">${av(contrato.representanteLegal)}</span></div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Doc. de Identificación:</span><span class="val">${av(contrato.docIdentificacion)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Antigüedad:</span><span class="val">${av(contrato.antiguedad)}</span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Salario:</span><span class="val">${av(contrato.salario)}</span></div>
+      </div>
+
+      <div class="anexo-seccion">Datos de Facturación</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Nombre del Contacto:</span><span class="val">${av(contrato.contactoNombre)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Teléfono:</span><span class="val">${av(contrato.contactoTelefono)}</span></div>
+        </div>
+        ${campoCorreo("Correo Electrónico:", contrato.contactoCorreo)}
+      </div>
+
+      <div class="anexo-seccion">Datos de servicio Multimedia</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${av(contrato.plazoContrato)}</span></div>
+          <div class="anexo-campo"><span class="lbl">No. de Teléfono:</span><span class="val">${av(contrato.telefono)}</span></div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Dirección de Instalación 1:</span><span class="val">${av(contrato.instalacion1)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Dirección de Instalación 2:</span><span class="val">${av(contrato.instalacion2)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Dirección de Instalación 3:</span><span class="val">${av(contrato.instalacion3)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Dirección de Instalación 4:</span><span class="val">${av(contrato.instalacion4)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Dirección de Instalación 5:</span><span class="val">${av(contrato.instalacion5)}</span></div>
+      </div>
+
+      <div class="anexo-seccion">Tarifas/Cuotas Mensuales Servicios Multimedia Pyme</div>
+      <div class="anexo-campos">
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Paquete a Contratar:</span><span class="val">${av(contrato.paqueteContratar)}</span></div>
+          <div class="anexo-checks">
+            ${casilla(contrato.tipoRed === "COBRE", "COBRE")} ${casilla(contrato.tipoRed === "HFC", "HFC")} ${casilla(contrato.tipoRed === "GPON", "GPON")}
+          </div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Cantidad:</span><span class="val">${av(contrato.lineaFijaCantidad)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Sub Total:</span><span class="val">${contrato.subTotal ? "Q " + Number(contrato.subTotal).toFixed(2) : ""}</span></div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Línea Fija Pyme:</span><span class="val">${av(contrato.lineaFijaDescripcion)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Instalación:</span><span class="val">${contrato.instalacionCosto ? "Q " + Number(contrato.instalacionCosto).toFixed(2) : ""}</span></div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Internet Pyme:</span><span class="val">${av(contrato.internetPyme)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Renta Total:</span><span class="val">${contrato.rentaTotal ? "Q " + Number(contrato.rentaTotal).toFixed(2) : ""}</span></div>
+        </div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">TV Pyme:</span><span class="val">${av(contrato.tvPyme)}</span></div>
+          <div class="anexo-checks">
+            ${casilla(contrato.activarClaroDrive === "Sí", "Activar Claro Drive 100Gb")}
+            ${casilla(contrato.activarPagolo === "Sí", "Activar Pagolo")}
+          </div>
+        </div>
+        <div class="anexo-campo"><span class="lbl">Servicio Adicional:</span><span class="val">${av(contrato.servicioAdicional)}</span></div>
+        <div class="anexo-campo-doble">
+          <div class="anexo-campo"><span class="lbl">Televisores adicionales sin costo:</span><span class="val">${av(contrato.televisoresAdicionales)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Email IPTV:</span><span class="val">${av(contrato.emailIptv)}</span></div>
+        </div>
+        <p class="anexo-condiciones-texto" style="font-size:0.6rem;">
+          Claro Video incluido al contratar servicio de TV.<br>*Aparato telefónico e instalación incluida.
+        </p>
+      </div>
+
+      <div class="anexo-tabla-envoltura">
+        <div class="anexo-seccion">Servicios Adicionales</div>
+        <table class="anexo-tabla">
+          <thead>
+            <tr><th>Cantidad</th><th>Telefonía Fija Adicional HFC / Internet / Equipo adicional TV / Paquete Premium de TV</th><th>Instalación</th><th>Cuota Mensual</th></tr>
+          </thead>
+          <tbody>
+            ${filasServiciosCompletas}
+            <tr class="anexo-tabla-total"><td colspan="2"></td><td class="num">Total Instalación Q ${sumaInstalacion.toFixed(2)}</td><td class="num">Total Mensual Q ${sumaMensual.toFixed(2)}</td></tr>
+          </tbody>
+        </table>
+        <div class="anexo-checks">
+          ${casilla(contrato.ipPublica === "Sí", "IP Pública")}
+          ${casilla(contrato.dtaAdicional === "Sí", "DTA adicional")}
+          ${casilla(contrato.dcxAdicional === "Sí", "DCX adicional")}
+          ${casilla(contrato.equipoDthAdicional === "Sí", "Equipo DTH adicional")}
+        </div>
+      </div>
+
+      <div class="anexo-tabla-envoltura">
+        <div class="anexo-seccion">Financiamientos</div>
+        <div class="anexo-checks">${casilla(contrato.aplicaFinanciamiento === "Sí", "Aplica Financiamiento")}</div>
+        <table class="anexo-tabla">
+          <thead>
+            <tr><th>Cant.</th><th>Tipo de Equipo a Financiar</th><th>Modelo</th><th>Cuota Mensual</th><th>Cantidad de Cuotas</th><th>Primer Pago</th><th>Monto total Mensual Financiamiento</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="centro"></td><td></td><td></td><td class="num">Q 0</td><td class="centro"></td><td class="num">Q 0</td><td class="num">Q 0.00</td></tr>
+            <tr><td class="centro"></td><td></td><td></td><td class="num">Q 0</td><td class="centro"></td><td class="num">Q 0</td><td class="num">Q 0.00</td></tr>
+            <tr><td class="centro"></td><td></td><td></td><td class="num">Q 0</td><td class="centro"></td><td class="num">Q 0</td><td class="num">Q 0.00</td></tr>
+            <tr><td class="centro"></td><td></td><td></td><td class="num">Q 0</td><td class="centro"></td><td class="num">Q 0</td><td class="num">Q 0.00</td></tr>
+            <tr class="anexo-tabla-total"><td colspan="6">TOTAL</td><td class="num">Q 0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="salto-pagina"></div>
+
+      <div class="anexo-seccion">Observaciones</div>
+      <div class="anexo-campo"><span class="val">${av(contrato.observaciones)}</span></div>
+
+      <div class="anexo-condiciones-titulo">Condiciones del Servicio</div>
+      <p class="anexo-condiciones-texto">
+        <strong>CONDICIONES ESPECIFICAS DEL SERVICIO:</strong> Los servicios de telefonía fija, Internet y televisión,
+        se le prestarán a EL CLIENTE con las facilidades técnicas y de instalación con que cuente Telgua para la
+        prestación de los servicios. Si TELGUA no cuenta con las facilidades técnicas y de instalación para la
+        efectiva prestación de cualesquiera de los servicios aquí contratados por EL CLIENTE, deberá notificarle al
+        mismo por cualquier medio que considere adecuado, teniendo por efecto que el contrato se tendrá por resuelto,
+        sin responsabilidad alguna de TELGUA. Para poder aplicar las tarifas preferenciales del paquete deberán ser
+        instalados todos los servicios que los conforman, de lo contrario aquel o aquellos servicios que
+        individualmente sean instalados se cobrarán a EL CLIENTE con la tarifa normal que TELGUA tenga vigente para el
+        público en general, aplicándose todas las condiciones, disposiciones y políticas comerciales vigentes del
+        servicio del que se trate.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones del Servicio de Telefonía Fija</div>
+      <p class="anexo-condiciones-texto">
+        <strong>TELEFONIA INTERNACIONAL:</strong> EL CLIENTE cuenta con una tarifa preferencial por minuto, fijada a
+        discreción de TELGUA en llamadas con destino a Estados Unidos. Algunos destinos internacionales tienen
+        recargos adicionales a las tarifas normales vigentes. Dichos recargos son establecidos por el operador del
+        país destino y son ajenos a TELGUA.
+      </p>
+      <p class="anexo-condiciones-texto">
+        <strong>LLAMADAS ILIMITADAS:</strong> El plan de llamadas ilimitadas incluye para EL CLIENTE el derecho de
+        llamar a números de la red móvil o fija de Claro o bien de redes de otros operadores de manera ilimitada,
+        siempre y cuando la utilización que se haga de este servicio se haga en el ámbito domiciliar y/o personal del
+        cliente, conforme a la política de uso razonable incluida en la página Web de Claro. En caso TELGUA detecte
+        por cualquier medio que el cliente ha dado un uso comercial al plan contratado, es decir tenga patrones de
+        conducta fuera del uso normal, no razonable o no permitido según la política de uso razonable TELGUA podrá
+        excluir al cliente del mismo y cobrar las llamadas realizadas según la tarifa normal vigente, lo cual acepta
+        expresamente EL CLIENTE. Si EL CLIENTE adquiere el plan de llamadas ilimitadas los minutos ilimitados no
+        aplican hacia líneas fijas destinadas a accesos empresariales, tales como números de cuatro dígitos o números
+        PBX, entre otros.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones del Servicio de Televisión</div>
+      <p class="anexo-condiciones-texto">
+        <strong>DE LA SEÑAL DE TELEVISIÓN Y PROGRAMACIÓN:</strong> EL CLIENTE, acepta expresamente: a) que TELGUA no
+        se hace responsable por cualquier interrupción en el servicio de transmisión de la señal de servicio
+        contratado que no obedezca a grave negligencia suya; b) que TELGUA podrá suspender los servicios prestados
+        sin responsabilidad de su parte en caso de mantenimiento, caso fortuito o fuerza mayor; c) que TELGUA pueda
+        discrecionalmente aplicar, variar y/o modificar los contenidos de la programación del servicio contratado,
+        incluyendo adición o supresión de canales y/o programas, sin previo aviso, ni posterior notificación ni
+        incurrir en responsabilidad alguna por dichos cambios; d) que el uso del control de mando del Set Top Box y
+        funciones de la guía interactiva son de su exclusiva responsabilidad; e) que la calidad de la señal dependerá
+        de que la instalación llene los requisitos mínimos establecidos y no se exceda el número de televisores
+        autorizados.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Condiciones del Servicio de INTERNET</div>
+      <p class="anexo-condiciones-texto">
+        <strong>INTERNET</strong>: Para la prestación del servicio de Internet Residencial, EL CLIENTE, deberá contar
+        con equipo de cómputo (computadora de escritorio o portátil), tierra física en el tomacorriente, UPS y
+        regulador de voltaje.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Servicios Adicionales</div>
+      <p class="anexo-condiciones-texto">
+        <strong>CLARO CLOUD:</strong> EL CLIENTE, acepta que al incluir el servicio Cloud en el Paquete Pyme, éste se
+        preste durante el plazo del plan que ha contratado, no pudiendo darle de baja al servicio Cloud hasta la
+        finalización del plazo del plan contratado. En caso desee dar la baja del servicio antes del plazo
+        correspondiente al plan que ha contratado EL CLIENTE acepta expresamente el pago de las penalizaciones
+        conforme a la cláusula indemnizatoria de los términos y condiciones generales.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Cancelación de Servicios Fijos</div>
+      <p class="anexo-condiciones-texto">
+        En caso que EL CLIENTE decida dar por terminado anticipadamente el plazo del servicio contratado en este
+        anexo, se compromete a pagar a TELGUA en concepto de daños y perjuicios, el cincuenta por ciento (50%) de la
+        tarifa convenida conforme al plan contratado durante los meses que falten para cumplir con el plazo acordado,
+        debiendo devolver el equipo con el que se prestó el servicio, ya sea Set Top Box o DVR HD en buenas
+        condiciones de funcionamiento y en caso éste se hubiese extraviado o tuviera daños, deberá pagar el valor del
+        mismo al precio que TELGUA tenga vigente al público en general en la fecha de terminación.
+      </p>
+
+      <div class="anexo-condiciones-titulo">Aceptación</div>
+      <p class="anexo-condiciones-texto">
+        <strong>ACEPTACION:</strong> EL CLIENTE, al firmar este anexo acepta expresamente: a) Ser de los datos de
+        identificación consignados en este anexo; b) que TELGUA pueda corroborar la veracidad de toda la información
+        proporcionada por su persona, por cualquier medio legal, siendo responsable de lo relativo al delito de
+        perjurio en caso se llegara a constar que la información relacionada es falsa parcial o totalmente; c) que el
+        presente ANEXO DE SERVICIO incorpora los TERMINOS Y CONDICIONES GENERALES DE CONTRATACION DE TELGUA ("TCG
+        CLIENTES"), los cuales he recibido de parte de TELGUA en este acto y que constituyen los aplicables de manera
+        general a la prestación de servicios de telecomunicaciones brindados por TELGUA; y d) haber leído el presente
+        anexo del servicio y bien impuesto de su contenido, objeto, validez y efectos legales, lo acepta, ratifica y
+        firma.
+      </p>
+
+      <div class="anexo-campo anexo-firma-fila">
+        <span class="lbl"><strong>Lugar y Fecha:</strong></span>
+        <span class="val">Guatemala</span>
+        <span class="val">${av(contrato.fechaFirma)}</span>
+      </div>
+      <div class="anexo-campo-doble anexo-firma-fila">
+        <div class="anexo-campo"><span class="lbl"><strong>Nombre de Ejecutivo:</strong></span><span class="val">${av(contrato.ejecutivoVentas)}</span></div>
+        <div class="anexo-campo"><span class="lbl"><strong>Firma del Cliente:</strong></span><span class="val"></span></div>
+      </div>
+      <div class="anexo-campo"><span class="lbl"><strong>Código Maestro:</strong></span><span class="val">${av(contrato.codigoMaestro)}</span></div>
+
+      <div class="anexo-campo-doble" style="margin-top:18px;">
+        <div class="anexo-campo"><span class="lbl">Control Interno No. de Onbase:</span><span class="val"></span></div>
+        <div class="anexo-campo" style="justify-content:flex-end;"><span class="val" style="border:none;flex:0 0 auto;white-space:nowrap;">V 5.3</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function imprimirContratoOficina() {
+  const data = {};
+  CONTRATO_OFICINA_FIELD_IDS.forEach((idCampo) => (data[CONTRATO_OFICINA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim()));
+  const empresa = (data.empresa || "").trim().toLowerCase();
+  const servicios = serviciosOficinaData.filter((s) => (s.empresa || "").trim().toLowerCase() === empresa);
+  $("printArea").innerHTML = anexoServiciosMultimediaHTML(data, servicios);
+  window.print();
+}
+
+function imprimirAnexoOficinaPorEmpresa(empresaTexto) {
+  const empresaBuscada = (empresaTexto || "").trim().toLowerCase();
+  if (!empresaBuscada) {
+    alert("Escribe o selecciona la empresa que quieres imprimir.");
+    return;
+  }
+  const contrato = contratosOficinaData.find((c) => (c.empresa || "").trim().toLowerCase() === empresaBuscada);
+  if (!contrato) {
+    alert("No se encontró un contrato de oficina con ese nombre de empresa. Verifica que coincida con el registrado en Contratos de Oficina.");
+    return;
+  }
+  const servicios = serviciosOficinaData.filter((s) => (s.empresa || "").trim().toLowerCase() === empresaBuscada);
+  $("printArea").innerHTML = anexoServiciosMultimediaHTML(contrato, servicios);
+  window.print();
+}
+
+function imprimirAnexoOficina() {
+  imprimirAnexoOficinaPorEmpresa($("empresaImprimirServicios").value);
+}
+
+function imprimirServicioOficinaDesdeModal() {
+  imprimirAnexoOficinaPorEmpresa($("soEmpresa").value);
 }
 
 function imprimirDesdeEdicion() {
@@ -2381,6 +3021,8 @@ function refrescarVistasSecundarias() {
   vistaContratos.render();
   vistaContratosMoviles.render();
   vistaLineasMoviles.render();
+  vistaContratosOficina.render();
+  vistaServiciosOficina.render();
 }
 
 function cambiarVista(nombre) {
@@ -2410,6 +3052,8 @@ function cambiarVista(nombre) {
   else if (nombre === "contratos") vistaContratos.render();
   else if (nombre === "contratosMoviles") vistaContratosMoviles.render();
   else if (nombre === "lineasMoviles") vistaLineasMoviles.render();
+  else if (nombre === "contratosOficina") vistaContratosOficina.render();
+  else if (nombre === "serviciosOficina") vistaServiciosOficina.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -3132,6 +3776,59 @@ const vistaLineasMoviles = crearVistaLista({
   alClicFila: (r) => abrirModalLineaMovil(r.linea),
 });
 
+function obtenerContratosOficina() {
+  return contratosOficinaData.map((c) => ({
+    contrato: c,
+    celdas: `
+      <td>${esc(c.empresa)}</td>
+      <td>${esc(c.nit)}</td>
+      <td>${esc(c.tipoGestion)}</td>
+      <td>${esc(c.paqueteContratar)}</td>
+      <td>${esc(c.plazoContrato)}</td>
+      <td>${esc(c.telefono)}</td>
+      <td>${c.rentaTotal ? "Q " + Number(c.rentaTotal).toFixed(2) : ""}</td>
+      <td>${esc(c.fechaFirma)}</td>
+    `,
+  }));
+}
+
+const vistaContratosOficina = crearVistaLista({
+  prefix: "contratosOficina",
+  columnas: 8,
+  obtenerFilas: obtenerContratosOficina,
+  filtrar: (r, t) => {
+    const texto = [r.contrato.empresa, r.contrato.nombreComercial, r.contrato.nit, r.contrato.paqueteContratar, r.contrato.telefono, r.contrato.representanteLegal]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalContratoOficina(r.contrato),
+});
+
+function obtenerServiciosOficina() {
+  return serviciosOficinaData.map((s) => ({
+    servicio: s,
+    celdas: `
+      <td>${esc(s.tipoServicio)}</td>
+      <td>${esc(s.cantidad)}</td>
+      <td>${s.instalacion ? "Q " + Number(s.instalacion).toFixed(2) : ""}</td>
+      <td>${s.cuotaMensual ? "Q " + Number(s.cuotaMensual).toFixed(2) : ""}</td>
+      <td>${esc(s.empresa)}</td>
+    `,
+  }));
+}
+
+const vistaServiciosOficina = crearVistaLista({
+  prefix: "serviciosOficina",
+  columnas: 5,
+  obtenerFilas: obtenerServiciosOficina,
+  filtrar: (r, t) => {
+    const texto = [r.servicio.tipoServicio, r.servicio.empresa].join(" ").toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalServicioOficina(r.servicio),
+});
+
 function obtenerImpresoras() {
   return equipos
     .filter(
@@ -3245,6 +3942,21 @@ $("btnCancelarLineaMovil").addEventListener("click", cerrarModalLineaMovil);
 $("btnEliminarModalLineaMovil").addEventListener("click", eliminarLineaMovilActual);
 $("formLineaMovil").addEventListener("submit", onSubmitLineaMovil);
 
+$("btnNuevoContratoOficina").addEventListener("click", () => abrirModalContratoOficina(null));
+$("btnImprimirContratoOficina").addEventListener("click", imprimirContratoOficina);
+$("btnImprimirServiciosOficina").addEventListener("click", imprimirAnexoOficina);
+$("btnImprimirServicioOficina").addEventListener("click", imprimirServicioOficinaDesdeModal);
+$("btnCerrarModalContratoOficina").addEventListener("click", cerrarModalContratoOficina);
+$("btnCancelarContratoOficina").addEventListener("click", cerrarModalContratoOficina);
+$("btnEliminarModalContratoOficina").addEventListener("click", eliminarContratoOficinaActual);
+$("formContratoOficina").addEventListener("submit", onSubmitContratoOficina);
+
+$("btnNuevoServicioOficina").addEventListener("click", () => abrirModalServicioOficina(null));
+$("btnCerrarModalServicioOficina").addEventListener("click", cerrarModalServicioOficina);
+$("btnCancelarServicioOficina").addEventListener("click", cerrarModalServicioOficina);
+$("btnEliminarModalServicioOficina").addEventListener("click", eliminarServicioOficinaActual);
+$("formServicioOficina").addEventListener("submit", onSubmitServicioOficina);
+
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
 $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
@@ -3287,6 +3999,8 @@ cargarImpresoras();
 cargarCodigos();
 cargarContratosMoviles();
 cargarLineasMoviles();
+cargarContratosOficina();
+cargarServiciosOficina();
 poblarFiltrosYDatalists();
 render();
 renderTablero();

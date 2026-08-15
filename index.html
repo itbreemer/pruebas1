@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813i">
+<link rel="stylesheet" href="style.css?v=20260813j">
 </head>
 <body>
 
@@ -36,6 +36,8 @@
       <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
       <button type="button" class="nav-item" data-vista="contratosMoviles" data-titulo="Contratos Móviles">📱 Contratos Móviles</button>
       <button type="button" class="nav-item nav-sub-item" data-vista="lineasMoviles" data-titulo="Formato de Adhesión Móvil">📝 Formato de Adhesión Móvil</button>
+      <button type="button" class="nav-item" data-vista="contratosOficina" data-titulo="Contratos de Oficina">📞 Contratos de Oficina</button>
+      <button type="button" class="nav-item nav-sub-item" data-vista="serviciosOficina" data-titulo="Anexo de Servicios Multimedia">📄 Anexo de Servicios Multimedia</button>
     </nav>
   </aside>
 
@@ -456,6 +458,69 @@
           <span id="infoPagina_lineasMoviles"></span>
           <button id="btnSiguiente_lineasMoviles">&rsaquo;</button>
           <button id="btnUltimo_lineasMoviles">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Contratos de Oficina -->
+      <section id="vista-contratosOficina" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_contratosOficina" placeholder="Buscar por empresa, NIT, paquete, teléfono...">
+          <button type="button" id="btnNuevoContratoOficina" class="btn btn-primary">+ Nuevo contrato de oficina</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>NIT</th>
+                <th>Gestión</th>
+                <th>Paquete</th>
+                <th>Plazo</th>
+                <th>Teléfono</th>
+                <th>Renta Total</th>
+                <th>Fecha Firma</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_contratosOficina"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_contratosOficina">&laquo;</button>
+          <button id="btnAnterior_contratosOficina">&lsaquo;</button>
+          <span id="infoPagina_contratosOficina"></span>
+          <button id="btnSiguiente_contratosOficina">&rsaquo;</button>
+          <button id="btnUltimo_contratosOficina">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Anexo de Servicios Multimedia (servicios adicionales de oficina) -->
+      <section id="vista-serviciosOficina" class="vista">
+        <section class="toolbar">
+          <input type="text" id="buscador_serviciosOficina" placeholder="Buscar por tipo de servicio o empresa...">
+          <input type="text" id="empresaImprimirServicios" list="dl-coEmpresa" placeholder="Empresa a imprimir..." style="max-width:260px;">
+          <button type="button" id="btnImprimirServiciosOficina" class="btn btn-outline">🖨️ Imprimir formato</button>
+          <button type="button" id="btnNuevoServicioOficina" class="btn btn-primary">+ Nuevo servicio</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Tipo de Servicio</th>
+                <th>Cantidad</th>
+                <th>Instalación</th>
+                <th>Cuota Mensual</th>
+                <th>Empresa</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_serviciosOficina"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_serviciosOficina">&laquo;</button>
+          <button id="btnAnterior_serviciosOficina">&lsaquo;</button>
+          <span id="infoPagina_serviciosOficina"></span>
+          <button id="btnSiguiente_serviciosOficina">&rsaquo;</button>
+          <button id="btnUltimo_serviciosOficina">&raquo;</button>
         </section>
       </section>
     </main>
@@ -1007,6 +1072,276 @@
   </div>
 </div>
 
+<!-- Modal de contrato de oficina (nuevo / editar) -->
+<div id="modalContratoOficinaOverlay" class="modal-overlay no-print">
+  <div class="modal modal-ingreso">
+    <div class="modal-header">
+      <h2 id="modalContratoOficinaTitulo">Nuevo contrato de oficina</h2>
+      <div class="modal-header-actions">
+        <button type="button" id="btnImprimirContratoOficina" class="btn btn-outline" title="Imprimir Anexo de Servicios Multimedia">Imprimir</button>
+        <button id="btnCerrarModalContratoOficina" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formContratoOficina" class="modal-body">
+      <input type="hidden" id="coId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="coEmpresa">Nombre Completo/Razón Social</label>
+            <input type="text" id="coEmpresa" list="dl-coEmpresa">
+            <datalist id="dl-coEmpresa"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="coNombreComercial">Nombre Comercial</label>
+            <input type="text" id="coNombreComercial">
+          </div>
+          <div class="glpi-row">
+            <label for="coNit">NIT</label>
+            <input type="text" id="coNit">
+          </div>
+          <div class="glpi-row">
+            <label for="coCategoriaCliente">Categoría de Cliente</label>
+            <input type="text" id="coCategoriaCliente" placeholder="Corporaciones">
+          </div>
+          <div class="glpi-row">
+            <label for="coTipoGestion">Tipo de Gestión</label>
+            <input type="text" id="coTipoGestion" list="dl-coTipoGestion" placeholder="Nuevo, Renovación...">
+            <datalist id="dl-coTipoGestion">
+              <option value="Nuevo"></option>
+              <option value="Renovación"></option>
+              <option value="Traspaso"></option>
+            </datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="coDireccion">Dirección</label>
+            <input type="text" id="coDireccion">
+          </div>
+          <div class="glpi-row">
+            <label for="coDepartamentoCiudad">Departamento / Ciudad</label>
+            <input type="text" id="coDepartamentoCiudad">
+          </div>
+          <div class="glpi-row">
+            <label for="coRepresentanteLegal">Representante Legal</label>
+            <input type="text" id="coRepresentanteLegal">
+          </div>
+          <div class="glpi-row">
+            <label for="coDocIdentificacion">Doc. de Identificación</label>
+            <input type="text" id="coDocIdentificacion">
+          </div>
+          <div class="glpi-row">
+            <label for="coAntiguedad">Antigüedad</label>
+            <input type="text" id="coAntiguedad">
+          </div>
+          <div class="glpi-row">
+            <label for="coSalario">Salario</label>
+            <input type="text" id="coSalario">
+          </div>
+          <div class="glpi-row">
+            <label for="coContactoNombre">Nombre del Contacto (Facturación)</label>
+            <input type="text" id="coContactoNombre">
+          </div>
+          <div class="glpi-row">
+            <label for="coContactoTelefono">Teléfono de Contacto</label>
+            <input type="text" id="coContactoTelefono">
+          </div>
+          <div class="glpi-row">
+            <label for="coContactoCorreo">Correo Electrónico</label>
+            <input type="text" id="coContactoCorreo" placeholder="usuario@dominio.com">
+          </div>
+          <div class="glpi-row">
+            <label for="coPlazoContrato">Plazo de Contrato</label>
+            <input type="text" id="coPlazoContrato" placeholder="12 meses">
+          </div>
+          <div class="glpi-row">
+            <label for="coTelefono">No. de Teléfono</label>
+            <input type="text" id="coTelefono">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacion1">Dirección de Instalación 1</label>
+            <input type="text" id="coInstalacion1">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacion2">Dirección de Instalación 2</label>
+            <input type="text" id="coInstalacion2">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacion3">Dirección de Instalación 3</label>
+            <input type="text" id="coInstalacion3">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacion4">Dirección de Instalación 4</label>
+            <input type="text" id="coInstalacion4">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacion5">Dirección de Instalación 5</label>
+            <input type="text" id="coInstalacion5">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="coPaqueteContratar">Paquete a Contratar</label>
+            <input type="text" id="coPaqueteContratar" list="dl-coPaqueteContratar" placeholder="Claro_PYME_One_Play">
+            <datalist id="dl-coPaqueteContratar"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="coTipoRed">Tipo de Red</label>
+            <select id="coTipoRed"><option value="">-</option><option value="COBRE">COBRE</option><option value="HFC">HFC</option><option value="GPON">GPON</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coSubTotal">Sub Total (Q)</label>
+            <input type="number" id="coSubTotal" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="coInstalacionCosto">Instalación (Q)</label>
+            <input type="number" id="coInstalacionCosto" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="coRentaTotal">Renta Total (Q)</label>
+            <input type="number" id="coRentaTotal" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="coLineaFijaCantidad">Cantidad (Línea Fija Pyme)</label>
+            <input type="number" id="coLineaFijaCantidad" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="coLineaFijaDescripcion">Línea Fija Pyme</label>
+            <input type="text" id="coLineaFijaDescripcion" placeholder="Ilimitadas a Claro">
+          </div>
+          <div class="glpi-row">
+            <label for="coInternetPyme">Internet Pyme</label>
+            <input type="text" id="coInternetPyme">
+          </div>
+          <div class="glpi-row">
+            <label for="coTvPyme">TV Pyme</label>
+            <input type="text" id="coTvPyme">
+          </div>
+          <div class="glpi-row">
+            <label for="coServicioAdicional">Servicio Adicional</label>
+            <input type="text" id="coServicioAdicional">
+          </div>
+          <div class="glpi-row">
+            <label for="coTelevisoresAdicionales">Televisores Adicionales sin Costo</label>
+            <input type="text" id="coTelevisoresAdicionales">
+          </div>
+          <div class="glpi-row">
+            <label for="coEmailIptv">Email IPTV</label>
+            <input type="text" id="coEmailIptv">
+          </div>
+          <div class="glpi-row">
+            <label for="coActivarClaroDrive">Activar Claro Drive 100Gb</label>
+            <select id="coActivarClaroDrive"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coActivarPagolo">Activar Pagolo</label>
+            <select id="coActivarPagolo"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coIpPublica">IP Pública</label>
+            <select id="coIpPublica"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coDtaAdicional">DTA Adicional</label>
+            <select id="coDtaAdicional"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coDcxAdicional">DCX Adicional</label>
+            <select id="coDcxAdicional"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coEquipoDthAdicional">Equipo DTH Adicional</label>
+            <select id="coEquipoDthAdicional"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coAplicaFinanciamiento">Aplica Financiamiento</label>
+            <select id="coAplicaFinanciamiento"><option value="">-</option><option value="Sí">Sí</option><option value="No">No</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="coEjecutivoVentas">Ejecutivo de Ventas</label>
+            <input type="text" id="coEjecutivoVentas">
+          </div>
+          <div class="glpi-row">
+            <label for="coFechaFirma">Fecha de Firma</label>
+            <input type="date" id="coFechaFirma">
+          </div>
+          <div class="glpi-row">
+            <label for="coCodigoMaestro">Código Maestro</label>
+            <input type="text" id="coCodigoMaestro">
+          </div>
+          <div class="glpi-row">
+            <label for="coObservaciones">Observaciones</label>
+            <input type="text" id="coObservaciones">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalContratoOficina" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarContratoOficina" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de servicio adicional de oficina (nuevo / editar) -->
+<div id="modalServicioOficinaOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalServicioOficinaTitulo">Nuevo servicio adicional</h2>
+      <div class="modal-header-actions">
+        <button type="button" id="btnImprimirServicioOficina" class="btn btn-outline" title="Imprimir Anexo de Servicios Multimedia">🖨️ Imprimir</button>
+        <button id="btnCerrarModalServicioOficina" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formServicioOficina" class="modal-body">
+      <input type="hidden" id="soId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="soTipoServicio">Tipo de Servicio</label>
+            <select id="soTipoServicio">
+              <option value="">-</option>
+              <option value="Telefonía Fija Adicional HFC">Telefonía Fija Adicional HFC</option>
+              <option value="Internet">Internet</option>
+              <option value="Equipo adicional TV">Equipo adicional TV</option>
+              <option value="Paquete Premium de TV">Paquete Premium de TV</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="soCantidad">Cantidad</label>
+            <input type="number" id="soCantidad" min="0">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="soInstalacion">Instalación (Q)</label>
+            <input type="number" id="soInstalacion" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="soCuotaMensual">Cuota Mensual (Q)</label>
+            <input type="number" id="soCuotaMensual" step="0.01" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="soEmpresa">Empresa</label>
+            <input type="text" id="soEmpresa" list="dl-soEmpresa">
+            <datalist id="dl-soEmpresa"></datalist>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalServicioOficina" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarServicioOficina" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal de generación rápida de Acta -->
 <div id="modalActaOverlay" class="modal-overlay no-print">
   <div class="modal modal-acta">
@@ -1206,17 +1541,19 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813i"></script>
+<script src="data.js?v=20260813j"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813i"></script>
+<script src="app.js?v=20260813j"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813i"></script>
-<script type="module" src="impresoras-sync.js?v=20260813i"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813i"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813i"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813i"></script>
+<script type="module" src="firestore-sync.js?v=20260813j"></script>
+<script type="module" src="impresoras-sync.js?v=20260813j"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260813j"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260813j"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260813j"></script>
+<script type="module" src="contratos-oficina-sync.js?v=20260813j"></script>
+<script type="module" src="servicios-oficina-sync.js?v=20260813j"></script>
 </body>
 </html>
