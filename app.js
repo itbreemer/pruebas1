@@ -2039,7 +2039,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
           <span class="anexo-firma-linea">Gerencia Mercado Corporativo País</span>
         </div>
-        <p class="anexo-nota-lineas">(Firmar únicamente en caso de que el plan lleve descuento en la renta)</p>
+        <p class="anexo-nota-lineas">Firma</p>
       </div>
     </div>
   `;
