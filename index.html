@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260814b">
+<link rel="stylesheet" href="style.css?v=20260814c">
 </head>
 <body>
 
@@ -426,6 +426,22 @@
           <button id="btnSiguiente_contratosMoviles">&rsaquo;</button>
           <button id="btnUltimo_contratosMoviles">&raquo;</button>
         </section>
+
+        <div class="reportes-panel">
+          <h3>📄 Reportes de Contratos Móviles</h3>
+          <p>Imprime aquí directamente, sin necesidad de entrar a editar un contrato o una línea.</p>
+          <div class="reportes-fila">
+            <span class="reportes-etiqueta">Anexo de Servicios Móviles (por empresa)</span>
+            <input type="text" id="empresaImprimirAnexoMovil" list="dl-cmEmpresa" placeholder="Escribe o selecciona la empresa...">
+            <button type="button" id="btnImprimirAnexoMovilDesdeReportes" class="btn btn-outline">🖨️ Imprimir</button>
+          </div>
+          <div class="reportes-fila">
+            <span class="reportes-etiqueta">Hoja de Responsabilidad (por número de línea)</span>
+            <input type="text" id="numeroImprimirHojaResponsabilidad" list="dl-lmNumero" placeholder="Escribe o selecciona el número de línea...">
+            <datalist id="dl-lmNumero"></datalist>
+            <button type="button" id="btnImprimirHojaResponsabilidadDesdeReportes" class="btn btn-outline">🖨️ Imprimir</button>
+          </div>
+        </div>
       </section>
 
       <!-- Control Líneas Móviles -->
@@ -491,6 +507,16 @@
           <button id="btnSiguiente_contratosOficina">&rsaquo;</button>
           <button id="btnUltimo_contratosOficina">&raquo;</button>
         </section>
+
+        <div class="reportes-panel">
+          <h3>📄 Reportes de Contratos de Oficina</h3>
+          <p>Imprime aquí directamente, sin necesidad de entrar a editar un contrato o un servicio.</p>
+          <div class="reportes-fila">
+            <span class="reportes-etiqueta">Anexo de Servicios Multimedia (por empresa)</span>
+            <input type="text" id="empresaImprimirAnexoOficina" list="dl-coEmpresa" placeholder="Escribe o selecciona la empresa...">
+            <button type="button" id="btnImprimirAnexoOficinaDesdeReportes" class="btn btn-outline">🖨️ Imprimir</button>
+          </div>
+        </div>
       </section>
 
       <!-- Anexo de Servicios Multimedia (servicios adicionales de oficina) -->
@@ -1708,19 +1734,19 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260814b"></script>
+<script src="data.js?v=20260814c"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260814b"></script>
+<script src="app.js?v=20260814c"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260814b"></script>
-<script type="module" src="impresoras-sync.js?v=20260814b"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260814b"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260814b"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260814b"></script>
-<script type="module" src="contratos-oficina-sync.js?v=20260814b"></script>
-<script type="module" src="servicios-oficina-sync.js?v=20260814b"></script>
+<script type="module" src="firestore-sync.js?v=20260814c"></script>
+<script type="module" src="impresoras-sync.js?v=20260814c"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260814c"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260814c"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260814c"></script>
+<script type="module" src="contratos-oficina-sync.js?v=20260814c"></script>
+<script type="module" src="servicios-oficina-sync.js?v=20260814c"></script>
 </body>
 </html>

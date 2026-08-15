@@ -1370,6 +1370,7 @@ function poblarFiltrosYDatalists() {
     "dl-lmNombreUsuario": "nombreUsuario",
     "dl-lmDepartamentoUsuario": "departamentoUsuario",
     "dl-lmSegmento": "segmento",
+    "dl-lmNumero": "numero",
   };
   Object.entries(datalistMapLineasMoviles).forEach(([dlId, campo]) => {
     const dl = $(dlId);
@@ -2805,6 +2806,33 @@ function imprimirHojaResponsabilidadDesdeModal() {
   LINEA_MOVIL_FIELD_IDS.forEach((idCampo) => (linea[LINEA_MOVIL_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim()));
   $("printArea").innerHTML = hojaResponsabilidadHTML(linea);
   window.print();
+}
+
+function imprimirHojaResponsabilidadPorNumero(numeroTexto) {
+  const numeroBuscado = (numeroTexto || "").trim().toLowerCase();
+  if (!numeroBuscado) {
+    alert("Escribe o selecciona el número de línea que quieres imprimir.");
+    return;
+  }
+  const linea = lineasMovilesData.find((l) => (l.numero || "").trim().toLowerCase() === numeroBuscado);
+  if (!linea) {
+    alert("No se encontró ninguna línea con ese número. Verifica que coincida con el registrado en Formato de Adhesión Móvil.");
+    return;
+  }
+  $("printArea").innerHTML = hojaResponsabilidadHTML(linea);
+  window.print();
+}
+
+function imprimirAnexoMovilDesdeReportes() {
+  imprimirFormatoAdhesionMovilPorEmpresa($("empresaImprimirAnexoMovil").value);
+}
+
+function imprimirHojaResponsabilidadDesdeReportes() {
+  imprimirHojaResponsabilidadPorNumero($("numeroImprimirHojaResponsabilidad").value);
+}
+
+function imprimirAnexoOficinaDesdeReportes() {
+  imprimirAnexoOficinaPorEmpresa($("empresaImprimirAnexoOficina").value);
 }
 
 /* ---------- Anexo de Servicios Multimedia (impresión, mismo formato de Claro) ----------
@@ -4322,6 +4350,8 @@ $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
 $("btnImprimirLineaMovil").addEventListener("click", imprimirLineaMovilDesdeModal);
 $("btnImprimirHojaResponsabilidad").addEventListener("click", imprimirHojaResponsabilidadDesdeModal);
+$("btnImprimirAnexoMovilDesdeReportes").addEventListener("click", imprimirAnexoMovilDesdeReportes);
+$("btnImprimirHojaResponsabilidadDesdeReportes").addEventListener("click", imprimirHojaResponsabilidadDesdeReportes);
 $("btnCerrarModalContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnCancelarContratoMovil").addEventListener("click", cerrarModalContratoMovil);
 $("btnEliminarModalContratoMovil").addEventListener("click", eliminarContratoMovilActual);
@@ -4336,6 +4366,7 @@ $("formLineaMovil").addEventListener("submit", onSubmitLineaMovil);
 $("btnNuevoContratoOficina").addEventListener("click", () => abrirModalContratoOficina(null));
 $("btnImprimirContratoOficina").addEventListener("click", imprimirContratoOficina);
 $("btnImprimirServiciosOficina").addEventListener("click", imprimirAnexoOficina);
+$("btnImprimirAnexoOficinaDesdeReportes").addEventListener("click", imprimirAnexoOficinaDesdeReportes);
 $("btnImprimirServicioOficina").addEventListener("click", imprimirServicioOficinaDesdeModal);
 $("btnCerrarModalContratoOficina").addEventListener("click", cerrarModalContratoOficina);
 $("btnCancelarContratoOficina").addEventListener("click", cerrarModalContratoOficina);
