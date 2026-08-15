@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813f">
+<link rel="stylesheet" href="style.css?v=20260813g">
 </head>
 <body>
 
@@ -953,6 +953,10 @@
             <input type="number" id="lmTarifaPlan" step="0.01" min="0">
           </div>
           <div class="glpi-row">
+            <label for="lmTarifaTotal">Tarifa Total (Q)</label>
+            <input type="number" id="lmTarifaTotal" step="0.01" min="0" title="Se usa en el Anexo si es distinta a la Tarifa del Plan; si se deja vacía se usa la Tarifa del Plan.">
+          </div>
+          <div class="glpi-row">
             <label for="lmUsuarioAsignado">Usuario Asignado</label>
             <input type="text" id="lmUsuarioAsignado" list="dl-lmUsuarioAsignado">
             <datalist id="dl-lmUsuarioAsignado"></datalist>
@@ -1215,17 +1219,17 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813f"></script>
+<script src="data.js?v=20260813g"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813f"></script>
+<script src="app.js?v=20260813g"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813f"></script>
-<script type="module" src="impresoras-sync.js?v=20260813f"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813f"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813f"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813f"></script>
+<script type="module" src="firestore-sync.js?v=20260813g"></script>
+<script type="module" src="impresoras-sync.js?v=20260813g"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260813g"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260813g"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260813g"></script>
 </body>
 </html>

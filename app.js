@@ -42,7 +42,7 @@ const LINEA_MOVIL_FIELD_IDS = [
   "lmTipoServicioCloud", "lmServicioCloud", "lmCorreoSpacesuite", "lmSpacesuite",
   "lmUsuarioAsignado", "lmCorreoCorporativo", "lmAppsCorp", "lmNavegacionApps", "lmSuitcase",
   "lmPentcloud", "lmLlamadasIlimitadas", "lmPaqueteRoaming", "lmClaroDirecto", "lmVpn",
-  "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmEmpresa", "lmEstado",
+  "lmAviDesvioPrepago", "lmDescuentoAutomatico", "lmTarifaTotal", "lmEmpresa", "lmEstado",
 ];
 const LINEA_MOVIL_CAMPO_POR_ID = {
   lmId: "id", lmNumero: "numero", lmModelo: "modelo", lmImei: "imei", lmIccidEsn: "iccidEsn",
@@ -54,7 +54,7 @@ const LINEA_MOVIL_CAMPO_POR_ID = {
   lmPentcloud: "pentcloud", lmLlamadasIlimitadas: "llamadasIlimitadas",
   lmPaqueteRoaming: "paqueteRoaming", lmClaroDirecto: "claroDirecto", lmVpn: "vpn",
   lmAviDesvioPrepago: "aviDesvioPrepago", lmDescuentoAutomatico: "descuentoAutomatico",
-  lmEmpresa: "empresa", lmEstado: "estado",
+  lmTarifaTotal: "tarifaTotal", lmEmpresa: "empresa", lmEstado: "estado",
 };
 
 let impresorasData = [];
@@ -655,7 +655,7 @@ const SEMILLA_LINEAS_MOVILES = [
   { numero: "50254111683", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
   { numero: "50254111824", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
   { numero: "50256942785", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
-  { numero: "50256968642", modelo: "SAMSUNG A 17 256GB", plan: "G-EMPRESAS SMART 25GB", tarifaPlan: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
+  { numero: "50256968642", modelo: "SAMSUNG A 17 256GB", tarifaTotal: 209, empresa: "GENERADORAL SOL, SOCIEDAD ANONIMA", estado: "Activa" },
 ];
 
 function cargarLineasMoviles() {
@@ -1611,7 +1611,7 @@ function campoCorreo(etiqueta, correoCompleto) {
 }
 
 function anexoServiciosMovilesHTML(contrato, lineas) {
-  const sumaLineas = lineas.reduce((s, l) => s + (Number(l.tarifaPlan) || 0), 0);
+  const sumaLineas = lineas.reduce((s, l) => s + (Number(l.tarifaTotal || l.tarifaPlan) || 0), 0);
   const totalMensual = contrato.totalMensual ? Number(contrato.totalMensual) : sumaLineas;
 
   const filasLineas = lineas
@@ -1641,7 +1641,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <td class="centro">${av(l.vpn)}</td>
           <td class="centro">${av(l.aviDesvioPrepago)}</td>
           <td class="centro">${av(l.descuentoAutomatico)}</td>
-          <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
+          <td class="num">${(l.tarifaTotal || l.tarifaPlan) ? "Q " + Number(l.tarifaTotal || l.tarifaPlan).toFixed(2) : ""}</td>
         </tr>`
     )
     .join("");
