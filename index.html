@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260813k">
+<link rel="stylesheet" href="style.css?v=20260814a">
 </head>
 <body>
 
@@ -444,9 +444,9 @@
                 <th>Modelo</th>
                 <th>Plan</th>
                 <th>Tarifa</th>
-                <th>Usuario Asignado</th>
+                <th>Nombre Usuario</th>
                 <th>Empresa</th>
-                <th>Estado</th>
+                <th>Departamento</th>
               </tr>
             </thead>
             <tbody id="tbody_lineasMoviles"></tbody>
@@ -1136,6 +1136,98 @@
         </div>
       </div>
 
+      <h3 class="ingreso-subtitulo">Datos de Control (Seguimiento)</h3>
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="lmNumeroControl">No. Control</label>
+            <input type="text" id="lmNumeroControl">
+          </div>
+          <div class="glpi-row">
+            <label for="lmNumeroMadre">Número Madre</label>
+            <input type="text" id="lmNumeroMadre" list="dl-lmNumeroMadre">
+            <datalist id="dl-lmNumeroMadre"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmResponsableFacturacion">Resp. Reg. de Facturación</label>
+            <input type="text" id="lmResponsableFacturacion">
+          </div>
+          <div class="glpi-row">
+            <label for="lmCodSapUsuario">Cód. SAP del Usuario</label>
+            <input type="text" id="lmCodSapUsuario">
+          </div>
+          <div class="glpi-row">
+            <label for="lmNombreUsuario">Nombre Completo Usuario</label>
+            <input type="text" id="lmNombreUsuario" list="dl-lmNombreUsuario">
+            <datalist id="dl-lmNombreUsuario"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmCargo">Cargo</label>
+            <input type="text" id="lmCargo">
+          </div>
+          <div class="glpi-row">
+            <label for="lmDepartamentoUsuario">Departamento</label>
+            <input type="text" id="lmDepartamentoUsuario" list="dl-lmDepartamentoUsuario">
+            <datalist id="dl-lmDepartamentoUsuario"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmSegmento">Sociedad / Segmento</label>
+            <input type="text" id="lmSegmento" list="dl-lmSegmento" placeholder="CORPORATIVO, INMOBILIARIA...">
+            <datalist id="dl-lmSegmento"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="lmAdOp">AD / OP</label>
+            <select id="lmAdOp"><option value="">-</option><option value="AD">AD</option><option value="OP">OP</option></select>
+          </div>
+          <div class="glpi-row">
+            <label for="lmServicio">Servicio</label>
+            <input type="text" id="lmServicio" placeholder="línea movil">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="lmClasificacion">Clasificación</label>
+            <input type="text" id="lmClasificacion">
+          </div>
+          <div class="glpi-row">
+            <label for="lmPaqueteGprs">Paquete GPRS</label>
+            <input type="text" id="lmPaqueteGprs">
+          </div>
+          <div class="glpi-row">
+            <label for="lmFechaRenovacion">Fecha de Renovación</label>
+            <input type="date" id="lmFechaRenovacion">
+          </div>
+          <div class="glpi-row">
+            <label for="lmFechaExpiracion">Fecha de Expiración</label>
+            <input type="date" id="lmFechaExpiracion">
+          </div>
+          <div class="glpi-row">
+            <label for="lmHojaRespCodigo">Código Hoja de Responsabilidad</label>
+            <input type="text" id="lmHojaRespCodigo">
+          </div>
+          <div class="glpi-row">
+            <label for="lmCodContrato">Código de Contrato</label>
+            <input type="text" id="lmCodContrato">
+          </div>
+          <div class="glpi-row">
+            <label for="lmRevision">Revisión</label>
+            <input type="text" id="lmRevision">
+          </div>
+          <div class="glpi-row">
+            <label for="lmObservaciones1">Observaciones 1</label>
+            <input type="text" id="lmObservaciones1">
+          </div>
+          <div class="glpi-row">
+            <label for="lmObservaciones2">Observaciones 2</label>
+            <input type="text" id="lmObservaciones2">
+          </div>
+          <div class="glpi-row">
+            <label for="lmObservaciones3">Observaciones 3</label>
+            <input type="text" id="lmObservaciones3">
+          </div>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button type="button" id="btnEliminarModalLineaMovil" class="btn btn-danger">Eliminar</button>
         <div class="modal-actions-right">
@@ -1616,19 +1708,19 @@
 <!-- Plantilla imprimible -->
 <div id="printArea" class="print-only"></div>
 
-<script src="data.js?v=20260813k"></script>
+<script src="data.js?v=20260814a"></script>
 <script src="monitores.js"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260813k"></script>
+<script src="app.js?v=20260814a"></script>
 <script type="module" src="auth.js"></script>
-<script type="module" src="firestore-sync.js?v=20260813k"></script>
-<script type="module" src="impresoras-sync.js?v=20260813k"></script>
-<script type="module" src="codigos-impresion-sync.js?v=20260813k"></script>
-<script type="module" src="contratos-moviles-sync.js?v=20260813k"></script>
-<script type="module" src="lineas-moviles-sync.js?v=20260813k"></script>
-<script type="module" src="contratos-oficina-sync.js?v=20260813k"></script>
-<script type="module" src="servicios-oficina-sync.js?v=20260813k"></script>
+<script type="module" src="firestore-sync.js?v=20260814a"></script>
+<script type="module" src="impresoras-sync.js?v=20260814a"></script>
+<script type="module" src="codigos-impresion-sync.js?v=20260814a"></script>
+<script type="module" src="contratos-moviles-sync.js?v=20260814a"></script>
+<script type="module" src="lineas-moviles-sync.js?v=20260814a"></script>
+<script type="module" src="contratos-oficina-sync.js?v=20260814a"></script>
+<script type="module" src="servicios-oficina-sync.js?v=20260814a"></script>
 </body>
 </html>
