@@ -1592,6 +1592,14 @@ function casilla(marcada, texto) {
   return `<span class="anexo-check"><span class="caja${marcada ? " marcada" : ""}">${marcada ? "✓" : ""}</span>${texto}</span>`;
 }
 
+// A diferencia de esc() (que usan las demas tablas de la app y muestra "N/A"
+// cuando el dato falta), el Anexo de Claro es un documento legal: los campos
+// sin dato deben quedar en blanco (la casilla vacia con su subrayado), igual
+// que en el Excel original, nunca con texto de relleno.
+function av(v) {
+  return v && String(v).trim() !== "" ? v : "";
+}
+
 // El formulario de Claro divide el correo en dos casillas separadas por un
 // "@" literal impreso en el formato (usuario @ dominio); cuando esta vacio
 // el dominio se marca con un guion "-", tal como viene en el documento.
@@ -1599,7 +1607,7 @@ function campoCorreo(etiqueta, correoCompleto) {
   const partes = (correoCompleto || "").split("@");
   const usuario = (partes[0] || "").trim();
   const dominio = (partes[1] || "").trim() || "-";
-  return `<div class="anexo-campo"><span class="lbl">${etiqueta}</span><span class="val">${esc(usuario)}</span><span class="lbl">@</span><span class="val" style="flex:0 0 90px;">${esc(dominio)}</span></div>`;
+  return `<div class="anexo-campo"><span class="lbl">${etiqueta}</span><span class="val">${av(usuario)}</span><span class="lbl">@</span><span class="val" style="flex:0 0 90px;">${av(dominio)}</span></div>`;
 }
 
 function anexoServiciosMovilesHTML(contrato, lineas) {
@@ -1611,28 +1619,28 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       (l, i) => `
         <tr>
           <td class="centro">${i + 1}</td>
-          <td>${esc(l.numero)}</td>
-          <td>${esc(l.modelo)}</td>
-          <td>${esc(l.imei)}</td>
-          <td>${esc(l.iccidEsn)}</td>
+          <td>${av(l.numero)}</td>
+          <td>${av(l.modelo)}</td>
+          <td>${av(l.imei)}</td>
+          <td>${av(l.iccidEsn)}</td>
           <td class="num">${l.costoEquipo ? "Q " + Number(l.costoEquipo).toFixed(2) : "Q -"}</td>
-          <td>${esc(l.plan)}</td>
+          <td>${av(l.plan)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
-          <td class="centro">${esc(l.tipoServicioCloud)}</td>
-          <td class="centro">${esc(l.servicioCloud)}</td>
-          <td class="centro">${esc(l.correoSpacesuite)}</td>
-          <td class="centro">${esc(l.spacesuite)}</td>
-          <td class="centro">${esc(l.correoCorporativo)}</td>
-          <td class="centro">${esc(l.appsCorp)}</td>
-          <td class="centro">${esc(l.navegacionApps)}</td>
-          <td class="centro">${esc(l.suitcase)}</td>
-          <td class="centro">${esc(l.pentcloud)}</td>
-          <td class="centro">${esc(l.llamadasIlimitadas)}</td>
-          <td class="centro">${esc(l.paqueteRoaming)}</td>
-          <td class="centro">${esc(l.claroDirecto)}</td>
-          <td class="centro">${esc(l.vpn)}</td>
-          <td class="centro">${esc(l.aviDesvioPrepago)}</td>
-          <td class="centro">${esc(l.descuentoAutomatico)}</td>
+          <td class="centro">${av(l.tipoServicioCloud)}</td>
+          <td class="centro">${av(l.servicioCloud)}</td>
+          <td class="centro">${av(l.correoSpacesuite)}</td>
+          <td class="centro">${av(l.spacesuite)}</td>
+          <td class="centro">${av(l.correoCorporativo)}</td>
+          <td class="centro">${av(l.appsCorp)}</td>
+          <td class="centro">${av(l.navegacionApps)}</td>
+          <td class="centro">${av(l.suitcase)}</td>
+          <td class="centro">${av(l.pentcloud)}</td>
+          <td class="centro">${av(l.llamadasIlimitadas)}</td>
+          <td class="centro">${av(l.paqueteRoaming)}</td>
+          <td class="centro">${av(l.claroDirecto)}</td>
+          <td class="centro">${av(l.vpn)}</td>
+          <td class="centro">${av(l.aviDesvioPrepago)}</td>
+          <td class="centro">${av(l.descuentoAutomatico)}</td>
           <td class="num">${l.tarifaPlan ? "Q " + Number(l.tarifaPlan).toFixed(2) : ""}</td>
         </tr>`
     )
@@ -1647,17 +1655,17 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       </div>
 
       <div class="anexo-cabecera">
-        <span><strong>Categoría de Cliente:</strong> ${esc(contrato.categoriaCliente)}</span>
-        <span><strong>Gestión:</strong> ${esc(contrato.tipoGestion)}</span>
+        <span><strong>Categoría de Cliente:</strong> ${av(contrato.categoriaCliente)}</span>
+        <span><strong>Gestión:</strong> ${av(contrato.tipoGestion)}</span>
         <span><strong>Tipo de Cliente:</strong> Existente</span>
       </div>
 
       <div class="anexo-seccion">Información General</div>
       <div class="anexo-campos">
-        <div class="anexo-campo"><span class="lbl">Nombre Completo / Razón Social:</span><span class="val">${esc(contrato.empresa)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Nombre Completo / Razón Social:</span><span class="val">${av(contrato.empresa)}</span></div>
         <div class="anexo-campo"><span class="lbl">Nombre Comercial:</span><span class="val"></span></div>
         <div class="anexo-campo-doble">
-          <div class="anexo-campo"><span class="lbl">Nombre Representante Legal:</span><span class="val">${esc(contrato.representanteLegal)}</span></div>
+          <div class="anexo-campo"><span class="lbl">Nombre Representante Legal:</span><span class="val">${av(contrato.representanteLegal)}</span></div>
           <div class="anexo-campo"><span class="lbl">Cargo:</span><span class="val"></span></div>
         </div>
         <div class="anexo-campo-doble">
@@ -1666,7 +1674,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         </div>
         <div class="anexo-campo-doble">
           <div class="anexo-campo"><span class="lbl">Documento de Identificación:</span><span class="val"></span></div>
-          <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${esc(contrato.nit)}</span></div>
+          <div class="anexo-campo"><span class="lbl">NIT:</span><span class="val">${av(contrato.nit)}</span></div>
         </div>
         <div class="anexo-campo"><span class="lbl">Dirección:</span><span class="val"></span></div>
         <div class="anexo-campo-doble">
@@ -1708,7 +1716,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
 
       <div class="anexo-seccion">Planes de Telefonía Móvil</div>
       <div class="anexo-campo-doble">
-        <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${esc(contrato.plazoContrato)}</span></div>
+        <div class="anexo-campo"><span class="lbl">Plazo de Contrato:</span><span class="val">${av(contrato.plazoContrato)}</span></div>
         <div class="anexo-campo"><span class="lbl">Otros a:</span><span class="val"></span></div>
       </div>
       <div class="anexo-checks">${casilla(false, "Claro Cloud")}</div>
@@ -1718,8 +1726,8 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
         </thead>
         <tbody>
           <tr>
-            <td class="centro">${esc(contrato.cantidadLineas)}</td>
-            <td>${esc(contrato.planContratado)}</td>
+            <td class="centro">${av(contrato.cantidadLineas)}</td>
+            <td>${av(contrato.planContratado)}</td>
             <td class="num">Q ${totalMensual.toFixed(2)}</td>
           </tr>
           <tr><td class="centro"></td><td></td><td class="num"></td></tr>
@@ -1824,7 +1832,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       </p>
 
       <div class="anexo-seccion">Observaciones</div>
-      <div class="anexo-campo"><span class="val">${esc(contrato.observaciones)}</span></div>
+      <div class="anexo-campo"><span class="val">${av(contrato.observaciones)}</span></div>
       <div class="anexo-campo"><span class="val"></span></div>
       <div class="anexo-campo"><span class="val"></span></div>
       <div class="anexo-campo"><span class="val"></span></div>
@@ -1999,15 +2007,15 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
       <div class="anexo-campo anexo-firma-fila">
         <span class="lbl"><strong>Lugar y Fecha:</strong></span>
         <span class="val">Guatemala</span>
-        <span class="val">${esc(contrato.fechaFirma)}</span>
+        <span class="val">${av(contrato.fechaFirma)}</span>
       </div>
       <div class="anexo-campo-doble anexo-firma-fila">
-        <div class="anexo-campo"><span class="lbl"><strong>Nombre de Ejecutivo:</strong></span><span class="val">${esc(contrato.ejecutivoVentas)}</span></div>
+        <div class="anexo-campo"><span class="lbl"><strong>Nombre de Ejecutivo:</strong></span><span class="val">${av(contrato.ejecutivoVentas)}</span></div>
         <div class="anexo-campo"><span class="lbl"><strong>Firma del Cliente:</strong></span><span class="val"></span></div>
       </div>
 
       <div class="salto-pagina anexo-lineas-pagina">
-        <div class="anexo-campo"><strong>${esc(contrato.empresa)}</strong></div>
+        <div class="anexo-campo"><strong>${av(contrato.empresa)}</strong></div>
         <div class="anexo-campo"><span class="lbl" style="font-size:0.62rem;">NOMBRE EMPRESA/NOMBRE TITULAR</span></div>
         <table class="anexo-tabla anexo-tabla-chica">
           <thead>
@@ -2031,6 +2039,7 @@ function anexoServiciosMovilesHTML(contrato, lineas) {
           <span class="anexo-firma-linea">Nombre Empresa / Nombre Titular — Firma</span>
           <span class="anexo-firma-linea">Gerencia Mercado Corporativo País</span>
         </div>
+        <p class="anexo-nota-lineas">(Firmar únicamente en caso de que el plan lleve descuento en la renta)</p>
       </div>
     </div>
   `;

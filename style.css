@@ -732,6 +732,7 @@ main .btn-primary:hover { background: #163158; }
 .anexo-condiciones-texto strong { font-weight: 700; }
 
 .anexo-aceptacion { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.74rem; }
+.anexo-nota-lineas { text-align: center; font-size: 0.68rem; font-style: italic; margin-top: 6px; }
 .anexo-firma-linea { border-top: 1px solid #000; margin-top: 30px; padding-top: 2px; width: 220px; text-align: center; }
 .anexo-firma-fila { margin-top: 16px; font-size: 0.82rem; }
 .anexo-firma-fila .val { min-width: 160px; flex: 0 0 auto; }
