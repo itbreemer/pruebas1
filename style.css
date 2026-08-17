@@ -690,6 +690,9 @@ main .btn-primary:hover { background: #163158; }
 .reportes-fila input { flex: 1; min-width: 200px; }
 .modal-ingreso { max-width: 1040px; }
 
+.doc-acciones { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.doc-acciones .btn { padding: 4px 10px; font-size: 0.8rem; }
+
 @media print {
   .no-print { display: none !important; }
   .print-only { display: block !important; }

@@ -6,6 +6,8 @@ const CONTRATOS_MOVILES_STORAGE_KEY = "contratosMovilesTI_v1";
 const LINEAS_MOVILES_STORAGE_KEY = "lineasMovilesTI_v1";
 const CONTRATOS_OFICINA_STORAGE_KEY = "contratosOficinaTI_v1";
 const SERVICIOS_OFICINA_STORAGE_KEY = "serviciosOficinaTI_v1";
+const DOCUMENTOS_ANEXO_MOVILES_STORAGE_KEY = "documentosAnexoMovilesTI_v1";
+const DOCUMENTOS_ANEXO_OFICINA_STORAGE_KEY = "documentosAnexoOficinaTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -125,6 +127,8 @@ let contratosMovilesData = [];
 let lineasMovilesData = [];
 let contratosOficinaData = [];
 let serviciosOficinaData = [];
+let documentosAnexoMovilesData = [];
+let documentosAnexoOficinaData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -1172,6 +1176,204 @@ function sincronizarEliminacionServicioOficina(id) {
   }
 }
 
+/* ---------- Documentos firmados (Anexo Móvil / Anexo Oficina) ----------
+   A diferencia de los demás catálogos, estos documentos no tienen semilla
+   ni una copia local "por si acaso": el PDF pesa demasiado para guardarlo
+   en localStorage, así que viven en Firebase Storage/Firestore (ver
+   documentos-anexo-moviles-sync.js / documentos-anexo-oficina-sync.js) y
+   aquí solo se guarda en caché la última lista conocida. */
+
+function cargarDocumentosAnexoMoviles() {
+  try {
+    documentosAnexoMovilesData = JSON.parse(localStorage.getItem(DOCUMENTOS_ANEXO_MOVILES_STORAGE_KEY) || "[]");
+  } catch {
+    documentosAnexoMovilesData = [];
+  }
+}
+
+function guardarDocumentosAnexoMoviles() {
+  localStorage.setItem(DOCUMENTOS_ANEXO_MOVILES_STORAGE_KEY, JSON.stringify(documentosAnexoMovilesData));
+}
+
+function establecerDocumentosAnexoMovilesDesdeSync(remotos) {
+  documentosAnexoMovilesData = remotos;
+  guardarDocumentosAnexoMoviles();
+  vistaDocumentosAnexoMoviles.render();
+}
+
+function cargarDocumentosAnexoOficina() {
+  try {
+    documentosAnexoOficinaData = JSON.parse(localStorage.getItem(DOCUMENTOS_ANEXO_OFICINA_STORAGE_KEY) || "[]");
+  } catch {
+    documentosAnexoOficinaData = [];
+  }
+}
+
+function guardarDocumentosAnexoOficina() {
+  localStorage.setItem(DOCUMENTOS_ANEXO_OFICINA_STORAGE_KEY, JSON.stringify(documentosAnexoOficinaData));
+}
+
+function establecerDocumentosAnexoOficinaDesdeSync(remotos) {
+  documentosAnexoOficinaData = remotos;
+  guardarDocumentosAnexoOficina();
+  vistaDocumentosAnexoOficina.render();
+}
+
+function eliminarDocumentoAnexoMovil(id) {
+  const documento = documentosAnexoMovilesData.find((d) => d.id === id);
+  if (!documento) return;
+  if (!confirm(`¿Eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) return;
+  if (!(window.DocumentosAnexoMovilesSync && typeof window.DocumentosAnexoMovilesSync.eliminarDocumento === "function")) {
+    alert("No se pudo eliminar: la sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.");
+    return;
+  }
+  window.DocumentosAnexoMovilesSync.eliminarDocumento(documento)
+    .then(() => {
+      documentosAnexoMovilesData = documentosAnexoMovilesData.filter((d) => d.id !== id);
+      guardarDocumentosAnexoMoviles();
+      vistaDocumentosAnexoMoviles.render();
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("No se pudo eliminar el documento. Verifica tu conexión a internet e intenta de nuevo.");
+    });
+}
+
+function eliminarDocumentoAnexoOficina(id) {
+  const documento = documentosAnexoOficinaData.find((d) => d.id === id);
+  if (!documento) return;
+  if (!confirm(`¿Eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) return;
+  if (!(window.DocumentosAnexoOficinaSync && typeof window.DocumentosAnexoOficinaSync.eliminarDocumento === "function")) {
+    alert("No se pudo eliminar: la sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.");
+    return;
+  }
+  window.DocumentosAnexoOficinaSync.eliminarDocumento(documento)
+    .then(() => {
+      documentosAnexoOficinaData = documentosAnexoOficinaData.filter((d) => d.id !== id);
+      guardarDocumentosAnexoOficina();
+      vistaDocumentosAnexoOficina.render();
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("No se pudo eliminar el documento. Verifica tu conexión a internet e intenta de nuevo.");
+    });
+}
+
+/* ---------- Modal para subir documentos firmados (Anexo Móvil) ---------- */
+
+function actualizarCampoReferenciaDocumentoAnexoMovil() {
+  const esHojaResponsabilidad = $("damTipo").value === "hojaResponsabilidad";
+  $("damCampoEmpresa").style.display = esHojaResponsabilidad ? "none" : "";
+  $("damCampoNumero").style.display = esHojaResponsabilidad ? "" : "none";
+}
+
+function abrirModalDocumentoAnexoMovil() {
+  $("formDocumentoAnexoMovil").reset();
+  $("damTipo").value = "anexoMovil";
+  actualizarCampoReferenciaDocumentoAnexoMovil();
+  $("damEstado").style.display = "none";
+  $("modalDocumentoAnexoMovilOverlay").classList.add("open");
+}
+
+function cerrarModalDocumentoAnexoMovil() {
+  $("modalDocumentoAnexoMovilOverlay").classList.remove("open");
+}
+
+function onSubmitDocumentoAnexoMovil(e) {
+  e.preventDefault();
+  const tipo = $("damTipo").value;
+  const referencia = (tipo === "hojaResponsabilidad" ? $("damNumero").value : $("damEmpresa").value).trim();
+  const archivo = $("damArchivo").files[0];
+  const estado = $("damEstado");
+  estado.style.display = "";
+
+  if (!referencia) {
+    estado.textContent = tipo === "hojaResponsabilidad" ? "Escribe el número de línea." : "Escribe la empresa.";
+    return;
+  }
+  if (!archivo) {
+    estado.textContent = "Selecciona el archivo PDF firmado.";
+    return;
+  }
+  if (!(window.DocumentosAnexoMovilesSync && typeof window.DocumentosAnexoMovilesSync.subirDocumento === "function")) {
+    estado.textContent = "La sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.";
+    return;
+  }
+
+  const boton = $("btnGuardarDocumentoAnexoMovil");
+  boton.disabled = true;
+  estado.textContent = "Subiendo...";
+
+  const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  window.DocumentosAnexoMovilesSync.subirDocumento({ id, tipo, referencia, archivo, subidoPor: TECNICO_ACTUAL })
+    .then((metadata) => {
+      documentosAnexoMovilesData.push(metadata);
+      guardarDocumentosAnexoMoviles();
+      vistaDocumentosAnexoMoviles.render();
+      cerrarModalDocumentoAnexoMovil();
+    })
+    .catch((err) => {
+      console.error(err);
+      estado.textContent = "No se pudo subir el documento. Verifica tu conexión a internet e intenta de nuevo.";
+    })
+    .finally(() => {
+      boton.disabled = false;
+    });
+}
+
+/* ---------- Modal para subir documentos firmados (Anexo Oficina) ---------- */
+
+function abrirModalDocumentoAnexoOficina() {
+  $("formDocumentoAnexoOficina").reset();
+  $("daoEstado").style.display = "none";
+  $("modalDocumentoAnexoOficinaOverlay").classList.add("open");
+}
+
+function cerrarModalDocumentoAnexoOficina() {
+  $("modalDocumentoAnexoOficinaOverlay").classList.remove("open");
+}
+
+function onSubmitDocumentoAnexoOficina(e) {
+  e.preventDefault();
+  const referencia = $("daoEmpresa").value.trim();
+  const archivo = $("daoArchivo").files[0];
+  const estado = $("daoEstado");
+  estado.style.display = "";
+
+  if (!referencia) {
+    estado.textContent = "Escribe la empresa.";
+    return;
+  }
+  if (!archivo) {
+    estado.textContent = "Selecciona el archivo PDF firmado.";
+    return;
+  }
+  if (!(window.DocumentosAnexoOficinaSync && typeof window.DocumentosAnexoOficinaSync.subirDocumento === "function")) {
+    estado.textContent = "La sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.";
+    return;
+  }
+
+  const boton = $("btnGuardarDocumentoAnexoOficina");
+  boton.disabled = true;
+  estado.textContent = "Subiendo...";
+
+  const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  window.DocumentosAnexoOficinaSync.subirDocumento({ id, referencia, archivo, subidoPor: TECNICO_ACTUAL })
+    .then((metadata) => {
+      documentosAnexoOficinaData.push(metadata);
+      guardarDocumentosAnexoOficina();
+      vistaDocumentosAnexoOficina.render();
+      cerrarModalDocumentoAnexoOficina();
+    })
+    .catch((err) => {
+      console.error(err);
+      estado.textContent = "No se pudo subir el documento. Verifica tu conexión a internet e intenta de nuevo.";
+    })
+    .finally(() => {
+      boton.disabled = false;
+    });
+}
+
 /* ---------- Exportar / Importar datos entre computadoras ---------- */
 /* Los datos viven en el localStorage de cada navegador, así que lo que se
    captura en una computadora no aparece en otra automáticamente. Estas
@@ -1848,6 +2050,19 @@ function eliminarContratoMovilActual() {
 
 /* ---------- Modal de líneas móviles (nueva / editar) ---------- */
 
+// Sugiere el siguiente código de Hoja de Responsabilidad del año en curso
+// (formato "AAAA-N"), para que no se repita ni se pierda la numeración
+// cuando varios técnicos capturan líneas nuevas.
+function siguienteCodigoHojaResponsabilidad() {
+  const anio = new Date().getFullYear();
+  let maximo = 0;
+  lineasMovilesData.forEach((l) => {
+    const m = /^(\d{4})-(\d+)$/.exec(String(l.hojaRespCodigo || "").trim());
+    if (m && Number(m[1]) === anio) maximo = Math.max(maximo, Number(m[2]));
+  });
+  return `${anio}-${maximo + 1}`;
+}
+
 function abrirModalLineaMovil(linea) {
   $("formLineaMovil").reset();
   if (linea) {
@@ -1860,6 +2075,7 @@ function abrirModalLineaMovil(linea) {
   } else {
     $("modalLineaMovilTitulo").textContent = "Nueva línea móvil";
     $("lmId").value = "";
+    $("lmHojaRespCodigo").value = siguienteCodigoHojaResponsabilidad();
     $("btnEliminarModalLineaMovil").style.display = "none";
   }
   $("modalLineaMovilOverlay").classList.add("open");
@@ -3438,6 +3654,8 @@ function refrescarVistasSecundarias() {
   vistaLineasMoviles.render();
   vistaContratosOficina.render();
   vistaServiciosOficina.render();
+  vistaDocumentosAnexoMoviles.render();
+  vistaDocumentosAnexoOficina.render();
 }
 
 function cambiarVista(nombre) {
@@ -3469,6 +3687,8 @@ function cambiarVista(nombre) {
   else if (nombre === "lineasMoviles") vistaLineasMoviles.render();
   else if (nombre === "contratosOficina") vistaContratosOficina.render();
   else if (nombre === "serviciosOficina") vistaServiciosOficina.render();
+  else if (nombre === "documentosAnexoMoviles") vistaDocumentosAnexoMoviles.render();
+  else if (nombre === "documentosAnexoOficina") vistaDocumentosAnexoOficina.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -4247,6 +4467,63 @@ const vistaServiciosOficina = crearVistaLista({
   alClicFila: (r) => abrirModalServicioOficina(r.servicio),
 });
 
+const ETIQUETA_TIPO_DOCUMENTO_ANEXO_MOVIL = {
+  anexoMovil: "Anexo de Servicios Móviles",
+  hojaResponsabilidad: "Hoja de Responsabilidad",
+};
+
+function obtenerDocumentosAnexoMoviles() {
+  return documentosAnexoMovilesData.map((d) => ({
+    documento: d,
+    celdas: `
+      <td>${esc(ETIQUETA_TIPO_DOCUMENTO_ANEXO_MOVIL[d.tipo] || d.tipo)}</td>
+      <td>${esc(d.referencia)}</td>
+      <td>${esc(d.nombreArchivo)}</td>
+      <td>${esc(formatearFecha(d.fechaSubida))}</td>
+      <td>${esc(d.subidoPor)}</td>
+      <td class="doc-acciones">
+        <a href="${esc(d.url)}" target="_blank" rel="noopener" class="btn btn-outline">👁️ Ver</a>
+        <button type="button" class="btn btn-danger btn-eliminar-documento-anexo-movil" data-id="${esc(d.id)}">Eliminar</button>
+      </td>
+    `,
+  }));
+}
+
+const vistaDocumentosAnexoMoviles = crearVistaLista({
+  prefix: "documentosAnexoMoviles",
+  columnas: 6,
+  obtenerFilas: obtenerDocumentosAnexoMoviles,
+  filtrar: (r, t) => {
+    const texto = [r.documento.referencia, r.documento.nombreArchivo, ETIQUETA_TIPO_DOCUMENTO_ANEXO_MOVIL[r.documento.tipo]]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+});
+
+function obtenerDocumentosAnexoOficina() {
+  return documentosAnexoOficinaData.map((d) => ({
+    documento: d,
+    celdas: `
+      <td>${esc(d.referencia)}</td>
+      <td>${esc(d.nombreArchivo)}</td>
+      <td>${esc(formatearFecha(d.fechaSubida))}</td>
+      <td>${esc(d.subidoPor)}</td>
+      <td class="doc-acciones">
+        <a href="${esc(d.url)}" target="_blank" rel="noopener" class="btn btn-outline">👁️ Ver</a>
+        <button type="button" class="btn btn-danger btn-eliminar-documento-anexo-oficina" data-id="${esc(d.id)}">Eliminar</button>
+      </td>
+    `,
+  }));
+}
+
+const vistaDocumentosAnexoOficina = crearVistaLista({
+  prefix: "documentosAnexoOficina",
+  columnas: 5,
+  obtenerFilas: obtenerDocumentosAnexoOficina,
+  filtrar: (r, t) => [r.documento.referencia, r.documento.nombreArchivo].join(" ").toLowerCase().includes(t),
+});
+
 function obtenerImpresoras() {
   return equipos
     .filter(
@@ -4379,6 +4656,25 @@ $("btnCancelarServicioOficina").addEventListener("click", cerrarModalServicioOfi
 $("btnEliminarModalServicioOficina").addEventListener("click", eliminarServicioOficinaActual);
 $("formServicioOficina").addEventListener("submit", onSubmitServicioOficina);
 
+$("btnSubirDocumentoAnexoMovil").addEventListener("click", abrirModalDocumentoAnexoMovil);
+$("btnCerrarModalDocumentoAnexoMovil").addEventListener("click", cerrarModalDocumentoAnexoMovil);
+$("btnCancelarDocumentoAnexoMovil").addEventListener("click", cerrarModalDocumentoAnexoMovil);
+$("damTipo").addEventListener("change", actualizarCampoReferenciaDocumentoAnexoMovil);
+$("formDocumentoAnexoMovil").addEventListener("submit", onSubmitDocumentoAnexoMovil);
+$("tbody_documentosAnexoMoviles").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".btn-eliminar-documento-anexo-movil");
+  if (btn) eliminarDocumentoAnexoMovil(btn.dataset.id);
+});
+
+$("btnSubirDocumentoAnexoOficina").addEventListener("click", abrirModalDocumentoAnexoOficina);
+$("btnCerrarModalDocumentoAnexoOficina").addEventListener("click", cerrarModalDocumentoAnexoOficina);
+$("btnCancelarDocumentoAnexoOficina").addEventListener("click", cerrarModalDocumentoAnexoOficina);
+$("formDocumentoAnexoOficina").addEventListener("submit", onSubmitDocumentoAnexoOficina);
+$("tbody_documentosAnexoOficina").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".btn-eliminar-documento-anexo-oficina");
+  if (btn) eliminarDocumentoAnexoOficina(btn.dataset.id);
+});
+
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
 $("btnCerrarModalActa").addEventListener("click", cerrarModalActa);
 $("btnCancelarActa").addEventListener("click", cerrarModalActa);
@@ -4423,6 +4719,8 @@ cargarContratosMoviles();
 cargarLineasMoviles();
 cargarContratosOficina();
 cargarServiciosOficina();
+cargarDocumentosAnexoMoviles();
+cargarDocumentosAnexoOficina();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
