@@ -481,10 +481,10 @@
 
       <!-- Documentos Anexo Móviles (PDF ya firmados) -->
       <section id="vista-documentosAnexoMoviles" class="vista">
-        <p class="acta-estado">Guarda aquí los PDF ya firmados (Anexo de Servicios Móviles y Hoja de Responsabilidad) para que queden disponibles desde cualquier computadora.</p>
+        <p class="acta-estado">Guarda aquí el enlace de los PDF ya firmados (Anexo de Servicios Móviles y Hoja de Responsabilidad) subidos a Google Drive, para que queden disponibles desde cualquier computadora.</p>
         <section class="toolbar">
           <input type="text" id="buscador_documentosAnexoMoviles" placeholder="Buscar por empresa, número de línea o archivo...">
-          <button type="button" id="btnSubirDocumentoAnexoMovil" class="btn btn-primary">+ Subir documento firmado</button>
+          <button type="button" id="btnSubirDocumentoAnexoMovil" class="btn btn-primary">+ Guardar documento firmado</button>
         </section>
         <section class="tabla-wrap">
           <table class="tabla">
@@ -585,10 +585,10 @@
 
       <!-- Documentos Anexo Oficina (PDF ya firmados) -->
       <section id="vista-documentosAnexoOficina" class="vista">
-        <p class="acta-estado">Guarda aquí los PDF ya firmados del Anexo de Servicios Multimedia para que queden disponibles desde cualquier computadora.</p>
+        <p class="acta-estado">Guarda aquí el enlace de los PDF ya firmados del Anexo de Servicios Multimedia subidos a Google Drive, para que queden disponibles desde cualquier computadora.</p>
         <section class="toolbar">
           <input type="text" id="buscador_documentosAnexoOficina" placeholder="Buscar por empresa o archivo...">
-          <button type="button" id="btnSubirDocumentoAnexoOficina" class="btn btn-primary">+ Subir documento firmado</button>
+          <button type="button" id="btnSubirDocumentoAnexoOficina" class="btn btn-primary">+ Guardar documento firmado</button>
         </section>
         <section class="tabla-wrap">
           <table class="tabla">
@@ -1598,16 +1598,17 @@
   </div>
 </div>
 
-<!-- Modal para subir un documento firmado (Anexo de Servicios Móviles / Hoja de Responsabilidad) -->
+<!-- Modal para guardar el enlace de un documento firmado (Anexo de Servicios Móviles / Hoja de Responsabilidad) -->
 <div id="modalDocumentoAnexoMovilOverlay" class="modal-overlay no-print">
   <div class="modal">
     <div class="modal-header">
-      <h2>Subir documento firmado</h2>
+      <h2>Guardar documento firmado</h2>
       <div class="modal-header-actions">
         <button id="btnCerrarModalDocumentoAnexoMovil" class="btn-close">&times;</button>
       </div>
     </div>
     <form id="formDocumentoAnexoMovil" class="modal-body">
+      <p class="acta-estado">Primero sube el PDF firmado a la carpeta de Google Drive del equipo y comparte el enlace ("Cualquier persona con el enlace" → Lector). Luego pégalo aquí.</p>
       <div class="glpi-row">
         <label for="damTipo">Tipo de Documento</label>
         <select id="damTipo">
@@ -1624,43 +1625,52 @@
         <input type="text" id="damNumero" list="dl-lmNumero" placeholder="Escribe o selecciona el número de línea...">
       </div>
       <div class="glpi-row">
-        <label for="damArchivo">Archivo PDF firmado</label>
-        <input type="file" id="damArchivo" accept="application/pdf" required>
+        <label for="damNombre">Nombre del Documento</label>
+        <input type="text" id="damNombre" placeholder="Ej. Anexo firmado - Generadoral Sol - ene2026">
+      </div>
+      <div class="glpi-row">
+        <label for="damEnlace">Enlace de Google Drive</label>
+        <input type="url" id="damEnlace" placeholder="https://drive.google.com/..." required>
       </div>
       <p id="damEstado" class="acta-estado" style="display:none;"></p>
       <div class="modal-actions">
         <div class="modal-actions-right">
           <button type="button" id="btnCancelarDocumentoAnexoMovil" class="btn btn-secondary">Cancelar</button>
-          <button type="submit" id="btnGuardarDocumentoAnexoMovil" class="btn btn-primary">Subir</button>
+          <button type="submit" id="btnGuardarDocumentoAnexoMovil" class="btn btn-primary">Guardar</button>
         </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Modal para subir un documento firmado (Anexo de Servicios Multimedia) -->
+<!-- Modal para guardar el enlace de un documento firmado (Anexo de Servicios Multimedia) -->
 <div id="modalDocumentoAnexoOficinaOverlay" class="modal-overlay no-print">
   <div class="modal">
     <div class="modal-header">
-      <h2>Subir documento firmado</h2>
+      <h2>Guardar documento firmado</h2>
       <div class="modal-header-actions">
         <button id="btnCerrarModalDocumentoAnexoOficina" class="btn-close">&times;</button>
       </div>
     </div>
     <form id="formDocumentoAnexoOficina" class="modal-body">
+      <p class="acta-estado">Primero sube el PDF firmado a la carpeta de Google Drive del equipo y comparte el enlace ("Cualquier persona con el enlace" → Lector). Luego pégalo aquí.</p>
       <div class="glpi-row">
         <label for="daoEmpresa">Empresa</label>
         <input type="text" id="daoEmpresa" list="dl-coEmpresa" placeholder="Escribe o selecciona la empresa...">
       </div>
       <div class="glpi-row">
-        <label for="daoArchivo">Archivo PDF firmado</label>
-        <input type="file" id="daoArchivo" accept="application/pdf" required>
+        <label for="daoNombre">Nombre del Documento</label>
+        <input type="text" id="daoNombre" placeholder="Ej. Anexo Multimedia firmado - Breemer - ene2026">
+      </div>
+      <div class="glpi-row">
+        <label for="daoEnlace">Enlace de Google Drive</label>
+        <input type="url" id="daoEnlace" placeholder="https://drive.google.com/..." required>
       </div>
       <p id="daoEstado" class="acta-estado" style="display:none;"></p>
       <div class="modal-actions">
         <div class="modal-actions-right">
           <button type="button" id="btnCancelarDocumentoAnexoOficina" class="btn btn-secondary">Cancelar</button>
-          <button type="submit" id="btnGuardarDocumentoAnexoOficina" class="btn btn-primary">Subir</button>
+          <button type="submit" id="btnGuardarDocumentoAnexoOficina" class="btn btn-primary">Guardar</button>
         </div>
       </div>
     </form>

@@ -1259,7 +1259,9 @@ function eliminarDocumentoAnexoOficina(id) {
     });
 }
 
-/* ---------- Modal para subir documentos firmados (Anexo Móvil) ---------- */
+/* ---------- Modal para guardar documentos firmados (Anexo Móvil) ----------
+   El PDF firmado se sube a mano a Google Drive (Firebase Storage exige
+   pasar al plan de pago); aquí solo se guarda el enlace ya compartido. */
 
 function actualizarCampoReferenciaDocumentoAnexoMovil() {
   const esHojaResponsabilidad = $("damTipo").value === "hojaResponsabilidad";
@@ -1283,7 +1285,8 @@ function onSubmitDocumentoAnexoMovil(e) {
   e.preventDefault();
   const tipo = $("damTipo").value;
   const referencia = (tipo === "hojaResponsabilidad" ? $("damNumero").value : $("damEmpresa").value).trim();
-  const archivo = $("damArchivo").files[0];
+  const enlace = $("damEnlace").value.trim();
+  const nombreArchivo = $("damNombre").value.trim() || `${ETIQUETA_TIPO_DOCUMENTO_ANEXO_MOVIL[tipo]} - ${referencia}`;
   const estado = $("damEstado");
   estado.style.display = "";
 
@@ -1291,21 +1294,21 @@ function onSubmitDocumentoAnexoMovil(e) {
     estado.textContent = tipo === "hojaResponsabilidad" ? "Escribe el número de línea." : "Escribe la empresa.";
     return;
   }
-  if (!archivo) {
-    estado.textContent = "Selecciona el archivo PDF firmado.";
+  if (!/^https?:\/\//i.test(enlace)) {
+    estado.textContent = "Pega el enlace de Google Drive del documento ya firmado.";
     return;
   }
-  if (!(window.DocumentosAnexoMovilesSync && typeof window.DocumentosAnexoMovilesSync.subirDocumento === "function")) {
+  if (!(window.DocumentosAnexoMovilesSync && typeof window.DocumentosAnexoMovilesSync.guardarDocumento === "function")) {
     estado.textContent = "La sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.";
     return;
   }
 
   const boton = $("btnGuardarDocumentoAnexoMovil");
   boton.disabled = true;
-  estado.textContent = "Subiendo...";
+  estado.textContent = "Guardando...";
 
   const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-  window.DocumentosAnexoMovilesSync.subirDocumento({ id, tipo, referencia, archivo, subidoPor: TECNICO_ACTUAL })
+  window.DocumentosAnexoMovilesSync.guardarDocumento({ id, tipo, referencia, nombreArchivo, url: enlace, subidoPor: TECNICO_ACTUAL })
     .then((metadata) => {
       documentosAnexoMovilesData.push(metadata);
       guardarDocumentosAnexoMoviles();
@@ -1314,14 +1317,14 @@ function onSubmitDocumentoAnexoMovil(e) {
     })
     .catch((err) => {
       console.error(err);
-      estado.textContent = "No se pudo subir el documento. Verifica tu conexión a internet e intenta de nuevo.";
+      estado.textContent = "No se pudo guardar el documento. Verifica tu conexión a internet e intenta de nuevo.";
     })
     .finally(() => {
       boton.disabled = false;
     });
 }
 
-/* ---------- Modal para subir documentos firmados (Anexo Oficina) ---------- */
+/* ---------- Modal para guardar documentos firmados (Anexo Oficina) ---------- */
 
 function abrirModalDocumentoAnexoOficina() {
   $("formDocumentoAnexoOficina").reset();
@@ -1336,7 +1339,8 @@ function cerrarModalDocumentoAnexoOficina() {
 function onSubmitDocumentoAnexoOficina(e) {
   e.preventDefault();
   const referencia = $("daoEmpresa").value.trim();
-  const archivo = $("daoArchivo").files[0];
+  const enlace = $("daoEnlace").value.trim();
+  const nombreArchivo = $("daoNombre").value.trim() || `Anexo de Servicios Multimedia - ${referencia}`;
   const estado = $("daoEstado");
   estado.style.display = "";
 
@@ -1344,21 +1348,21 @@ function onSubmitDocumentoAnexoOficina(e) {
     estado.textContent = "Escribe la empresa.";
     return;
   }
-  if (!archivo) {
-    estado.textContent = "Selecciona el archivo PDF firmado.";
+  if (!/^https?:\/\//i.test(enlace)) {
+    estado.textContent = "Pega el enlace de Google Drive del documento ya firmado.";
     return;
   }
-  if (!(window.DocumentosAnexoOficinaSync && typeof window.DocumentosAnexoOficinaSync.subirDocumento === "function")) {
+  if (!(window.DocumentosAnexoOficinaSync && typeof window.DocumentosAnexoOficinaSync.guardarDocumento === "function")) {
     estado.textContent = "La sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.";
     return;
   }
 
   const boton = $("btnGuardarDocumentoAnexoOficina");
   boton.disabled = true;
-  estado.textContent = "Subiendo...";
+  estado.textContent = "Guardando...";
 
   const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-  window.DocumentosAnexoOficinaSync.subirDocumento({ id, referencia, archivo, subidoPor: TECNICO_ACTUAL })
+  window.DocumentosAnexoOficinaSync.guardarDocumento({ id, referencia, nombreArchivo, url: enlace, subidoPor: TECNICO_ACTUAL })
     .then((metadata) => {
       documentosAnexoOficinaData.push(metadata);
       guardarDocumentosAnexoOficina();
@@ -1367,7 +1371,7 @@ function onSubmitDocumentoAnexoOficina(e) {
     })
     .catch((err) => {
       console.error(err);
-      estado.textContent = "No se pudo subir el documento. Verifica tu conexión a internet e intenta de nuevo.";
+      estado.textContent = "No se pudo guardar el documento. Verifica tu conexión a internet e intenta de nuevo.";
     })
     .finally(() => {
       boton.disabled = false;

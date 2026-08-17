@@ -7,52 +7,30 @@ import {
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-// Guarda los PDF ya firmados del Anexo de Servicios Móviles y de la Hoja de
-// Responsabilidad por Línea y Equipo Telefónico: el archivo va a Firebase
-// Storage y su ficha (tipo, empresa o número de línea, nombre de archivo,
-// fecha, quién lo subió) a Firestore, para que cualquier computadora pueda
-// verlo y descargarlo después, aunque quien lo subió ya no esté en la
-// oficina.
+// Guarda la ficha de los PDF ya firmados del Anexo de Servicios Móviles y de
+// la Hoja de Responsabilidad por Línea y Equipo Telefónico: el archivo en sí
+// vive en Google Drive (compartido con enlace); aquí solo se guarda en
+// Firestore el enlace, el tipo, la empresa o número de línea, la fecha y
+// quién lo agregó, para que cualquier computadora lo vea después.
 //
-// Requiere, además de la regla de Firestore para "documentosAnexoMoviles"
-// (igual a las demás colecciones):
+// No se usa Firebase Storage porque exige pasar el proyecto al plan de
+// pago (Blaze). Cuando se migre a GLPI Cloud, solo hay que actualizar el
+// campo "url" de cada ficha para que apunte al archivo ya migrado ahí; el
+// resto de la ficha no cambia.
+//
+// Requiere la regla de Firestore para "documentosAnexoMoviles" (igual a
+// las demás colecciones):
 //
 //   match /documentosAnexoMoviles/{docId} {
 //     allow read, write: if request.auth != null;
 //   }
-//
-// una regla de Storage (Firebase Console → Storage → Rules) para la
-// carpeta donde se guardan los archivos:
-//
-//   rules_version = '2';
-//   service firebase.storage {
-//     match /b/{bucket}/o {
-//       match /documentosAnexoMoviles/{allPaths=**} {
-//         allow read, write: if request.auth != null;
-//       }
-//     }
-//   }
-//
-// A diferencia de los demás catálogos, aquí no hay una copia "solo local"
-// de respaldo: un PDF firmado pesa demasiado para guardarlo en
-// localStorage, así que si Storage no está configurado la subida falla
-// con un mensaje claro en vez de fallar en silencio.
 
 const app = getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 const COL = "documentosAnexoMoviles";
-const CARPETA = "documentosAnexoMoviles";
 
 function iniciar(onCambioRemoto) {
   onAuthStateChanged(auth, (user) => {
@@ -71,17 +49,12 @@ function iniciar(onCambioRemoto) {
   });
 }
 
-async function subirDocumento({ id, tipo, referencia, archivo, subidoPor }) {
-  const storagePath = `${CARPETA}/${id}-${archivo.name}`;
-  const refArchivo = ref(storage, storagePath);
-  await uploadBytes(refArchivo, archivo);
-  const url = await getDownloadURL(refArchivo);
+async function guardarDocumento({ id, tipo, referencia, nombreArchivo, url, subidoPor }) {
   const metadata = {
     id,
     tipo,
     referencia,
-    nombreArchivo: archivo.name,
-    storagePath,
+    nombreArchivo,
     url,
     fechaSubida: new Date().toISOString(),
     subidoPor: subidoPor || "",
@@ -92,17 +65,10 @@ async function subirDocumento({ id, tipo, referencia, archivo, subidoPor }) {
 
 async function eliminarDocumento(documento) {
   if (!documento || !documento.id) return;
-  if (documento.storagePath) {
-    try {
-      await deleteObject(ref(storage, documento.storagePath));
-    } catch (err) {
-      console.warn("No se pudo eliminar el archivo en Storage (puede que ya no exista):", err);
-    }
-  }
   await deleteDoc(doc(db, COL, documento.id));
 }
 
-window.DocumentosAnexoMovilesSync = { subirDocumento, eliminarDocumento };
+window.DocumentosAnexoMovilesSync = { guardarDocumento, eliminarDocumento };
 
 iniciar((remotos) => {
   if (typeof window.establecerDocumentosAnexoMovilesDesdeSync === "function") {
