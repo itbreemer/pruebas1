@@ -1449,37 +1449,37 @@ function poblarSelect(select, valores, placeholder) {
 }
 
 function valoresUnicos(campo) {
-  return [...new Set(equipos.map((e) => (e[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(equipos.map((e) => String(e[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
 
 function valoresUnicosImpresoras(campo) {
-  return [...new Set(impresorasData.map((p) => (p[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(impresorasData.map((p) => String(p[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
 
 function valoresUnicosContratosMoviles(campo) {
-  return [...new Set(contratosMovilesData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(contratosMovilesData.map((c) => String(c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
 
 function valoresUnicosLineasMoviles(campo) {
-  return [...new Set(lineasMovilesData.map((l) => (l[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(lineasMovilesData.map((l) => String(l[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
 
 function valoresUnicosContratosOficina(campo) {
-  return [...new Set(contratosOficinaData.map((c) => (c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(contratosOficinaData.map((c) => String(c[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
 
 function valoresUnicosServiciosOficina(campo) {
-  return [...new Set(serviciosOficinaData.map((s) => (s[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
+  return [...new Set(serviciosOficinaData.map((s) => String(s[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
   );
 }
@@ -3724,7 +3724,7 @@ function contarPor(campo, { excluirServidores, soloServidores, excluirEnRevision
     if (excluirServidores && esServidor(e)) return;
     if (soloServidores && !esServidor(e)) return;
     if (excluirEnRevision && esEnRevisionCronograma(e)) return;
-    let v = (e[campo] || "").trim() || "Sin dato";
+    let v = String(e[campo] || "").trim() || "Sin dato";
     if (agruparTipoEquipo) v = ALIAS_TIPO_EQUIPO[v] || v;
     conteo[v] = (conteo[v] || 0) + 1;
   });
@@ -4093,7 +4093,7 @@ function renderTablero() {
   const contarImpresorasPor = (campo) => {
     const conteo = {};
     impresoras.forEach((p) => {
-      const v = (p[campo] || "").trim() || "Sin dato";
+      const v = String(p[campo] || "").trim() || "Sin dato";
       conteo[v] = (conteo[v] || 0) + 1;
     });
     return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
