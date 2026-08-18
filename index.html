@@ -36,8 +36,10 @@
       <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
       <button type="button" class="nav-item" data-vista="contratosMoviles" data-titulo="Contratos Móviles">📱 Contratos Móviles</button>
       <button type="button" class="nav-item nav-sub-item" data-vista="lineasMoviles" data-titulo="Formato de Adhesión Móvil">📝 Formato de Adhesión Móvil</button>
+      <button type="button" class="nav-item nav-sub-item" data-vista="documentosAnexoMoviles" data-titulo="Documentos Anexo Móviles">📁 Documentos Anexo Móviles</button>
       <button type="button" class="nav-item" data-vista="contratosOficina" data-titulo="Contratos de Oficina">📞 Contratos de Oficina</button>
       <button type="button" class="nav-item nav-sub-item" data-vista="serviciosOficina" data-titulo="Anexo de Servicios Multimedia">📄 Anexo de Servicios Multimedia</button>
+      <button type="button" class="nav-item nav-sub-item" data-vista="documentosAnexoOficina" data-titulo="Documentos Anexo Oficina">📁 Documentos Anexo Oficina</button>
     </nav>
   </aside>
 
@@ -477,6 +479,37 @@
         </section>
       </section>
 
+      <!-- Documentos Anexo Móviles (PDF ya firmados) -->
+      <section id="vista-documentosAnexoMoviles" class="vista">
+        <p class="acta-estado">Guarda aquí el enlace de los PDF ya firmados (Anexo de Servicios Móviles y Hoja de Responsabilidad) subidos a Google Drive, para que queden disponibles desde cualquier computadora.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_documentosAnexoMoviles" placeholder="Buscar por empresa, número de línea o archivo...">
+          <button type="button" id="btnSubirDocumentoAnexoMovil" class="btn btn-primary">+ Guardar documento firmado</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Tipo de Documento</th>
+                <th>Empresa / Línea</th>
+                <th>Archivo</th>
+                <th>Fecha de Carga</th>
+                <th>Subido por</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_documentosAnexoMoviles"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_documentosAnexoMoviles">&laquo;</button>
+          <button id="btnAnterior_documentosAnexoMoviles">&lsaquo;</button>
+          <span id="infoPagina_documentosAnexoMoviles"></span>
+          <button id="btnSiguiente_documentosAnexoMoviles">&rsaquo;</button>
+          <button id="btnUltimo_documentosAnexoMoviles">&raquo;</button>
+        </section>
+      </section>
+
       <!-- Contratos de Oficina -->
       <section id="vista-contratosOficina" class="vista">
         <section class="toolbar">
@@ -547,6 +580,36 @@
           <span id="infoPagina_serviciosOficina"></span>
           <button id="btnSiguiente_serviciosOficina">&rsaquo;</button>
           <button id="btnUltimo_serviciosOficina">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Documentos Anexo Oficina (PDF ya firmados) -->
+      <section id="vista-documentosAnexoOficina" class="vista">
+        <p class="acta-estado">Guarda aquí el enlace de los PDF ya firmados del Anexo de Servicios Multimedia subidos a Google Drive, para que queden disponibles desde cualquier computadora.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_documentosAnexoOficina" placeholder="Buscar por empresa o archivo...">
+          <button type="button" id="btnSubirDocumentoAnexoOficina" class="btn btn-primary">+ Guardar documento firmado</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Archivo</th>
+                <th>Fecha de Carga</th>
+                <th>Subido por</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_documentosAnexoOficina"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_documentosAnexoOficina">&laquo;</button>
+          <button id="btnAnterior_documentosAnexoOficina">&lsaquo;</button>
+          <span id="infoPagina_documentosAnexoOficina"></span>
+          <button id="btnSiguiente_documentosAnexoOficina">&rsaquo;</button>
+          <button id="btnUltimo_documentosAnexoOficina">&raquo;</button>
         </section>
       </section>
     </main>
@@ -1535,6 +1598,85 @@
   </div>
 </div>
 
+<!-- Modal para guardar el enlace de un documento firmado (Anexo de Servicios Móviles / Hoja de Responsabilidad) -->
+<div id="modalDocumentoAnexoMovilOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Guardar documento firmado</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalDocumentoAnexoMovil" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formDocumentoAnexoMovil" class="modal-body">
+      <p class="acta-estado">Primero sube el PDF firmado a la carpeta de Google Drive del equipo y comparte el enlace ("Cualquier persona con el enlace" → Lector). Luego pégalo aquí.</p>
+      <div class="glpi-row">
+        <label for="damTipo">Tipo de Documento</label>
+        <select id="damTipo">
+          <option value="anexoMovil">Anexo de Servicios Móviles</option>
+          <option value="hojaResponsabilidad">Hoja de Responsabilidad</option>
+        </select>
+      </div>
+      <div class="glpi-row" id="damCampoEmpresa">
+        <label for="damEmpresa">Empresa</label>
+        <input type="text" id="damEmpresa" list="dl-cmEmpresa" placeholder="Escribe o selecciona la empresa...">
+      </div>
+      <div class="glpi-row" id="damCampoNumero" style="display:none;">
+        <label for="damNumero">Número de Línea</label>
+        <input type="text" id="damNumero" list="dl-lmNumero" placeholder="Escribe o selecciona el número de línea...">
+      </div>
+      <div class="glpi-row">
+        <label for="damNombre">Nombre del Documento</label>
+        <input type="text" id="damNombre" placeholder="Ej. Anexo firmado - Generadoral Sol - ene2026">
+      </div>
+      <div class="glpi-row">
+        <label for="damEnlace">Enlace de Google Drive</label>
+        <input type="url" id="damEnlace" placeholder="https://drive.google.com/..." required>
+      </div>
+      <p id="damEstado" class="acta-estado" style="display:none;"></p>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarDocumentoAnexoMovil" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="btnGuardarDocumentoAnexoMovil" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para guardar el enlace de un documento firmado (Anexo de Servicios Multimedia) -->
+<div id="modalDocumentoAnexoOficinaOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Guardar documento firmado</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalDocumentoAnexoOficina" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formDocumentoAnexoOficina" class="modal-body">
+      <p class="acta-estado">Primero sube el PDF firmado a la carpeta de Google Drive del equipo y comparte el enlace ("Cualquier persona con el enlace" → Lector). Luego pégalo aquí.</p>
+      <div class="glpi-row">
+        <label for="daoEmpresa">Empresa</label>
+        <input type="text" id="daoEmpresa" list="dl-coEmpresa" placeholder="Escribe o selecciona la empresa...">
+      </div>
+      <div class="glpi-row">
+        <label for="daoNombre">Nombre del Documento</label>
+        <input type="text" id="daoNombre" placeholder="Ej. Anexo Multimedia firmado - Breemer - ene2026">
+      </div>
+      <div class="glpi-row">
+        <label for="daoEnlace">Enlace de Google Drive</label>
+        <input type="url" id="daoEnlace" placeholder="https://drive.google.com/..." required>
+      </div>
+      <p id="daoEstado" class="acta-estado" style="display:none;"></p>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarDocumentoAnexoOficina" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="btnGuardarDocumentoAnexoOficina" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal de generación rápida de Acta -->
 <div id="modalActaOverlay" class="modal-overlay no-print">
   <div class="modal modal-acta">
@@ -1748,5 +1890,7 @@
 <script type="module" src="lineas-moviles-sync.js?v=20260814c"></script>
 <script type="module" src="contratos-oficina-sync.js?v=20260814c"></script>
 <script type="module" src="servicios-oficina-sync.js?v=20260814c"></script>
+<script type="module" src="documentos-anexo-moviles-sync.js"></script>
+<script type="module" src="documentos-anexo-oficina-sync.js"></script>
 </body>
 </html>
