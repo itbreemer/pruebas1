@@ -1219,14 +1219,16 @@ function establecerDocumentosAnexoOficinaDesdeSync(remotos) {
   vistaDocumentosAnexoOficina.render();
 }
 
-function eliminarDocumentoAnexoMovil(id) {
+function eliminarDocumentoAnexoMovil(id, boton) {
   const documento = documentosAnexoMovilesData.find((d) => d.id === id);
   if (!documento) return;
+  if (boton && boton.disabled) return;
   if (!confirm(`¿Eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) return;
   if (!(window.DocumentosAnexoMovilesSync && typeof window.DocumentosAnexoMovilesSync.eliminarDocumento === "function")) {
     alert("No se pudo eliminar: la sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.");
     return;
   }
+  if (boton) boton.disabled = true;
   window.DocumentosAnexoMovilesSync.eliminarDocumento(documento)
     .then(() => {
       documentosAnexoMovilesData = documentosAnexoMovilesData.filter((d) => d.id !== id);
@@ -1235,18 +1237,21 @@ function eliminarDocumentoAnexoMovil(id) {
     })
     .catch((err) => {
       console.error(err);
+      if (boton) boton.disabled = false;
       alert("No se pudo eliminar el documento. Verifica tu conexión a internet e intenta de nuevo.");
     });
 }
 
-function eliminarDocumentoAnexoOficina(id) {
+function eliminarDocumentoAnexoOficina(id, boton) {
   const documento = documentosAnexoOficinaData.find((d) => d.id === id);
   if (!documento) return;
+  if (boton && boton.disabled) return;
   if (!confirm(`¿Eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) return;
   if (!(window.DocumentosAnexoOficinaSync && typeof window.DocumentosAnexoOficinaSync.eliminarDocumento === "function")) {
     alert("No se pudo eliminar: la sincronización con Firebase todavía no está lista. Intenta de nuevo en unos segundos.");
     return;
   }
+  if (boton) boton.disabled = true;
   window.DocumentosAnexoOficinaSync.eliminarDocumento(documento)
     .then(() => {
       documentosAnexoOficinaData = documentosAnexoOficinaData.filter((d) => d.id !== id);
@@ -1255,6 +1260,7 @@ function eliminarDocumentoAnexoOficina(id) {
     })
     .catch((err) => {
       console.error(err);
+      if (boton) boton.disabled = false;
       alert("No se pudo eliminar el documento. Verifica tu conexión a internet e intenta de nuevo.");
     });
 }
@@ -4667,7 +4673,7 @@ $("damTipo").addEventListener("change", actualizarCampoReferenciaDocumentoAnexoM
 $("formDocumentoAnexoMovil").addEventListener("submit", onSubmitDocumentoAnexoMovil);
 $("tbody_documentosAnexoMoviles").addEventListener("click", (ev) => {
   const btn = ev.target.closest(".btn-eliminar-documento-anexo-movil");
-  if (btn) eliminarDocumentoAnexoMovil(btn.dataset.id);
+  if (btn) eliminarDocumentoAnexoMovil(btn.dataset.id, btn);
 });
 
 $("btnSubirDocumentoAnexoOficina").addEventListener("click", abrirModalDocumentoAnexoOficina);
@@ -4676,7 +4682,7 @@ $("btnCancelarDocumentoAnexoOficina").addEventListener("click", cerrarModalDocum
 $("formDocumentoAnexoOficina").addEventListener("submit", onSubmitDocumentoAnexoOficina);
 $("tbody_documentosAnexoOficina").addEventListener("click", (ev) => {
   const btn = ev.target.closest(".btn-eliminar-documento-anexo-oficina");
-  if (btn) eliminarDocumentoAnexoOficina(btn.dataset.id);
+  if (btn) eliminarDocumentoAnexoOficina(btn.dataset.id, btn);
 });
 
 $("btnGenerarActa").addEventListener("click", abrirModalActa);
