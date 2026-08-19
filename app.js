@@ -1316,7 +1316,9 @@ function onSubmitDocumentoAnexoMovil(e) {
   const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
   window.DocumentosAnexoMovilesSync.guardarDocumento({ id, tipo, referencia, nombreArchivo, url: enlace, subidoPor: TECNICO_ACTUAL })
     .then((metadata) => {
-      documentosAnexoMovilesData.push(metadata);
+      if (!documentosAnexoMovilesData.some((d) => d.id === metadata.id)) {
+        documentosAnexoMovilesData.push(metadata);
+      }
       guardarDocumentosAnexoMoviles();
       vistaDocumentosAnexoMoviles.render();
       cerrarModalDocumentoAnexoMovil();
@@ -1370,7 +1372,9 @@ function onSubmitDocumentoAnexoOficina(e) {
   const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
   window.DocumentosAnexoOficinaSync.guardarDocumento({ id, referencia, nombreArchivo, url: enlace, subidoPor: TECNICO_ACTUAL })
     .then((metadata) => {
-      documentosAnexoOficinaData.push(metadata);
+      if (!documentosAnexoOficinaData.some((d) => d.id === metadata.id)) {
+        documentosAnexoOficinaData.push(metadata);
+      }
       guardarDocumentosAnexoOficina();
       vistaDocumentosAnexoOficina.render();
       cerrarModalDocumentoAnexoOficina();
