@@ -32,6 +32,7 @@
       <button type="button" class="nav-item" data-vista="usuarios" data-titulo="Usuarios">👤 Usuarios</button>
       <button type="button" class="nav-item" data-vista="monitores" data-titulo="Monitores">🖥️ Monitores</button>
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
+      <button type="button" class="nav-item" data-vista="ticketsGarantia" data-titulo="Tickets de Garantía">🎫 Tickets de Garantía</button>
       <button type="button" class="nav-item" data-vista="dispositivos" data-titulo="Dispositivos">📶 Dispositivos</button>
       <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
       <button type="button" class="nav-item" data-vista="contratosMoviles" data-titulo="Contratos Móviles">📱 Contratos Móviles</button>
@@ -340,6 +341,37 @@
           <span id="infoPagina_codigos"></span>
           <button id="btnSiguiente_codigos">&rsaquo;</button>
           <button id="btnUltimo_codigos">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Tickets de Garantía (reportes a GBM por equipos Lenovo, a Canella por impresoras Canon) -->
+      <section id="vista-ticketsGarantia" class="vista">
+        <p class="acta-estado">Registra aquí el número de ticket que te da el proveedor (GBM o Canella) al reportar por correo una falla en garantía, para llevar el control de en qué va cada caso.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_ticketsGarantia" placeholder="Buscar por proveedor, equipo, número de ticket, estado...">
+          <button type="button" id="btnNuevoTicketGarantia" class="btn btn-primary">+ Nuevo ticket de garantía</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Proveedor</th>
+                <th>Equipo</th>
+                <th>N° Ticket</th>
+                <th>Fecha de Reporte</th>
+                <th>Estado</th>
+                <th>Falla Reportada</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_ticketsGarantia"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_ticketsGarantia">&laquo;</button>
+          <button id="btnAnterior_ticketsGarantia">&lsaquo;</button>
+          <span id="infoPagina_ticketsGarantia"></span>
+          <button id="btnSiguiente_ticketsGarantia">&rsaquo;</button>
+          <button id="btnUltimo_ticketsGarantia">&raquo;</button>
         </section>
       </section>
 
@@ -935,6 +967,71 @@
         <button type="button" id="btnEliminarModalCodigo" class="btn btn-danger">Eliminar</button>
         <div class="modal-actions-right">
           <button type="button" id="btnCancelarCodigo" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de ticket de garantía (nuevo / editar) -->
+<div id="modalTicketGarantiaOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTicketGarantiaTitulo">Nuevo ticket de garantía</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalTicketGarantia" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formTicketGarantia" class="modal-body">
+      <input type="hidden" id="tgId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="tgProveedor">Proveedor</label>
+            <select id="tgProveedor">
+              <option value="GBM">GBM (Lenovo — Desktop/Laptop)</option>
+              <option value="Canella">Canella (Canon — Impresoras)</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="tgEquipo">Equipo</label>
+            <input type="text" id="tgEquipo" list="dl-nombreRedEquipo">
+            <datalist id="dl-impresorasSerialCatalogo"></datalist>
+          </div>
+          <div class="glpi-row">
+            <label for="tgNumeroTicket">N° de Ticket (el que da el proveedor)</label>
+            <input type="text" id="tgNumeroTicket" required>
+          </div>
+          <div class="glpi-row">
+            <label for="tgFechaReporte">Fecha de Reporte</label>
+            <input type="date" id="tgFechaReporte">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="tgEstado">Estado</label>
+            <select id="tgEstado">
+              <option value="Abierto">Abierto</option>
+              <option value="En proceso">En proceso</option>
+              <option value="Resuelto">Resuelto</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="tgDescripcionFalla">Falla Reportada</label>
+            <input type="text" id="tgDescripcionFalla" placeholder="Descripción breve de la falla...">
+          </div>
+          <div class="glpi-row">
+            <label for="tgComentarios">Comentarios / Seguimiento</label>
+            <input type="text" id="tgComentarios">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalTicketGarantia" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarTicketGarantia" class="btn btn-secondary">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </div>
@@ -1892,5 +1989,6 @@
 <script type="module" src="servicios-oficina-sync.js?v=20260814c"></script>
 <script type="module" src="documentos-anexo-moviles-sync.js"></script>
 <script type="module" src="documentos-anexo-oficina-sync.js"></script>
+<script type="module" src="tickets-garantia-sync.js"></script>
 </body>
 </html>

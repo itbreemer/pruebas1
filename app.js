@@ -8,6 +8,7 @@ const CONTRATOS_OFICINA_STORAGE_KEY = "contratosOficinaTI_v1";
 const SERVICIOS_OFICINA_STORAGE_KEY = "serviciosOficinaTI_v1";
 const DOCUMENTOS_ANEXO_MOVILES_STORAGE_KEY = "documentosAnexoMovilesTI_v1";
 const DOCUMENTOS_ANEXO_OFICINA_STORAGE_KEY = "documentosAnexoOficinaTI_v1";
+const TICKETS_GARANTIA_STORAGE_KEY = "ticketsGarantiaTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +27,16 @@ const CODIGO_FIELD_IDS = ["codId", "codIdUsuario", "codNombre", "codClave", "cod
 const CODIGO_CAMPO_POR_ID = {
   codId: "id", codIdUsuario: "idUsuario", codNombre: "nombre", codClave: "clave",
   codAgregadoPor: "agregadoPor",
+};
+
+const TICKET_GARANTIA_FIELD_IDS = [
+  "tgId", "tgProveedor", "tgEquipo", "tgNumeroTicket", "tgFechaReporte",
+  "tgEstado", "tgDescripcionFalla", "tgComentarios",
+];
+const TICKET_GARANTIA_CAMPO_POR_ID = {
+  tgId: "id", tgProveedor: "proveedor", tgEquipo: "equipoRef", tgNumeroTicket: "numeroTicket",
+  tgFechaReporte: "fechaReporte", tgEstado: "estado", tgDescripcionFalla: "descripcionFalla",
+  tgComentarios: "comentarios",
 };
 
 const CONTRATO_MOVIL_FIELD_IDS = [
@@ -129,6 +140,7 @@ let contratosOficinaData = [];
 let serviciosOficinaData = [];
 let documentosAnexoMovilesData = [];
 let documentosAnexoOficinaData = [];
+let ticketsGarantiaData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -1219,6 +1231,132 @@ function establecerDocumentosAnexoOficinaDesdeSync(remotos) {
   vistaDocumentosAnexoOficina.render();
 }
 
+/* ---------- Tickets de Garantía (reportes a GBM / Canella) ---------- */
+
+function cargarTicketsGarantia() {
+  const raw = localStorage.getItem(TICKETS_GARANTIA_STORAGE_KEY);
+  try {
+    ticketsGarantiaData = raw ? JSON.parse(raw) : [];
+  } catch {
+    ticketsGarantiaData = [];
+  }
+}
+
+function guardarTicketsGarantia() {
+  localStorage.setItem(TICKETS_GARANTIA_STORAGE_KEY, JSON.stringify(ticketsGarantiaData));
+}
+
+function obtenerTicketsGarantiaActuales() {
+  return ticketsGarantiaData;
+}
+
+function establecerTicketsGarantiaDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((t) => [t.id, t]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  ticketsGarantiaData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarTicketGarantia(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  ticketsGarantiaData = combinados;
+  guardarTicketsGarantia();
+  poblarFiltrosYDatalists();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarTicketGarantia(ticket) {
+  if (window.FirestoreSyncTicketsGarantia && typeof window.FirestoreSyncTicketsGarantia.guardarTicketGarantia === "function") {
+    window.FirestoreSyncTicketsGarantia.guardarTicketGarantia(ticket);
+  }
+}
+
+function sincronizarEliminacionTicketGarantia(id) {
+  if (window.FirestoreSyncTicketsGarantia && typeof window.FirestoreSyncTicketsGarantia.eliminarTicketGarantia === "function") {
+    window.FirestoreSyncTicketsGarantia.eliminarTicketGarantia(id);
+  }
+}
+
+/* ---------- Modal de ticket de garantía (nuevo / editar) ---------- */
+
+function actualizarCampoEquipoTicketGarantia() {
+  const esCanella = $("tgProveedor").value === "Canella";
+  $("tgEquipo").setAttribute("list", esCanella ? "dl-impresorasSerialCatalogo" : "dl-nombreRedEquipo");
+  $("tgEquipo").placeholder = esCanella ? "Serial de la impresora..." : "Nombre en Red del equipo...";
+}
+
+function abrirModalTicketGarantia(ticket) {
+  $("formTicketGarantia").reset();
+  if (ticket) {
+    $("modalTicketGarantiaTitulo").textContent = `Editar ticket — ${ticket.numeroTicket || ""}`;
+    TICKET_GARANTIA_FIELD_IDS.forEach((idCampo) => {
+      const campo = TICKET_GARANTIA_CAMPO_POR_ID[idCampo];
+      if (ticket[campo] !== undefined) $(idCampo).value = ticket[campo];
+    });
+    $("btnEliminarModalTicketGarantia").style.display = "";
+  } else {
+    $("modalTicketGarantiaTitulo").textContent = "Nuevo ticket de garantía";
+    $("tgId").value = "";
+    $("tgProveedor").value = "GBM";
+    $("tgEstado").value = "Abierto";
+    $("tgFechaReporte").value = new Date().toISOString().slice(0, 10);
+    $("btnEliminarModalTicketGarantia").style.display = "none";
+  }
+  actualizarCampoEquipoTicketGarantia();
+  $("modalTicketGarantiaOverlay").classList.add("open");
+}
+
+function cerrarModalTicketGarantia() {
+  $("modalTicketGarantiaOverlay").classList.remove("open");
+}
+
+function onSubmitTicketGarantia(e) {
+  e.preventDefault();
+  const data = {};
+  TICKET_GARANTIA_FIELD_IDS.forEach((idCampo) => {
+    data[TICKET_GARANTIA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
+  });
+  data.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (data.id) {
+    const idx = ticketsGarantiaData.findIndex((t) => t.id === data.id);
+    if (idx !== -1) ticketsGarantiaData[idx] = { ...ticketsGarantiaData[idx], ...data };
+    guardado = ticketsGarantiaData[idx];
+  } else {
+    data.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    data.reportadoPor = TECNICO_ACTUAL;
+    ticketsGarantiaData.push(data);
+    guardado = data;
+  }
+  guardarTicketsGarantia();
+  sincronizarTicketGarantia(guardado);
+  cerrarModalTicketGarantia();
+  refrescarVistasSecundarias();
+}
+
+function eliminarTicketGarantiaActual() {
+  const id = $("tgId").value;
+  if (!id) return;
+  if (!confirm("¿Eliminar este ticket de garantía de forma permanente?")) return;
+  ticketsGarantiaData = ticketsGarantiaData.filter((t) => t.id !== id);
+  guardarTicketsGarantia();
+  sincronizarEliminacionTicketGarantia(id);
+  cerrarModalTicketGarantia();
+  refrescarVistasSecundarias();
+}
+
 function eliminarDocumentoAnexoMovil(id, boton) {
   const documento = documentosAnexoMovilesData.find((d) => d.id === id);
   if (!documento) return;
@@ -1552,6 +1690,7 @@ function poblarFiltrosYDatalists() {
     "dl-impEmpresa": "empresa",
     "dl-impDepartamento": "departamento",
     "dl-impUbicacion": "ubicacion",
+    "dl-impresorasSerialCatalogo": "serial",
   };
   Object.entries(datalistMapImpresoras).forEach(([dlId, campo]) => {
     const dl = $(dlId);
@@ -3670,6 +3809,7 @@ function refrescarVistasSecundarias() {
   vistaServiciosOficina.render();
   vistaDocumentosAnexoMoviles.render();
   vistaDocumentosAnexoOficina.render();
+  vistaTicketsGarantia.render();
 }
 
 function cambiarVista(nombre) {
@@ -3703,6 +3843,7 @@ function cambiarVista(nombre) {
   else if (nombre === "serviciosOficina") vistaServiciosOficina.render();
   else if (nombre === "documentosAnexoMoviles") vistaDocumentosAnexoMoviles.render();
   else if (nombre === "documentosAnexoOficina") vistaDocumentosAnexoOficina.render();
+  else if (nombre === "ticketsGarantia") vistaTicketsGarantia.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -4368,6 +4509,33 @@ const vistaCodigos = crearVistaLista({
   alClicFila: (r) => abrirModalCodigo(r.codigo),
 });
 
+function obtenerTicketsGarantia() {
+  return ticketsGarantiaData.map((t) => ({
+    ticket: t,
+    celdas: `
+      <td>${esc(t.proveedor)}</td>
+      <td>${esc(t.equipoRef)}</td>
+      <td>${esc(t.numeroTicket)}</td>
+      <td>${esc(formatearFechaSimple(t.fechaReporte))}</td>
+      <td><span class="badge">${esc(t.estado)}</span></td>
+      <td>${esc(t.descripcionFalla)}</td>
+    `,
+  }));
+}
+
+const vistaTicketsGarantia = crearVistaLista({
+  prefix: "ticketsGarantia",
+  columnas: 6,
+  obtenerFilas: obtenerTicketsGarantia,
+  filtrar: (r, t) => {
+    const texto = [r.ticket.proveedor, r.ticket.equipoRef, r.ticket.numeroTicket, r.ticket.estado, r.ticket.descripcionFalla]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalTicketGarantia(r.ticket),
+});
+
 function obtenerContratosMoviles() {
   return contratosMovilesData.map((c) => ({
     contrato: c,
@@ -4636,6 +4804,13 @@ $("btnCancelarCodigo").addEventListener("click", cerrarModalCodigo);
 $("btnEliminarModalCodigo").addEventListener("click", eliminarCodigoActual);
 $("formCodigo").addEventListener("submit", onSubmitCodigo);
 
+$("btnNuevoTicketGarantia").addEventListener("click", () => abrirModalTicketGarantia(null));
+$("btnCerrarModalTicketGarantia").addEventListener("click", cerrarModalTicketGarantia);
+$("btnCancelarTicketGarantia").addEventListener("click", cerrarModalTicketGarantia);
+$("btnEliminarModalTicketGarantia").addEventListener("click", eliminarTicketGarantiaActual);
+$("tgProveedor").addEventListener("change", actualizarCampoEquipoTicketGarantia);
+$("formTicketGarantia").addEventListener("submit", onSubmitTicketGarantia);
+
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
@@ -4735,6 +4910,7 @@ cargarContratosOficina();
 cargarServiciosOficina();
 cargarDocumentosAnexoMoviles();
 cargarDocumentosAnexoOficina();
+cargarTicketsGarantia();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
