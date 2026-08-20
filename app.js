@@ -4557,6 +4557,7 @@ function mostrarReporteGarantias() {
   const reporteData = generarReporteGarantias();
   const container = $("reporteGarantiaContainer");
   const tablaBody = $("tablaReporteGarantia");
+  const chartContainer = $("chartGarantias");
 
   tablaBody.innerHTML = reporteData.map((r) => `
     <tr>
@@ -4571,57 +4572,32 @@ function mostrarReporteGarantias() {
     tablaBody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #999;">No hay datos de tickets de garantía</td></tr>';
   }
 
-  if (window.chartGarantias && typeof window.chartGarantias.destroy === 'function') {
-    window.chartGarantias.destroy();
-  }
+  const maxVal = Math.max(...reporteData.flatMap((r) => [r.GBM, r.Canella]), 1);
+  const scale = 200 / maxVal;
 
-  const ctxChart = $("chartGarantias");
-  const labels = reporteData.map((r) => r.mes);
-  const datosGBM = reporteData.map((r) => r.GBM);
-  const datosCanella = reporteData.map((r) => r.Canella);
-
-  if (typeof Chart === 'undefined') {
-    tablaBody.innerHTML += '<tr><td colspan="4" style="padding: 10px; color: #d32f2f;">Error: Librería Chart.js no cargó. Recarga la página.</td></tr>';
-    return;
-  }
-
-  try {
-    window.chartGarantias = new Chart(ctxChart, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'GBM',
-            data: datosGBM,
-            backgroundColor: '#4CAF50',
-            borderColor: '#45a049',
-            borderWidth: 1,
-          },
-          {
-            label: 'Canella',
-            data: datosCanella,
-            backgroundColor: '#2196F3',
-            borderColor: '#0b7dda',
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { position: 'top' },
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        },
-      },
-    });
-  } catch (err) {
-    console.error('Error al crear gráfica:', err);
-    tablaBody.innerHTML += '<tr><td colspan="4" style="padding: 10px; color: #d32f2f;">Error al renderizar gráfica.</td></tr>';
-  }
+  chartContainer.innerHTML = `
+    <div style="display: flex; gap: 20px; align-items: flex-end; justify-content: center; height: 250px; border-left: 2px solid #ddd; padding-left: 10px;">
+      ${reporteData.map((r) => `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+          <div style="display: flex; gap: 5px; align-items: flex-end;">
+            <div style="width: 25px; height: ${r.GBM * scale}px; background-color: #4CAF50; border-radius: 2px 2px 0 0; min-height: 2px;" title="GBM: ${r.GBM}"></div>
+            <div style="width: 25px; height: ${r.Canella * scale}px; background-color: #2196F3; border-radius: 2px 2px 0 0; min-height: 2px;" title="Canella: ${r.Canella}"></div>
+          </div>
+          <small style="font-size: 11px; color: #666; text-align: center; width: 60px;">${r.mes}</small>
+        </div>
+      `).join('')}
+    </div>
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; font-size: 12px;">
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 15px; height: 15px; background-color: #4CAF50;"></div>
+        <span>GBM</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 15px; height: 15px; background-color: #2196F3;"></div>
+        <span>Canella</span>
+      </div>
+    </div>
+  `;
 
   container.style.display = 'block';
 }
