@@ -1355,12 +1355,24 @@ function obtenerRegistrosMantenimientoActuales() {
 
 let mantenimientoEquiposActualId = null;
 
+function actualizarUsuarioEquipoMantenimiento() {
+  const equipoRef = $("meEquipo").value;
+  if (!equipoRef) return;
+  const equipo = equiposTI_v2.find((e) => e.nombreRed === equipoRef);
+  if (equipo) {
+    $("meUsuario").value = equipo.usuario || "";
+  }
+}
+
 function abrirModalMantenimientoEquipos(registro) {
   mantenimientoEquiposActualId = registro ? registro.id : null;
   MANTENIMIENTO_EQUIPOS_FIELD_IDS.forEach((fieldId) => {
     const campo = MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID[fieldId];
     $(fieldId).value = (registro && registro[campo]) || "";
   });
+  if (!registro) {
+    $("meTecnico").value = TECNICO_ACTUAL || "";
+  }
   $("modalMantenimientoEquiposOverlay").style.display = "flex";
 }
 
@@ -5108,6 +5120,7 @@ $("btnNuevoMantenimientoEquipo").addEventListener("click", () => abrirModalMante
 $("btnCerrarModalMantenimientoEquipos").addEventListener("click", cerrarModalMantenimientoEquipos);
 $("btnCancelarMantenimientoEquipos").addEventListener("click", cerrarModalMantenimientoEquipos);
 $("btnEliminarModalMantenimientoEquipos").addEventListener("click", eliminarRegistroMantenimientoActual);
+$("meEquipo").addEventListener("change", actualizarUsuarioEquipoMantenimiento);
 $("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEquipos);
 $("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
 $("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);
