@@ -1357,14 +1357,19 @@ let mantenimientoEquiposActualId = null;
 
 function actualizarUsuarioEquipoMantenimiento() {
   const equipoRef = $("meEquipo").value;
+  console.log("Buscando equipo:", equipoRef);
+  console.log("Total equipos disponibles:", equiposTI_v2.length);
   if (!equipoRef) return;
   const equipo = equiposTI_v2.find((e) => e.nombreRed === equipoRef);
+  console.log("Equipo encontrado:", equipo);
   if (equipo) {
     $("meUsuario").value = equipo.nombreEmpleado || "";
     $("meHwProcesador").textContent = equipo.procesador || "-";
     $("meHwRam").textContent = equipo.memoria || "-";
     $("meHwDisco").textContent = equipo.tipoDisco || "-";
     $("meHwTipo").textContent = equipo.tipoEquipo || "-";
+  } else {
+    console.warn("Equipo no encontrado en lista. Nombres disponibles:", equiposTI_v2.map((e) => e.nombreRed).slice(0, 5));
   }
 }
 
