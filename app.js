@@ -41,12 +41,12 @@ const TICKET_GARANTIA_CAMPO_POR_ID = {
 };
 
 const MANTENIMIENTO_EQUIPOS_FIELD_IDS = [
-  "meId", "meEquipo", "meFechaIngreso", "meProblema", "meSolucion",
+  "meId", "meEquipo", "meFechaIngreso", "meProblema",
   "meTecnico", "meObservaciones",
 ];
 const MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID = {
   meId: "id", meEquipo: "equipoRef", meFechaIngreso: "fechaIngreso",
-  meProblema: "problema", meSolucion: "solucion", meTecnico: "tecnico",
+  meProblema: "problema", meTecnico: "tecnico",
   meObservaciones: "observaciones",
 };
 
