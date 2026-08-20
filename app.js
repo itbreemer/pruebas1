@@ -1360,10 +1360,10 @@ function actualizarUsuarioEquipoMantenimiento() {
   if (!equipoRef) return;
   const equipo = equiposTI_v2.find((e) => e.nombreRed === equipoRef);
   if (equipo) {
-    $("meUsuario").value = equipo.usuario || "";
+    $("meUsuario").value = equipo.nombreEmpleado || "";
     $("meHwProcesador").textContent = equipo.procesador || "-";
-    $("meHwRam").textContent = equipo.ram || "-";
-    $("meHwDisco").textContent = equipo.disco || "-";
+    $("meHwRam").textContent = equipo.memoria || "-";
+    $("meHwDisco").textContent = equipo.tipoDisco || "-";
     $("meHwTipo").textContent = equipo.tipoEquipo || "-";
   }
 }
