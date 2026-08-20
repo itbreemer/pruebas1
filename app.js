@@ -9,6 +9,7 @@ const SERVICIOS_OFICINA_STORAGE_KEY = "serviciosOficinaTI_v1";
 const DOCUMENTOS_ANEXO_MOVILES_STORAGE_KEY = "documentosAnexoMovilesTI_v1";
 const DOCUMENTOS_ANEXO_OFICINA_STORAGE_KEY = "documentosAnexoOficinaTI_v1";
 const TICKETS_GARANTIA_STORAGE_KEY = "ticketsGarantiaTI_v1";
+const MANTENIMIENTO_EQUIPOS_STORAGE_KEY = "mantenimientoEquiposTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -37,6 +38,16 @@ const TICKET_GARANTIA_CAMPO_POR_ID = {
   tgId: "id", tgProveedor: "proveedor", tgEquipo: "equipoRef", tgNumeroTicket: "numeroTicket",
   tgFechaReporte: "fechaReporte", tgEstado: "estado", tgDescripcionFalla: "descripcionFalla",
   tgComentarios: "comentarios",
+};
+
+const MANTENIMIENTO_EQUIPOS_FIELD_IDS = [
+  "meId", "meEquipo", "meFechaIngreso", "meProblema", "meSolucion",
+  "meTecnico", "meObservaciones",
+];
+const MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID = {
+  meId: "id", meEquipo: "equipoRef", meFechaIngreso: "fechaIngreso",
+  meProblema: "problema", meSolucion: "solucion", meTecnico: "tecnico",
+  meObservaciones: "observaciones",
 };
 
 const CONTRATO_MOVIL_FIELD_IDS = [
@@ -141,6 +152,7 @@ let serviciosOficinaData = [];
 let documentosAnexoMovilesData = [];
 let documentosAnexoOficinaData = [];
 let ticketsGarantiaData = [];
+let mantenimientoEquiposData = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -1285,6 +1297,113 @@ function sincronizarTicketGarantia(ticket) {
 function sincronizarEliminacionTicketGarantia(id) {
   if (window.FirestoreSyncTicketsGarantia && typeof window.FirestoreSyncTicketsGarantia.eliminarTicketGarantia === "function") {
     window.FirestoreSyncTicketsGarantia.eliminarTicketGarantia(id);
+  }
+}
+
+/* ---------- Mantenimiento de Equipos ---------- */
+
+function cargarMantenimientoEquipos() {
+  mantenimientoEquiposData = JSON.parse(localStorage.getItem(MANTENIMIENTO_EQUIPOS_STORAGE_KEY)) || [];
+}
+
+function guardarMantenimientoEquipos() {
+  localStorage.setItem(MANTENIMIENTO_EQUIPOS_STORAGE_KEY, JSON.stringify(mantenimientoEquiposData));
+  sincronizarRegistroMantenimiento();
+}
+
+function establecerMantenimientoEquiposDesdeSync(registrosRemotos) {
+  const remotosPorId = new Map(registrosRemotos.map((r) => [r.id, r]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  mantenimientoEquiposData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarRegistroMantenimiento();
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  registrosRemotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  mantenimientoEquiposData = combinados.sort((a, b) => (b.fechaIngreso || "").localeCompare(a.fechaIngreso || ""));
+  guardarMantenimientoEquipos();
+  if (vistaMantenimientoEquipos) vistaMantenimientoEquipos.render();
+}
+
+function sincronizarRegistroMantenimiento() {
+  if (typeof window.FirestoreSyncMantenimientoEquipos !== "undefined" && mantenimientoEquiposActualId) {
+    const registro = mantenimientoEquiposData.find((r) => r.id === mantenimientoEquiposActualId);
+    if (registro) window.FirestoreSyncMantenimientoEquipos.guardarRegistroMantenimiento(registro);
+  }
+}
+
+function sincronizarEliminacionRegistroMantenimiento(id) {
+  if (typeof window.FirestoreSyncMantenimientoEquipos !== "undefined") {
+    window.FirestoreSyncMantenimientoEquipos.eliminarRegistroMantenimiento(id);
+  }
+}
+
+function obtenerRegistrosMantenimientoActuales() {
+  return mantenimientoEquiposData;
+}
+
+let mantenimientoEquiposActualId = null;
+
+function abrirModalMantenimientoEquipos(registro) {
+  mantenimientoEquiposActualId = registro ? registro.id : null;
+  MANTENIMIENTO_EQUIPOS_FIELD_IDS.forEach((fieldId) => {
+    const campo = MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID[fieldId];
+    $(fieldId).value = (registro && registro[campo]) || "";
+  });
+  $("modalMantenimientoEquiposOverlay").style.display = "flex";
+}
+
+function cerrarModalMantenimientoEquipos() {
+  mantenimientoEquiposActualId = null;
+  MANTENIMIENTO_EQUIPOS_FIELD_IDS.forEach((fieldId) => ($(fieldId).value = ""));
+  $("modalMantenimientoEquiposOverlay").style.display = "none";
+}
+
+function onSubmitMantenimientoEquipos(e) {
+  e.preventDefault();
+  const nuevoRegistro = {};
+  MANTENIMIENTO_EQUIPOS_FIELD_IDS.forEach((fieldId) => {
+    const campo = MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID[fieldId];
+    nuevoRegistro[campo] = $(fieldId).value;
+  });
+  if (!nuevoRegistro.equipoRef) {
+    alert("Selecciona un equipo");
+    return;
+  }
+  if (!mantenimientoEquiposActualId) {
+    nuevoRegistro.id = crypto.randomUUID();
+    mantenimientoEquiposData.push(nuevoRegistro);
+  } else {
+    const idx = mantenimientoEquiposData.findIndex((r) => r.id === mantenimientoEquiposActualId);
+    if (idx !== -1) mantenimientoEquiposData[idx] = { ...mantenimientoEquiposData[idx], ...nuevoRegistro };
+  }
+  guardarMantenimientoEquipos();
+  refrescarVistasSecundarias();
+  cerrarModalMantenimientoEquipos();
+}
+
+function eliminarRegistroMantenimientoActual() {
+  if (!mantenimientoEquiposActualId) return;
+  if (!confirm("¿Eliminar este registro?")) return;
+  const idx = mantenimientoEquiposData.findIndex((r) => r.id === mantenimientoEquiposActualId);
+  if (idx !== -1) {
+    const id = mantenimientoEquiposData[idx].id;
+    mantenimientoEquiposData.splice(idx, 1);
+    guardarMantenimientoEquipos();
+    sincronizarEliminacionRegistroMantenimiento(id);
+    refrescarVistasSecundarias();
+    cerrarModalMantenimientoEquipos();
   }
 }
 
@@ -3810,6 +3929,7 @@ function refrescarVistasSecundarias() {
   vistaDocumentosAnexoMoviles.render();
   vistaDocumentosAnexoOficina.render();
   vistaTicketsGarantia.render();
+  vistaMantenimientoEquipos.render();
 }
 
 function cambiarVista(nombre) {
@@ -3844,6 +3964,7 @@ function cambiarVista(nombre) {
   else if (nombre === "documentosAnexoMoviles") vistaDocumentosAnexoMoviles.render();
   else if (nombre === "documentosAnexoOficina") vistaDocumentosAnexoOficina.render();
   else if (nombre === "ticketsGarantia") vistaTicketsGarantia.render();
+  else if (nombre === "mantenimientoEquipos") vistaMantenimientoEquipos.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -4536,6 +4657,92 @@ const vistaTicketsGarantia = crearVistaLista({
   alClicFila: (r) => abrirModalTicketGarantia(r.ticket),
 });
 
+function obtenerMantenimientoEquipos() {
+  return mantenimientoEquiposData.map((m) => ({
+    registro: m,
+    celdas: `
+      <td>${esc(m.equipoRef)}</td>
+      <td>${esc(formatearFechaSimple(m.fechaIngreso))}</td>
+      <td>${esc(m.problema)}</td>
+      <td>${esc(m.solucion)}</td>
+      <td>${esc(m.tecnico)}</td>
+      <td>${esc(m.observaciones)}</td>
+    `,
+  }));
+}
+
+const vistaMantenimientoEquipos = crearVistaLista({
+  prefix: "mantenimientoEquipos",
+  columnas: 6,
+  obtenerFilas: obtenerMantenimientoEquipos,
+  filtrar: (r, t) => {
+    const texto = [r.registro.equipoRef, r.registro.problema, r.registro.solucion, r.registro.tecnico]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalMantenimientoEquipos(r.registro),
+});
+
+function generarReporteMantenimiento() {
+  const porTecnico = {};
+  mantenimientoEquiposData.forEach((registro) => {
+    const tecnico = registro.tecnico || "Sin técnico";
+    if (!porTecnico[tecnico]) porTecnico[tecnico] = 0;
+    porTecnico[tecnico]++;
+  });
+  return Object.keys(porTecnico).sort().map((tecnico) => ({
+    tecnico,
+    cantidad: porTecnico[tecnico],
+  }));
+}
+
+function mostrarReporteMantenimiento() {
+  const reporteData = generarReporteMantenimiento();
+  const container = $("reporteMantenimientoContainer");
+  const tablaBody = $("tablaReporteMantenimiento");
+  const chartContainer = $("chartMantenimiento");
+
+  tablaBody.innerHTML = reporteData.map((r) => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${esc(r.tecnico)}</td>
+      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-weight: bold;">${r.cantidad}</td>
+    </tr>
+  `).join('');
+
+  if (reporteData.length === 0) {
+    tablaBody.innerHTML = '<tr><td colspan="2" style="padding: 20px; text-align: center; color: #999;">No hay registros de mantenimiento</td></tr>';
+  }
+
+  const maxVal = Math.max(...reporteData.map((r) => r.cantidad), 1);
+  const scale = 200 / maxVal;
+
+  chartContainer.innerHTML = `
+    <div style="display: flex; gap: 15px; align-items: flex-end; justify-content: center; height: 250px; border-left: 2px solid #ddd; padding-left: 10px;">
+      ${reporteData.map((r) => `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+          <div style="width: 40px; height: ${r.cantidad * scale}px; background-color: #FF9800; border-radius: 2px 2px 0 0; min-height: 2px;" title="${r.tecnico}: ${r.cantidad}"></div>
+          <small style="font-size: 10px; color: #666; text-align: center; width: 70px; word-wrap: break-word;">${esc(r.tecnico)}</small>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  container.style.display = 'block';
+}
+
+function descargarReporteMantenimientoPDF() {
+  const element = $("reporteMantenimientoContent");
+  const opt = {
+    margin: 10,
+    filename: 'reporte-mantenimiento-' + new Date().toISOString().split('T')[0] + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' },
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
 function generarReporteGarantias() {
   const datos = {};
   ticketsGarantiaData.forEach((ticket) => {
@@ -4897,6 +5104,17 @@ $("btnCerrarReporte").addEventListener("click", () => {
   $("reporteGarantiaContainer").style.display = "none";
 });
 
+$("btnNuevoMantenimientoEquipo").addEventListener("click", () => abrirModalMantenimientoEquipos(null));
+$("btnCerrarModalMantenimientoEquipos").addEventListener("click", cerrarModalMantenimientoEquipos);
+$("btnCancelarMantenimientoEquipos").addEventListener("click", cerrarModalMantenimientoEquipos);
+$("btnEliminarModalMantenimientoEquipos").addEventListener("click", eliminarRegistroMantenimientoActual);
+$("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEquipos);
+$("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
+$("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);
+$("btnCerrarReporteMantenimiento").addEventListener("click", () => {
+  $("reporteMantenimientoContainer").style.display = "none";
+});
+
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
 $("btnImprimirLineasMoviles").addEventListener("click", imprimirFormatoAdhesionMovil);
@@ -4997,6 +5215,7 @@ cargarServiciosOficina();
 cargarDocumentosAnexoMoviles();
 cargarDocumentosAnexoOficina();
 cargarTicketsGarantia();
+cargarMantenimientoEquipos();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
