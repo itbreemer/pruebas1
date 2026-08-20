@@ -4571,45 +4571,57 @@ function mostrarReporteGarantias() {
     tablaBody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #999;">No hay datos de tickets de garantía</td></tr>';
   }
 
-  if (window.chartGarantias) window.chartGarantias.destroy();
+  if (window.chartGarantias && typeof window.chartGarantias.destroy === 'function') {
+    window.chartGarantias.destroy();
+  }
 
   const ctxChart = $("chartGarantias");
   const labels = reporteData.map((r) => r.mes);
   const datosGBM = reporteData.map((r) => r.GBM);
   const datosCanella = reporteData.map((r) => r.Canella);
 
-  window.chartGarantias = new Chart(ctxChart, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'GBM',
-          data: datosGBM,
-          backgroundColor: '#4CAF50',
-          borderColor: '#45a049',
-          borderWidth: 1,
-        },
-        {
-          label: 'Canella',
-          data: datosCanella,
-          backgroundColor: '#2196F3',
-          borderColor: '#0b7dda',
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: { position: 'top' },
+  if (typeof Chart === 'undefined') {
+    tablaBody.innerHTML += '<tr><td colspan="4" style="padding: 10px; color: #d32f2f;">Error: Librería Chart.js no cargó. Recarga la página.</td></tr>';
+    return;
+  }
+
+  try {
+    window.chartGarantias = new Chart(ctxChart, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'GBM',
+            data: datosGBM,
+            backgroundColor: '#4CAF50',
+            borderColor: '#45a049',
+            borderWidth: 1,
+          },
+          {
+            label: 'Canella',
+            data: datosCanella,
+            backgroundColor: '#2196F3',
+            borderColor: '#0b7dda',
+            borderWidth: 1,
+          },
+        ],
       },
-      scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { position: 'top' },
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error('Error al crear gráfica:', err);
+    tablaBody.innerHTML += '<tr><td colspan="4" style="padding: 10px; color: #d32f2f;">Error al renderizar gráfica.</td></tr>';
+  }
 
   container.style.display = 'block';
 }
