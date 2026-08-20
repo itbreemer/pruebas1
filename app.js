@@ -4554,10 +4554,13 @@ function generarReporteGarantias() {
 }
 
 function mostrarReporteGarantias() {
+  console.log("=== Mostrar Reporte Garantías ===");
   const reporteData = generarReporteGarantias();
+  console.log("Datos del reporte:", reporteData);
   const container = $("reporteGarantiaContainer");
   const tablaBody = $("tablaReporteGarantia");
   const chartContainer = $("chartGarantias");
+  console.log("Contenedores encontrados:", { container, tablaBody, chartContainer });
 
   tablaBody.innerHTML = reporteData.map((r) => `
     <tr>
