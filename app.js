@@ -1358,11 +1358,10 @@ let mantenimientoEquiposActualId = null;
 function actualizarUsuarioEquipoMantenimiento() {
   const equipoRef = $("meEquipo").value;
   if (!equipoRef) return;
-  if (!window.equiposTI_v2 || !Array.isArray(window.equiposTI_v2)) {
-    console.warn("Equipos no cargados aún");
+  if (!Array.isArray(equipos) || equipos.length === 0) {
     return;
   }
-  const equipo = window.equiposTI_v2.find((e) => e.nombreRed === equipoRef);
+  const equipo = equipos.find((e) => e.nombreRed === equipoRef);
   if (equipo) {
     $("meUsuario").value = equipo.nombreEmpleado || "";
     $("meHwProcesador").textContent = equipo.procesador || "-";
