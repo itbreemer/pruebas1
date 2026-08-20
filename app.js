@@ -4536,6 +4536,96 @@ const vistaTicketsGarantia = crearVistaLista({
   alClicFila: (r) => abrirModalTicketGarantia(r.ticket),
 });
 
+function generarReporteGarantias() {
+  const datos = {};
+  ticketsGarantiaData.forEach((ticket) => {
+    const fecha = new Date(ticket.fechaReporte);
+    const mesAnio = fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0');
+    if (!datos[mesAnio]) datos[mesAnio] = { GBM: 0, Canella: 0 };
+    if (ticket.proveedor === 'GBM') datos[mesAnio].GBM++;
+    else if (ticket.proveedor === 'Canella') datos[mesAnio].Canella++;
+  });
+  return Object.keys(datos).sort().map((mes) => ({
+    mes,
+    GBM: datos[mes].GBM,
+    Canella: datos[mes].Canella,
+    total: datos[mes].GBM + datos[mes].Canella,
+  }));
+}
+
+function mostrarReporteGarantias() {
+  const reporteData = generarReporteGarantias();
+  const container = $("reporteGarantiaContainer");
+  const tablaBody = $("tablaReporteGarantia");
+
+  tablaBody.innerHTML = reporteData.map((r) => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${r.mes}</td>
+      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">${r.GBM}</td>
+      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">${r.Canella}</td>
+      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-weight: bold;">${r.total}</td>
+    </tr>
+  `).join('');
+
+  if (reporteData.length === 0) {
+    tablaBody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #999;">No hay datos de tickets de garantía</td></tr>';
+  }
+
+  if (window.chartGarantias) window.chartGarantias.destroy();
+
+  const ctxChart = $("chartGarantias");
+  const labels = reporteData.map((r) => r.mes);
+  const datosGBM = reporteData.map((r) => r.GBM);
+  const datosCanella = reporteData.map((r) => r.Canella);
+
+  window.chartGarantias = new Chart(ctxChart, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'GBM',
+          data: datosGBM,
+          backgroundColor: '#4CAF50',
+          borderColor: '#45a049',
+          borderWidth: 1,
+        },
+        {
+          label: 'Canella',
+          data: datosCanella,
+          backgroundColor: '#2196F3',
+          borderColor: '#0b7dda',
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'top' },
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+      },
+    },
+  });
+
+  container.style.display = 'block';
+}
+
+function descargarReporteGarantiaPDF() {
+  const element = $("reporteGarantiaContent");
+  const opt = {
+    margin: 10,
+    filename: 'reporte-garantia-' + new Date().toISOString().split('T')[0] + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' },
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
 function obtenerContratosMoviles() {
   return contratosMovilesData.map((c) => ({
     contrato: c,
@@ -4810,6 +4900,11 @@ $("btnCancelarTicketGarantia").addEventListener("click", cerrarModalTicketGarant
 $("btnEliminarModalTicketGarantia").addEventListener("click", eliminarTicketGarantiaActual);
 $("tgProveedor").addEventListener("change", actualizarCampoEquipoTicketGarantia);
 $("formTicketGarantia").addEventListener("submit", onSubmitTicketGarantia);
+$("btnVerEstadisticasGarantia").addEventListener("click", mostrarReporteGarantias);
+$("btnDescargarReportePDF").addEventListener("click", descargarReporteGarantiaPDF);
+$("btnCerrarReporte").addEventListener("click", () => {
+  $("reporteGarantiaContainer").style.display = "none";
+});
 
 $("btnNuevoContratoMovil").addEventListener("click", () => abrirModalContratoMovil(null));
 $("btnImprimirContratoMovil").addEventListener("click", imprimirContratoMovil);
