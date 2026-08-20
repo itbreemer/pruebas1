@@ -1361,6 +1361,10 @@ function actualizarUsuarioEquipoMantenimiento() {
   const equipo = equiposTI_v2.find((e) => e.nombreRed === equipoRef);
   if (equipo) {
     $("meUsuario").value = equipo.usuario || "";
+    $("meHwProcesador").textContent = equipo.procesador || "-";
+    $("meHwRam").textContent = equipo.ram || "-";
+    $("meHwDisco").textContent = equipo.disco || "-";
+    $("meHwTipo").textContent = equipo.tipoEquipo || "-";
   }
 }
 
@@ -1370,9 +1374,25 @@ function abrirModalMantenimientoEquipos(registro) {
     const campo = MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID[fieldId];
     $(fieldId).value = (registro && registro[campo]) || "";
   });
+
+  document.querySelectorAll('input[name="solucion"]').forEach((cb) => (cb.checked = false));
+  if (registro && registro.solucion) {
+    const soluciones = registro.solucion.split(", ");
+    document.querySelectorAll('input[name="solucion"]').forEach((cb) => {
+      if (soluciones.includes(cb.value)) cb.checked = true;
+    });
+  }
+
   if (!registro) {
     $("meTecnico").value = TECNICO_ACTUAL || "";
+    $("meHwProcesador").textContent = "-";
+    $("meHwRam").textContent = "-";
+    $("meHwDisco").textContent = "-";
+    $("meHwTipo").textContent = "-";
+  } else {
+    actualizarUsuarioEquipoMantenimiento();
   }
+
   $("modalMantenimientoEquiposOverlay").style.display = "flex";
 }
 
@@ -1389,10 +1409,21 @@ function onSubmitMantenimientoEquipos(e) {
     const campo = MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID[fieldId];
     nuevoRegistro[campo] = $(fieldId).value;
   });
+
+  const solucionesSeleccionadas = Array.from(document.querySelectorAll('input[name="solucion"]:checked'))
+    .map((cb) => cb.value)
+    .join(", ");
+  nuevoRegistro.solucion = solucionesSeleccionadas;
+
   if (!nuevoRegistro.equipoRef) {
     alert("Selecciona un equipo");
     return;
   }
+  if (!solucionesSeleccionadas) {
+    alert("Selecciona al menos una solución aplicada");
+    return;
+  }
+
   if (!mantenimientoEquiposActualId) {
     nuevoRegistro.id = crypto.randomUUID();
     mantenimientoEquiposData.push(nuevoRegistro);

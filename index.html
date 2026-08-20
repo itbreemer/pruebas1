@@ -1149,7 +1149,7 @@
       <div class="glpi-grid">
         <div class="glpi-col">
           <div class="glpi-row">
-            <label for="meEquipo">Equipo</label>
+            <label for="meEquipo">Equipo (ServiceTag / Nombre en Red)</label>
             <input type="text" id="meEquipo" list="dl-nombreRedEquipo" required>
           </div>
           <div class="glpi-row">
@@ -1157,26 +1157,56 @@
             <input type="text" id="meUsuario" readonly>
           </div>
           <div class="glpi-row">
+            <label>Hardware Actual</label>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 13px; line-height: 1.6;">
+              <div><strong>Procesador:</strong> <span id="meHwProcesador">-</span></div>
+              <div><strong>RAM:</strong> <span id="meHwRam">-</span></div>
+              <div><strong>Disco Duro:</strong> <span id="meHwDisco">-</span></div>
+              <div><strong>Tipo:</strong> <span id="meHwTipo">-</span></div>
+            </div>
+          </div>
+          <div class="glpi-row">
             <label for="meFechaIngreso">Fecha de Ingreso</label>
             <input type="date" id="meFechaIngreso" required>
           </div>
           <div class="glpi-row">
             <label for="meProblema">Problema Reportado</label>
-            <input type="text" id="meProblema" placeholder="Descripción del problema..." required>
+            <textarea id="meProblema" placeholder="Descripción del problema..." required style="min-height: 60px;"></textarea>
           </div>
         </div>
         <div class="glpi-col">
-          <div class="glpi-row">
-            <label for="meSolucion">Solución Aplicada</label>
-            <input type="text" id="meSolucion" placeholder="Cambio de pieza, RAM, Windows, etc..." required>
+          <div class="glpi-row glpi-row-textarea">
+            <label>Solución Aplicada</label>
+            <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; max-height: 280px; overflow-y: auto;">
+              <div style="margin-bottom: 8px;"><strong style="color: #4CAF50;">Mantenimiento Preventivo</strong></div>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de pasta térmica"> Cambio de pasta térmica</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Pasar sopladora"> Pasar sopladora al equipo</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Limpia contactos"> Limpia contactos</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 12px;"><input type="checkbox" name="solucion" value="Limpieza externa"> Limpieza externa</label>
+
+              <div style="margin-bottom: 8px;"><strong style="color: #2196F3;">Mantenimiento Correctivo</strong></div>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de Disco duro"> Disco duro</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de Memoria RAM"> Memoria RAM</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de Procesador"> Procesador</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de Fuente de poder"> Fuente de poder</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Cambio de Tarjeta gráfica"> Tarjeta gráfica (marca/capacidad)</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Reparación de Pantalla o monitor"> Pantalla o monitor</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 12px;"><input type="checkbox" name="solucion" value="Cambio de Cables"> Cables (VGA/HDMI/DP)</label>
+
+              <div style="margin-bottom: 8px;"><strong style="color: #FF9800;">Software</strong></div>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Actualización Windows"> Actualización Windows</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Instalación Windows"> Instalación Windows</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Instalación O365"> Instalación O365</label>
+              <label style="display: flex; gap: 8px; margin-bottom: 4px;"><input type="checkbox" name="solucion" value="Actualización O365"> Actualización O365</label>
+            </div>
           </div>
           <div class="glpi-row">
             <label for="meTecnico">Técnico que Revisó</label>
-            <input type="text" id="meTecnico" placeholder="Nombre del técnico" required>
+            <input type="text" id="meTecnico" placeholder="Nombre del técnico" required readonly>
           </div>
           <div class="glpi-row">
             <label for="meObservaciones">Observaciones</label>
-            <input type="text" id="meObservaciones">
+            <textarea id="meObservaciones" style="min-height: 50px;"></textarea>
           </div>
         </div>
       </div>
