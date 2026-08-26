@@ -1,0 +1,40 @@
+{
+  "endpoint": {
+    "type": "firebase",
+    "firebase": {
+      "projectId": "tu-proyecto-firebase",
+      "database": "equiposTI_v2",
+      "apiKey": "tu-api-key-firebase-aqui"
+    },
+    "custom": {
+      "url": "https://ti.empresa.com/api/inventario/",
+      "authType": "bearer",
+      "token": "tu-token-api-aqui"
+    }
+  },
+  "schedule": {
+    "frequency": "hourly",
+    "hour": 22
+  },
+  "retry": {
+    "maxAttempts": 5,
+    "delaySeconds": 60,
+    "exponentialBackoff": true
+  },
+  "data": {
+    "includeHardware": true,
+    "includeSoftware": true,
+    "includeNetwork": true,
+    "sendFullInventory": false
+  },
+  "security": {
+    "validateSSL": true,
+    "useProxy": false,
+    "proxyServer": ""
+  },
+  "logging": {
+    "level": "INFO",
+    "maxLogSizeMB": 100,
+    "retentionDays": 30
+  }
+}
