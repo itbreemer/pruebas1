@@ -2,9 +2,9 @@
   "endpoint": {
     "type": "firebase",
     "firebase": {
-      "projectId": "tu-proyecto-firebase",
+      "projectId": "inventario-ti-riol",
       "database": "equiposTI_v2",
-      "apiKey": "tu-api-key-firebase-aqui"
+      "apiKey": "AIzaSyBondrL7b5C-WI6hbQTtCxob8Dn0mpwBrs"
     },
     "custom": {
       "url": "https://ti.empresa.com/api/inventario/",
