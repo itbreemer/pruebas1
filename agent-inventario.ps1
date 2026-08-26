@@ -370,7 +370,7 @@ function Send-ToFirebase {
 
         # Construir URL de Firestore REST API
         $docId = $Inventory.equipoId
-        $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/$database/$docId"
+        $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/%28default%29/documents/$database/$docId"
 
         # Preparar documento para Firestore
         $firestoreDoc = @{
