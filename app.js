@@ -153,6 +153,7 @@ let documentosAnexoMovilesData = [];
 let documentosAnexoOficinaData = [];
 let ticketsGarantiaData = [];
 let mantenimientoEquiposData = [];
+let equiposTIv2Data = [];
 
 let TECNICO_ACTUAL = "";
 window.establecerTecnicoActual = (nombre) => {
@@ -1260,6 +1261,14 @@ function guardarTicketsGarantia() {
 
 function obtenerTicketsGarantiaActuales() {
   return ticketsGarantiaData;
+}
+
+// Datos de solo lectura recolectados por el Agente de Inventario TI (PowerShell).
+// No hay edicion desde la app, asi que no hace falta fusionar con nada local:
+// se reemplaza directo con lo que llega de Firestore.
+function establecerEquiposTIv2DesdeSync(remotos) {
+  equiposTIv2Data = remotos || [];
+  if (typeof vistaEquiposTIv2 !== "undefined") vistaEquiposTIv2.render();
 }
 
 function establecerTicketsGarantiaDesdeSync(remotos) {
@@ -3976,6 +3985,7 @@ function refrescarVistasSecundarias() {
   vistaDocumentosAnexoOficina.render();
   vistaTicketsGarantia.render();
   vistaMantenimientoEquipos.render();
+  vistaEquiposTIv2.render();
 }
 
 function cambiarVista(nombre) {
@@ -4011,6 +4021,7 @@ function cambiarVista(nombre) {
   else if (nombre === "documentosAnexoOficina") vistaDocumentosAnexoOficina.render();
   else if (nombre === "ticketsGarantia") vistaTicketsGarantia.render();
   else if (nombre === "mantenimientoEquipos") vistaMantenimientoEquipos.render();
+  else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -4674,6 +4685,47 @@ const vistaCodigos = crearVistaLista({
     return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
   },
   alClicFila: (r) => abrirModalCodigo(r.codigo),
+});
+
+function formatearFechaHora(valor) {
+  if (!valor) return "";
+  return String(valor);
+}
+
+function obtenerEquiposTIv2() {
+  return equiposTIv2Data.map((e) => {
+    const hw = e.hardware || {};
+    const cpu = hw.procesador || {};
+    const ram = hw.memoria || {};
+    const so = hw.sistemaOperativo || {};
+    return {
+      dato: e,
+      celdas: `
+        <td>${esc(e.computadora || e.equipoId)}</td>
+        <td>${esc(e.usuario)}</td>
+        <td>${esc(cpu.nombre)}</td>
+        <td>${esc(ram.total)}</td>
+        <td>${esc(so.nombre)}</td>
+        <td>${esc(hw.ipPrincipal)}</td>
+        <td>${esc(hw.serialNumber)}</td>
+        <td>${esc(formatearFechaHora(e.timestamp))}</td>
+      `,
+    };
+  });
+}
+
+const vistaEquiposTIv2 = crearVistaLista({
+  prefix: "equiposTIv2",
+  columnas: 8,
+  obtenerFilas: obtenerEquiposTIv2,
+  filtrar: (r, t) => {
+    const hw = r.dato.hardware || {};
+    const so = hw.sistemaOperativo || {};
+    const texto = [r.dato.computadora, r.dato.equipoId, r.dato.usuario, hw.ipPrincipal, so.nombre]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
 });
 
 function obtenerTicketsGarantia() {

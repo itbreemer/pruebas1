@@ -356,6 +356,41 @@ function Build-Inventory {
 # FUNCIONES DE ENVÍO A SERVIDOR
 # ============================================================================
 
+function ConvertTo-FirestoreValue {
+    # Convierte recursivamente un valor de PowerShell (hashtable, array, string,
+    # numero, bool) al formato de "Value" que espera la REST API de Firestore.
+    # Sin esto, los hashtables/arrays anidados (hardware, software, red) se
+    # guardaban vacios porque solo se serializaban los campos de primer nivel.
+    param($Value)
+
+    if ($null -eq $Value) {
+        return @{ nullValue = $null }
+    }
+    elseif ($Value -is [hashtable] -or $Value -is [System.Collections.Specialized.OrderedDictionary]) {
+        $fields = @{}
+        foreach ($key in $Value.Keys) {
+            $fields[$key] = ConvertTo-FirestoreValue -Value $Value[$key]
+        }
+        return @{ mapValue = @{ fields = $fields } }
+    }
+    elseif ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
+        $values = @($Value | ForEach-Object { ConvertTo-FirestoreValue -Value $_ })
+        return @{ arrayValue = @{ values = $values } }
+    }
+    elseif ($Value -is [int] -or $Value -is [long]) {
+        return @{ integerValue = $Value }
+    }
+    elseif ($Value -is [double] -or $Value -is [decimal] -or $Value -is [single]) {
+        return @{ doubleValue = $Value }
+    }
+    elseif ($Value -is [bool]) {
+        return @{ booleanValue = $Value }
+    }
+    else {
+        return @{ stringValue = [string]$Value }
+    }
+}
+
 function Send-ToFirebase {
     param(
         [object]$Inventory,
@@ -378,27 +413,12 @@ function Send-ToFirebase {
         }
 
         foreach ($key in $Inventory.PSObject.Properties.Name) {
-            $value = $Inventory.$key
-            if ($value -is [hashtable]) {
-                $firestoreDoc.fields[$key] = @{ mapValue = @{ fields = @{} } }
-            }
-            elseif ($value -is [array]) {
-                $firestoreDoc.fields[$key] = @{ arrayValue = @{ values = @() } }
-            }
-            else {
-                if ($value -is [int] -or $value -is [long]) {
-                    $firestoreDoc.fields[$key] = @{ integerValue = $value }
-                }
-                elseif ($value -is [bool]) {
-                    $firestoreDoc.fields[$key] = @{ booleanValue = $value }
-                }
-                else {
-                    $firestoreDoc.fields[$key] = @{ stringValue = [string]$value }
-                }
-            }
+            $firestoreDoc.fields[$key] = ConvertTo-FirestoreValue -Value $Inventory.$key
         }
 
-        $body = $firestoreDoc | ConvertTo-Json -Depth 10
+        # Depth mayor a 10: cada nivel real de anidamiento (hardware -> discos -> disco)
+        # ocupa ~2 niveles en el formato de Firestore (mapValue/arrayValue + fields/values).
+        $body = $firestoreDoc | ConvertTo-Json -Depth 20
 
         $headers = @{
             "Content-Type" = "application/json"

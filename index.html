@@ -34,6 +34,7 @@
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
       <button type="button" class="nav-item" data-vista="ticketsGarantia" data-titulo="Tickets de Garantía">🎫 Tickets de Garantía</button>
       <button type="button" class="nav-item" data-vista="mantenimientoEquipos" data-titulo="Mantenimiento de Equipos">🔧 Mantenimiento de Equipos</button>
+      <button type="button" class="nav-item" data-vista="equiposTIv2" data-titulo="Inventario Automático">🤖 Inventario Automático</button>
       <button type="button" class="nav-item" data-vista="dispositivos" data-titulo="Dispositivos">📶 Dispositivos</button>
       <button type="button" class="nav-item" data-vista="contratos" data-titulo="Contratos">📄 Contratos</button>
       <button type="button" class="nav-item" data-vista="contratosMoviles" data-titulo="Contratos Móviles">📱 Contratos Móviles</button>
@@ -250,6 +251,38 @@
           <span id="infoPagina_catalogoMonitores"></span>
           <button id="btnSiguiente_catalogoMonitores">&rsaquo;</button>
           <button id="btnUltimo_catalogoMonitores">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Inventario Automático (Agente TI) -->
+      <section id="vista-equiposTIv2" class="vista">
+        <p class="subseccion-nota">Datos técnicos recolectados automáticamente por el Agente de Inventario TI en cada equipo (hardware, software, red). Se actualiza solo, sin captura manual.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_equiposTIv2" placeholder="Buscar por nombre de equipo, usuario, IP, SO...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Equipo</th>
+                <th>Usuario</th>
+                <th>Procesador</th>
+                <th>RAM</th>
+                <th>Sistema Operativo</th>
+                <th>IP</th>
+                <th>Serial</th>
+                <th>Última Actualización</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_equiposTIv2"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_equiposTIv2">&laquo;</button>
+          <button id="btnAnterior_equiposTIv2">&lsaquo;</button>
+          <span id="infoPagina_equiposTIv2"></span>
+          <button id="btnSiguiente_equiposTIv2">&rsaquo;</button>
+          <button id="btnUltimo_equiposTIv2">&raquo;</button>
         </section>
       </section>
 
@@ -2181,5 +2214,6 @@
 <script type="module" src="documentos-anexo-oficina-sync.js"></script>
 <script type="module" src="tickets-garantia-sync.js"></script>
 <script type="module" src="mantenimiento-equipos-sync.js"></script>
+<script type="module" src="equipos-ti-v2-sync.js"></script>
 </body>
 </html>
