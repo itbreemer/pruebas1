@@ -438,36 +438,40 @@ function ConvertTo-FirestoreJsonValue {
 
     $culture = [System.Globalization.CultureInfo]::InvariantCulture
 
+    # IMPORTANTE: cada rama devuelve el objeto Value COMPLETO de Firestore, con su
+    # llave de tipo incluida (ej. {"stringValue":"x"}), no solo el valor interno ("x").
+    # Firestore rechaza el documento si falta esa envoltura de tipo.
     if ($Value.ContainsKey('nullValue')) {
-        return "null"
+        return '{"nullValue":null}'
     }
     if ($Value.ContainsKey('stringValue')) {
         $s = $Value.stringValue
-        if ($null -eq $s) { return "null" }
-        return '"' + (ConvertTo-JsonEscapedString -Value $s) + '"'
+        if ($null -eq $s) { return '{"nullValue":null}' }
+        return '{"stringValue":"' + (ConvertTo-JsonEscapedString -Value $s) + '"}'
     }
     if ($Value.ContainsKey('integerValue')) {
-        return [string]::Format($culture, "{0}", $Value.integerValue)
+        # Firestore espera integerValue como string (para no perder precision en int64).
+        return '{"integerValue":"' + [string]::Format($culture, "{0}", $Value.integerValue) + '"}'
     }
     if ($Value.ContainsKey('doubleValue')) {
-        return [string]::Format($culture, "{0}", $Value.doubleValue)
+        return '{"doubleValue":' + [string]::Format($culture, "{0}", $Value.doubleValue) + '}'
     }
     if ($Value.ContainsKey('booleanValue')) {
-        return $(if ($Value.booleanValue) { "true" } else { "false" })
+        return '{"booleanValue":' + $(if ($Value.booleanValue) { "true" } else { "false" }) + '}'
     }
     if ($Value.ContainsKey('mapValue')) {
         $fields = $Value.mapValue.fields
         $parts = @($fields.Keys | ForEach-Object {
             '"' + (ConvertTo-JsonEscapedString -Value $_) + '":' + (ConvertTo-FirestoreJsonValue -Value $fields[$_])
         })
-        return '{' + ($parts -join ',') + '}'
+        return '{"mapValue":{"fields":{' + ($parts -join ',') + '}}}'
     }
     if ($Value.ContainsKey('arrayValue')) {
         $items = $Value.arrayValue.values
         $parts = @($items | ForEach-Object { ConvertTo-FirestoreJsonValue -Value $_ })
-        return '[' + ($parts -join ',') + ']'
+        return '{"arrayValue":{"values":[' + ($parts -join ',') + ']}}'
     }
-    return "null"
+    return '{"nullValue":null}'
 }
 
 function ConvertTo-FirestoreRequestBody {
@@ -548,7 +552,7 @@ function Send-ToFirebase {
         }
     }
     catch {
-        LogError "Error enviando a Firebase: $_"
+        LogError "Error enviando a Firebase: $_ (linea $($_.InvocationInfo.ScriptLineNumber))"
         return $false
     }
 }
