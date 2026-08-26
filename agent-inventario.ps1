@@ -373,6 +373,15 @@ function ConvertTo-FirestoreValue {
         }
         return @{ mapValue = @{ fields = $fields } }
     }
+    elseif ($Value -is [System.Management.Automation.PSCustomObject]) {
+        # Ocurre al reintentar un envio: el inventario se recarga desde el JSON local
+        # con ConvertFrom-Json, que produce PSCustomObject en vez de Hashtable.
+        $fields = @{}
+        foreach ($prop in $Value.PSObject.Properties) {
+            $fields[$prop.Name] = ConvertTo-FirestoreValue -Value $prop.Value
+        }
+        return @{ mapValue = @{ fields = $fields } }
+    }
     elseif ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
         $values = @($Value | ForEach-Object { ConvertTo-FirestoreValue -Value $_ })
         return @{ arrayValue = @{ values = $values } }
@@ -389,6 +398,85 @@ function ConvertTo-FirestoreValue {
     else {
         return @{ stringValue = [string]$Value }
     }
+}
+
+function ConvertTo-JsonEscapedString {
+    param([string]$Value)
+    if ($null -eq $Value) { return "" }
+    $sb = [System.Text.StringBuilder]::new()
+    foreach ($ch in $Value.ToCharArray()) {
+        switch ($ch) {
+            '"'  { $sb.Append('\"') | Out-Null }
+            '\'  { $sb.Append('\\') | Out-Null }
+            "`n" { $sb.Append('\n') | Out-Null }
+            "`r" { $sb.Append('\r') | Out-Null }
+            "`t" { $sb.Append('\t') | Out-Null }
+            default {
+                if ([int]$ch -lt 0x20) {
+                    $sb.Append([string]::Format("\u{0:x4}", [int]$ch)) | Out-Null
+                }
+                else {
+                    $sb.Append($ch) | Out-Null
+                }
+            }
+        }
+    }
+    return $sb.ToString()
+}
+
+function ConvertTo-FirestoreJsonValue {
+    # Convierte recursivamente un FirestoreValue (salida de ConvertTo-FirestoreValue) a
+    # texto JSON directamente, en vez de usar ConvertTo-Json.
+    #
+    # Motivo: en estructuras muy anidadas (como esta, donde cada nivel real de datos
+    # se envuelve en 2-3 niveles adicionales por el formato de Firestore), ConvertTo-Json
+    # de Windows PowerShell puede caer en su serializacion por reflexion de .NET para el
+    # hashtable de nivel superior, devolviendo sus propiedades internas (Keys, Values,
+    # Count, IsReadOnly, SyncRoot...) en vez de las claves reales del documento. Escribir
+    # el JSON a mano evita ese bug por completo.
+    param($Value)
+
+    $culture = [System.Globalization.CultureInfo]::InvariantCulture
+
+    if ($Value.ContainsKey('nullValue')) {
+        return "null"
+    }
+    if ($Value.ContainsKey('stringValue')) {
+        $s = $Value.stringValue
+        if ($null -eq $s) { return "null" }
+        return '"' + (ConvertTo-JsonEscapedString -Value $s) + '"'
+    }
+    if ($Value.ContainsKey('integerValue')) {
+        return [string]::Format($culture, "{0}", $Value.integerValue)
+    }
+    if ($Value.ContainsKey('doubleValue')) {
+        return [string]::Format($culture, "{0}", $Value.doubleValue)
+    }
+    if ($Value.ContainsKey('booleanValue')) {
+        return $(if ($Value.booleanValue) { "true" } else { "false" })
+    }
+    if ($Value.ContainsKey('mapValue')) {
+        $fields = $Value.mapValue.fields
+        $parts = @($fields.Keys | ForEach-Object {
+            '"' + (ConvertTo-JsonEscapedString -Value $_) + '":' + (ConvertTo-FirestoreJsonValue -Value $fields[$_])
+        })
+        return '{' + ($parts -join ',') + '}'
+    }
+    if ($Value.ContainsKey('arrayValue')) {
+        $items = $Value.arrayValue.values
+        $parts = @($items | ForEach-Object { ConvertTo-FirestoreJsonValue -Value $_ })
+        return '[' + ($parts -join ',') + ']'
+    }
+    return "null"
+}
+
+function ConvertTo-FirestoreRequestBody {
+    param([hashtable]$FirestoreDoc)
+
+    $parts = @($FirestoreDoc.fields.Keys | ForEach-Object {
+        '"' + (ConvertTo-JsonEscapedString -Value $_) + '":' + (ConvertTo-FirestoreJsonValue -Value $FirestoreDoc.fields[$_])
+    })
+    return '{"fields":{' + ($parts -join ',') + '}}'
 }
 
 function Send-ToFirebase {
@@ -416,9 +504,11 @@ function Send-ToFirebase {
             $firestoreDoc.fields[$key] = ConvertTo-FirestoreValue -Value $Inventory.$key
         }
 
-        # Depth mayor a 10: cada nivel real de anidamiento (hardware -> discos -> disco)
-        # ocupa ~2 niveles en el formato de Firestore (mapValue/arrayValue + fields/values).
-        $body = $firestoreDoc | ConvertTo-Json -Depth 20
+        # No se usa ConvertTo-Json aqui: con esta estructura tan anidada, en Windows
+        # PowerShell puede caer en su serializacion por reflexion de .NET del hashtable
+        # de nivel superior (devuelve Keys/Values/Count/SyncRoot en vez de los campos
+        # reales). ConvertTo-FirestoreRequestBody arma el JSON a mano y evita ese bug.
+        $body = ConvertTo-FirestoreRequestBody -FirestoreDoc $firestoreDoc
 
         $headers = @{
             "Content-Type" = "application/json"
