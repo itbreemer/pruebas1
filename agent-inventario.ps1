@@ -406,15 +406,35 @@ function Send-ToFirebase {
 
         Log "Enviando inventario a Firebase: $url"
 
-        $response = Invoke-WebRequest -Uri "$url?key=$apiKey" -Method PATCH -Body $body -Headers $headers -TimeoutSec 30
+        # Se usa HttpClient en lugar de Invoke-WebRequest -Method PATCH:
+        # en algunos parches de .NET Framework, Invoke-WebRequest falla al enviar
+        # PATCH con un UriFormatException enganoso ("no se puede analizar el nombre de host")
+        # debido al mecanismo interno (reflection) que usa para habilitar ese verbo.
+        Add-Type -AssemblyName System.Net.Http -ErrorAction SilentlyContinue
 
-        if ($response.StatusCode -eq 200) {
-            LogSuccess "Inventario enviado a Firebase correctamente"
-            return $true
+        $httpClient = [System.Net.Http.HttpClient]::new()
+        try {
+            $httpClient.Timeout = [TimeSpan]::FromSeconds(30)
+            $requestUri = "$url`?key=$apiKey"
+            $content = [System.Net.Http.StringContent]::new($body, [System.Text.Encoding]::UTF8, "application/json")
+
+            $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::new("PATCH"), $requestUri)
+            $request.Content = $content
+
+            $result = $httpClient.SendAsync($request).GetAwaiter().GetResult()
+
+            if ($result.IsSuccessStatusCode) {
+                LogSuccess "Inventario enviado a Firebase correctamente"
+                return $true
+            }
+            else {
+                $responseBody = $result.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+                LogWarning "Firebase respondio con codigo: $($result.StatusCode) - $responseBody"
+                return $false
+            }
         }
-        else {
-            LogWarning "Firebase respondió con código: $($response.StatusCode)"
-            return $false
+        finally {
+            $httpClient.Dispose()
         }
     }
     catch {
