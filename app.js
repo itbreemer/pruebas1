@@ -2617,6 +2617,18 @@ function formatearFechaSimple(valor) {
   return valor;
 }
 
+function obtenerMonitorDetectadoTIv2(equipo) {
+  // El Agente de Inventario TI detecta el monitor fisico conectado (via EDID/
+  // WmiMonitorID) y lo guarda en equiposTI_v2, buscado por nombre de equipo en
+  // red. Se prefiere sobre el campo "monitor" capturado a mano, que puede
+  // quedar desactualizado si el monitor cambio.
+  const nombreRed = (equipo.nombreRed || "").trim().toLowerCase();
+  if (!nombreRed || typeof equiposTIv2Data === "undefined") return "";
+  const doc = equiposTIv2Data.find((e) => (e.computadora || e.equipoId || "").trim().toLowerCase() === nombreRed);
+  if (!doc) return "";
+  return formatearMonitorTIv2(doc.hardware || {});
+}
+
 function actaHTML(equipo, transaccion) {
   const declarante = transaccion.declarante || equipo.nombreEmpleado || "___________________________";
   const accion = transaccion.accion === "Devolucion" ? "Devuelvo" : "Recibo";
@@ -2685,7 +2697,7 @@ function actaHTML(equipo, transaccion) {
           ${filaActa("Tamaño Disco (GB):", equipo.tamanoDisco)}
           ${filaActa("Service Tag:", equipo.numeroSerial)}
           ${filaActa("Descripción Procesador:", equipo.procesador)}
-          ${filaActa("Monitor:", equipo.monitor)}
+          ${filaActa("Monitor:", obtenerMonitorDetectadoTIv2(equipo) || equipo.monitor)}
           ${filaActa("Activo Fijo:", equipo.numeroInventario)}
         </div>
         <div class="formulario-derecha">
