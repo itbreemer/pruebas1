@@ -458,6 +458,7 @@
               <tr>
                 <th>Equipo</th>
                 <th>Fecha de Ingreso</th>
+                <th>Fecha de Salida</th>
                 <th>Problema</th>
                 <th>Solución</th>
                 <th>Técnico</th>
@@ -493,6 +494,7 @@
                     <tr style="background-color: #f5f5f5;">
                       <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Técnico</th>
                       <th style="padding: 8px; text-align: center; border-bottom: 2px solid #ddd;">Cantidad</th>
+                      <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Equipos Atendidos</th>
                     </tr>
                   </thead>
                   <tbody id="tablaReporteMantenimiento">
@@ -1209,6 +1211,10 @@
           <div class="glpi-row">
             <label for="meFechaIngreso">Fecha de Ingreso</label>
             <input type="date" id="meFechaIngreso" required>
+          </div>
+          <div class="glpi-row">
+            <label for="meFechaSalida">Fecha de Salida</label>
+            <input type="date" id="meFechaSalida">
           </div>
           <div class="glpi-row">
             <label for="meProblema">Problema Reportado</label>

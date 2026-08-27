@@ -41,11 +41,11 @@ const TICKET_GARANTIA_CAMPO_POR_ID = {
 };
 
 const MANTENIMIENTO_EQUIPOS_FIELD_IDS = [
-  "meId", "meEquipo", "meFechaIngreso", "meProblema",
+  "meId", "meEquipo", "meFechaIngreso", "meFechaSalida", "meProblema",
   "meTecnico", "meObservaciones",
 ];
 const MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID = {
-  meId: "id", meEquipo: "equipoRef", meFechaIngreso: "fechaIngreso",
+  meId: "id", meEquipo: "equipoRef", meFechaIngreso: "fechaIngreso", meFechaSalida: "fechaSalida",
   meProblema: "problema", meTecnico: "tecnico",
   meObservaciones: "observaciones",
 };
@@ -4877,6 +4877,7 @@ function obtenerMantenimientoEquipos() {
     celdas: `
       <td>${esc(m.equipoRef)}</td>
       <td>${esc(formatearFechaSimple(m.fechaIngreso))}</td>
+      <td>${esc(formatearFechaSimple(m.fechaSalida))}</td>
       <td>${esc(m.problema)}</td>
       <td>${esc(m.solucion)}</td>
       <td>${esc(m.tecnico)}</td>
@@ -4887,7 +4888,7 @@ function obtenerMantenimientoEquipos() {
 
 const vistaMantenimientoEquipos = crearVistaLista({
   prefix: "mantenimientoEquipos",
-  columnas: 6,
+  columnas: 7,
   obtenerFilas: obtenerMantenimientoEquipos,
   filtrar: (r, t) => {
     const texto = [r.registro.equipoRef, r.registro.problema, r.registro.solucion, r.registro.tecnico]
@@ -4902,12 +4903,13 @@ function generarReporteMantenimiento() {
   const porTecnico = {};
   mantenimientoEquiposData.forEach((registro) => {
     const tecnico = registro.tecnico || "Sin técnico";
-    if (!porTecnico[tecnico]) porTecnico[tecnico] = 0;
-    porTecnico[tecnico]++;
+    if (!porTecnico[tecnico]) porTecnico[tecnico] = [];
+    porTecnico[tecnico].push(registro);
   });
   return Object.keys(porTecnico).sort().map((tecnico) => ({
     tecnico,
-    cantidad: porTecnico[tecnico],
+    cantidad: porTecnico[tecnico].length,
+    equipos: porTecnico[tecnico],
   }));
 }
 
@@ -4919,13 +4921,21 @@ function mostrarReporteMantenimiento() {
 
   tablaBody.innerHTML = reporteData.map((r) => `
     <tr>
-      <td style="padding: 8px; border-bottom: 1px solid #eee;">${esc(r.tecnico)}</td>
-      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-weight: bold;">${r.cantidad}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; vertical-align: top;">${esc(r.tecnico)}</td>
+      <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-weight: bold; vertical-align: top;">${r.cantidad}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 12px;">
+        ${r.equipos
+          .map(
+            (eq) =>
+              `${esc(eq.equipoRef)} <span style="color:#888;">(${esc(formatearFechaSimple(eq.fechaIngreso))} → ${eq.fechaSalida ? esc(formatearFechaSimple(eq.fechaSalida)) : "en proceso"})</span>`
+          )
+          .join("<br>")}
+      </td>
     </tr>
   `).join('');
 
   if (reporteData.length === 0) {
-    tablaBody.innerHTML = '<tr><td colspan="2" style="padding: 20px; text-align: center; color: #999;">No hay registros de mantenimiento</td></tr>';
+    tablaBody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No hay registros de mantenimiento</td></tr>';
   }
 
   const maxVal = Math.max(...reporteData.map((r) => r.cantidad), 1);
