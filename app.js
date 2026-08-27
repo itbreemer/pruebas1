@@ -5396,7 +5396,6 @@ $("btnDashboard").addEventListener("click", () => {
 
 $("btnVerTodosDepartamentos").addEventListener("click", () => irACatalogoImpresorasFiltrado(null, ""));
 
-$("btnPbiActa").addEventListener("click", abrirModalActa);
 
 $("btnNuevoIngreso").addEventListener("click", abrirModalIngreso);
 $("btnCerrarModalIngreso").addEventListener("click", cerrarModalIngreso);
