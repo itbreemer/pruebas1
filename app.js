@@ -1770,6 +1770,55 @@ function poblarSelect(select, valores, placeholder) {
   select.value = actual;
 }
 
+function buscarMonitorCatalogo(serial) {
+  const s = (serial || "").trim();
+  if (!s) return null;
+  const catalogo = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
+  return catalogo.find((m) => m.serial === s) || null;
+}
+
+function descripcionMonitorEquipo(equipo) {
+  const valor = (equipo.monitor || "").trim();
+  if (!valor) return "";
+  const m = buscarMonitorCatalogo(valor);
+  // Si no calza con el catalogo, es texto libre capturado antes de vincular al
+  // catalogo (o un serial que ya no esta en el archivo de contratos) - se
+  // muestra tal cual para no perder el dato.
+  return m ? `${m.descripcion || m.modelo} (S/N ${m.serial})` : valor;
+}
+
+function poblarSelectMonitor() {
+  const sel = $("monitor");
+  sel.innerHTML = "";
+
+  const optVacio = document.createElement("option");
+  optVacio.value = "";
+  optVacio.textContent = "N/A";
+  sel.appendChild(optVacio);
+
+  const catalogo = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
+  const seriales = new Set(catalogo.map((m) => m.serial));
+  [...catalogo]
+    .sort((a, b) => (a.descripcion || a.modelo || "").localeCompare(b.descripcion || b.modelo || "", "es"))
+    .forEach((m) => {
+      const opt = document.createElement("option");
+      opt.value = m.serial;
+      opt.textContent = `${m.descripcion || m.modelo} (${m.serial})`;
+      sel.appendChild(opt);
+    });
+
+  // Preserva valores capturados como texto libre antes de vincular al catalogo,
+  // para no perderlos al reabrir esos equipos.
+  valoresUnicos("monitor")
+    .filter((v) => v && !seriales.has(v))
+    .forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = `${v} (fuera de catálogo)`;
+      sel.appendChild(opt);
+    });
+}
+
 function valoresUnicos(campo) {
   return [...new Set(equipos.map((e) => String(e[campo] || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, "es")
@@ -1826,7 +1875,6 @@ function poblarFiltrosYDatalists() {
     "dl-correo": "correo",
     "dl-dpi": "dpi",
     "dl-dominio": "dominio",
-    "dl-monitor": "monitor",
     "dl-tamanoDisco": "tamanoDisco",
     "dl-datosImpresora": "datosImpresora",
     "dl-serialImpresora": "serialImpresora",
@@ -1857,6 +1905,8 @@ function poblarFiltrosYDatalists() {
       dl.appendChild(opt);
     });
   });
+
+  poblarSelectMonitor();
 
   const datalistMapImpresoras = {
     "dl-impTipoEquipoImp": "tipoEquipoImp",
@@ -2697,7 +2747,7 @@ function actaHTML(equipo, transaccion) {
           ${filaActa("Tamaño Disco (GB):", equipo.tamanoDisco)}
           ${filaActa("Service Tag:", equipo.numeroSerial)}
           ${filaActa("Descripción Procesador:", equipo.procesador)}
-          ${filaActa("Monitor:", obtenerMonitorDetectadoTIv2(equipo) || equipo.monitor)}
+          ${filaActa("Monitor:", descripcionMonitorEquipo(equipo))}
           ${filaActa("Activo Fijo:", equipo.numeroInventario)}
         </div>
         <div class="formulario-derecha">
@@ -4598,7 +4648,7 @@ function obtenerMonitores() {
     .map((e) => ({
       equipo: e,
       celdas: `
-        <td>${esc(e.monitor)}</td>
+        <td>${esc(descripcionMonitorEquipo(e))}</td>
         <td>${esc(e.nombreRed)}</td>
         <td>${esc(e.nombreEmpleado)}</td>
         <td>${esc(e.empresa)}</td>
@@ -4612,7 +4662,7 @@ const vistaMonitores = crearVistaLista({
   columnas: 5,
   obtenerFilas: obtenerMonitores,
   filtrar: (r, t) =>
-    [r.equipo.monitor, r.equipo.nombreRed, r.equipo.nombreEmpleado, r.equipo.empresa].join(" ").toLowerCase().includes(t),
+    [descripcionMonitorEquipo(r.equipo), r.equipo.nombreRed, r.equipo.nombreEmpleado, r.equipo.empresa].join(" ").toLowerCase().includes(t),
   alClicFila: (r) => abrirModal(r.equipo),
 });
 
@@ -4630,11 +4680,25 @@ function obtenerCatalogoMonitores() {
   }));
 }
 
+function equipoAsignadoAMonitor(serial) {
+  const s = (serial || "").trim();
+  if (!s) return null;
+  return equipos.find((e) => (e.monitor || "").trim() === s) || null;
+}
+
 const vistaCatalogoMonitores = crearVistaLista({
   prefix: "catalogoMonitores",
   columnas: 5,
   obtenerFilas: obtenerCatalogoMonitores,
   filtrar: (r, t) => [r.monitor.serial, r.monitor.modelo, r.monitor.descripcion, r.monitor.contrato].join(" ").toLowerCase().includes(t),
+  alClicFila: (r) => {
+    const equipo = equipoAsignadoAMonitor(r.monitor.serial);
+    if (equipo) {
+      abrirModal(equipo);
+    } else {
+      alert(`El monitor ${r.monitor.serial} (${r.monitor.descripcion || r.monitor.modelo}) aún no está asignado a ningún equipo.\n\nPara asignarlo, edita el equipo correspondiente y selecciónalo en el campo "Monitor".`);
+    }
+  },
 });
 
 function obtenerCatalogoImpresoras() {
