@@ -1380,11 +1380,15 @@ function actualizarUsuarioEquipoMantenimiento() {
 
     // Los equipos Lenovo en renta (con contrato activo, mismo criterio que el
     // filtro "equipos propios") solo pueden recibir mantenimiento de tecnicos
-    // de GBM segun el contrato de arrendamiento. Solo se recalcula en registros
-    // nuevos; al editar uno existente se respeta el tecnico ya guardado.
-    if (!mantenimientoEquiposActualId) {
-      const esLenovoEnRenta = (equipo.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(equipo.contratos);
-      $("meTecnico").value = esLenovoEnRenta ? "Técnico GBM" : TECNICO_ACTUAL || "";
+    // de GBM segun el contrato de arrendamiento. Se fuerza siempre (incluso en
+    // registros existentes, para corregir capturas previas a esta regla); para
+    // equipos propios solo se autocompleta en registros nuevos, respetando el
+    // tecnico ya guardado en los existentes.
+    const esLenovoEnRenta = (equipo.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(equipo.contratos);
+    if (esLenovoEnRenta) {
+      $("meTecnico").value = "Técnico GBM";
+    } else if (!mantenimientoEquiposActualId) {
+      $("meTecnico").value = TECNICO_ACTUAL || "";
     }
   }
 }
