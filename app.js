@@ -169,7 +169,7 @@ const FIELD_IDS = [
   "dominio",
   "procesador", "memoria", "tipoDisco", "firmwareInventario",
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
-  "monitor", "tamanoDisco", "datosImpresora", "serialImpresora",
+  "monitor", "numeroInventarioMonitor", "tamanoDisco", "datosImpresora", "serialImpresora",
   "tipoImpresora", "nombreDispositivo", "serialDispositivo",
   "puesto", "fechaIngresoEquipo", "codigoRam", "memoriaDescripcion",
 ];
@@ -1925,6 +1925,7 @@ function poblarFiltrosYDatalists() {
     "dl-proyecto": "proyecto",
     "dl-puesto": "puesto",
     "dl-codigoRam": "codigoRam",
+    "dl-numeroInventarioMonitor": "numeroInventarioMonitor",
     "dl-memoriaDescripcion": "memoriaDescripcion",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
@@ -2779,6 +2780,7 @@ function actaHTML(equipo, transaccion) {
           ${filaActa("Service Tag:", equipo.numeroSerial)}
           ${filaActa("Descripción Procesador:", equipo.procesador)}
           ${filaActa("Monitor:", descripcionMonitorEquipo(equipo))}
+          ${filaActa("No. Inventario Monitor:", equipo.numeroInventarioMonitor)}
           ${filaActa("Activo Fijo:", equipo.numeroInventario)}
         </div>
         <div class="formulario-derecha">
