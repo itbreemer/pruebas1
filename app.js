@@ -4692,6 +4692,12 @@ function formatearFechaHora(valor) {
   return String(valor);
 }
 
+function formatearMonitorTIv2(hw) {
+  const monitores = Array.isArray(hw.monitores) ? hw.monitores.filter((m) => m && m.activo !== false) : [];
+  if (!monitores.length) return "";
+  return monitores.map((m) => [m.fabricante, m.modelo].filter((v) => v && v !== "N/A").join(" ")).join(", ");
+}
+
 function obtenerEquiposTIv2() {
   return equiposTIv2Data.map((e) => {
     const hw = e.hardware || {};
@@ -4706,6 +4712,7 @@ function obtenerEquiposTIv2() {
         <td>${esc(cpu.nombre)}</td>
         <td>${esc(ram.total)}</td>
         <td>${esc(so.nombre)}</td>
+        <td>${esc(formatearMonitorTIv2(hw))}</td>
         <td>${esc(hw.ipPrincipal)}</td>
         <td>${esc(hw.serialNumber)}</td>
         <td>${esc(formatearFechaHora(e.timestamp))}</td>
@@ -4716,12 +4723,12 @@ function obtenerEquiposTIv2() {
 
 const vistaEquiposTIv2 = crearVistaLista({
   prefix: "equiposTIv2",
-  columnas: 8,
+  columnas: 9,
   obtenerFilas: obtenerEquiposTIv2,
   filtrar: (r, t) => {
     const hw = r.dato.hardware || {};
     const so = hw.sistemaOperativo || {};
-    const texto = [r.dato.computadora, r.dato.equipoId, r.dato.usuario, hw.ipPrincipal, so.nombre]
+    const texto = [r.dato.computadora, r.dato.equipoId, r.dato.usuario, hw.ipPrincipal, so.nombre, formatearMonitorTIv2(hw)]
       .join(" ")
       .toLowerCase();
     return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));

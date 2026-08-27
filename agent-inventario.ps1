@@ -266,6 +266,18 @@ function Get-ComputerHardware {
             $hardware.macPrincipal = "N/A"
         }
 
+        # Monitor(es) conectado(s) actualmente
+        # Se lee via WMI (root\wmi, WmiMonitorID) que expone el EDID reportado por el
+        # propio monitor (fabricante/modelo/serial) - funciona con cualquier marca de
+        # monitor, sin importar la marca de la PC (Lenovo, Dell, etc).
+        try {
+            $hardware.monitores = Get-ConnectedMonitors
+        }
+        catch {
+            LogWarning "No se pudo obtener info de monitores: $_"
+            $hardware.monitores = @()
+        }
+
         LogSuccess "Información de hardware recolectada correctamente"
         return $hardware
     }
@@ -273,6 +285,34 @@ function Get-ComputerHardware {
         LogError "Error recolectando hardware: $_"
         return $null
     }
+}
+
+function ConvertFrom-WmiMonitorBytes {
+    # Las propiedades de WmiMonitorID (ManufacturerName, UserFriendlyName,
+    # SerialNumberID) vienen como arreglos de UInt16 (codigos de caracter),
+    # rellenados con ceros al final.
+    param([uint16[]]$Bytes)
+    if (-not $Bytes -or $Bytes.Count -eq 0) { return "" }
+    -join ($Bytes | Where-Object { $_ -ne 0 } | ForEach-Object { [char]$_ })
+}
+
+function Get-ConnectedMonitors {
+    $monitores = @()
+    try {
+        Get-CimInstance -Namespace "root\wmi" -ClassName WmiMonitorID -ErrorAction Stop | ForEach-Object {
+            $fabricanteCodigo = ConvertFrom-WmiMonitorBytes -Bytes $_.ManufacturerName
+            $monitores += @{
+                fabricante = if ($fabricanteCodigo) { $fabricanteCodigo } else { "N/A" }
+                modelo = $(if ($nombre = ConvertFrom-WmiMonitorBytes -Bytes $_.UserFriendlyName) { $nombre } else { "N/A" })
+                serial = $(if ($serie = ConvertFrom-WmiMonitorBytes -Bytes $_.SerialNumberID) { $serie } else { "N/A" })
+                activo = [bool]$_.Active
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar WmiMonitorID (puede requerir permisos de administrador): $_"
+    }
+    return $monitores
 }
 
 # ============================================================================
