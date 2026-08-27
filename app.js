@@ -31,14 +31,23 @@ const CODIGO_CAMPO_POR_ID = {
 };
 
 const TICKET_GARANTIA_FIELD_IDS = [
-  "tgId", "tgProveedor", "tgEquipo", "tgNumeroTicket", "tgFechaReporte",
+  "tgId", "tgProveedor", "tgEquipo", "tgNumeroTicket", "tgFechaReporte", "tgFechaResolucion",
   "tgEstado", "tgDescripcionFalla", "tgComentarios",
 ];
 const TICKET_GARANTIA_CAMPO_POR_ID = {
   tgId: "id", tgProveedor: "proveedor", tgEquipo: "equipoRef", tgNumeroTicket: "numeroTicket",
-  tgFechaReporte: "fechaReporte", tgEstado: "estado", tgDescripcionFalla: "descripcionFalla",
-  tgComentarios: "comentarios",
+  tgFechaReporte: "fechaReporte", tgFechaResolucion: "fechaResolucion", tgEstado: "estado",
+  tgDescripcionFalla: "descripcionFalla", tgComentarios: "comentarios",
 };
+
+function diasRespuestaGarantia(ticket) {
+  if (!ticket.fechaReporte || !ticket.fechaResolucion) return "";
+  const inicio = new Date(ticket.fechaReporte);
+  const fin = new Date(ticket.fechaResolucion);
+  if (isNaN(inicio) || isNaN(fin)) return "";
+  const dias = Math.round((fin - inicio) / (1000 * 60 * 60 * 24));
+  return dias >= 0 ? dias : "";
+}
 
 const MANTENIMIENTO_EQUIPOS_FIELD_IDS = [
   "meId", "meEquipo", "meFechaIngreso", "meFechaSalida", "meProblema",
@@ -4869,6 +4878,8 @@ function obtenerTicketsGarantia() {
       <td>${esc(t.equipoRef)}</td>
       <td>${esc(t.numeroTicket)}</td>
       <td>${esc(formatearFechaSimple(t.fechaReporte))}</td>
+      <td>${esc(formatearFechaSimple(t.fechaResolucion))}</td>
+      <td>${esc(diasRespuestaGarantia(t))}</td>
       <td><span class="badge">${esc(t.estado)}</span></td>
       <td>${esc(t.descripcionFalla)}</td>
     `,
@@ -4877,7 +4888,7 @@ function obtenerTicketsGarantia() {
 
 const vistaTicketsGarantia = crearVistaLista({
   prefix: "ticketsGarantia",
-  columnas: 6,
+  columnas: 8,
   obtenerFilas: obtenerTicketsGarantia,
   filtrar: (r, t) => {
     const texto = [r.ticket.proveedor, r.ticket.equipoRef, r.ticket.numeroTicket, r.ticket.estado, r.ticket.descripcionFalla]
@@ -4960,13 +4971,15 @@ function abrirHistorialGarantiaEquipo() {
               <td>${esc(t.proveedor)}</td>
               <td>${esc(t.numeroTicket)}</td>
               <td>${esc(formatearFechaSimple(t.fechaReporte))}</td>
+              <td>${esc(formatearFechaSimple(t.fechaResolucion))}</td>
+              <td>${esc(diasRespuestaGarantia(t))}</td>
               <td><span class="badge">${esc(t.estado)}</span></td>
               <td>${esc(t.descripcionFalla)}</td>
             </tr>
           `
         )
         .join("")
-    : `<tr><td colspan="5" class="empty-state">Este equipo no tiene tickets de garantía reportados.</td></tr>`;
+    : `<tr><td colspan="7" class="empty-state">Este equipo no tiene tickets de garantía reportados.</td></tr>`;
 
   $("modalHistorialGarantiaEquipoOverlay").style.display = "flex";
 }
