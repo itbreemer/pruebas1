@@ -1377,6 +1377,15 @@ function actualizarUsuarioEquipoMantenimiento() {
     $("meHwRam").textContent = equipo.memoria || "-";
     $("meHwDisco").textContent = equipo.tipoDisco || "-";
     $("meHwTipo").textContent = equipo.tipoEquipo || "-";
+
+    // Los equipos Lenovo en renta (con contrato activo, mismo criterio que el
+    // filtro "equipos propios") solo pueden recibir mantenimiento de tecnicos
+    // de GBM segun el contrato de arrendamiento. Solo se recalcula en registros
+    // nuevos; al editar uno existente se respeta el tecnico ya guardado.
+    if (!mantenimientoEquiposActualId) {
+      const esLenovoEnRenta = (equipo.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(equipo.contratos);
+      $("meTecnico").value = esLenovoEnRenta ? "Técnico GBM" : TECNICO_ACTUAL || "";
+    }
   }
 }
 
