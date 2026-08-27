@@ -4930,22 +4930,26 @@ function cerrarHistorialMantenimientoEquipo() {
   $("modalHistorialMantenimientoEquipoOverlay").style.display = "none";
 }
 
-function registrosGarantiaDeEquipo(nombreRed) {
-  const n = (nombreRed || "").trim();
-  if (!n) return [];
+function registrosGarantiaDeEquipo(nombreRed, numeroSerial) {
+  // Los tickets de garantia se capturan a veces con el Nombre en Red del equipo
+  // y otras veces con su Numero de Serial (segun lo que el proveedor pida en el
+  // reporte), asi que se compara contra ambos valores del equipo.
+  const candidatos = [nombreRed, numeroSerial].map((v) => (v || "").trim().toLowerCase()).filter(Boolean);
+  if (!candidatos.length) return [];
   return ticketsGarantiaData
-    .filter((t) => (t.equipoRef || "").trim() === n)
+    .filter((t) => candidatos.includes((t.equipoRef || "").trim().toLowerCase()))
     .sort((a, b) => (b.fechaReporte || "").localeCompare(a.fechaReporte || ""));
 }
 
 function actualizarContadorGarantiaEquipo() {
-  $("contadorGarantiaEquipo").textContent = registrosGarantiaDeEquipo($("nombreRed").value).length;
+  $("contadorGarantiaEquipo").textContent = registrosGarantiaDeEquipo($("nombreRed").value, $("numeroSerial").value).length;
 }
 
 function abrirHistorialGarantiaEquipo() {
   const nombreRed = $("nombreRed").value.trim();
-  const registros = registrosGarantiaDeEquipo(nombreRed);
-  $("modalHistorialGarantiaEquipoTitulo").textContent = `Historial de Garantías — ${nombreRed || "N/A"} (${registros.length})`;
+  const numeroSerial = $("numeroSerial").value.trim();
+  const registros = registrosGarantiaDeEquipo(nombreRed, numeroSerial);
+  $("modalHistorialGarantiaEquipoTitulo").textContent = `Historial de Garantías — ${nombreRed || numeroSerial || "N/A"} (${registros.length})`;
 
   const tbody = $("tbodyHistorialGarantiaEquipo");
   tbody.innerHTML = registros.length
