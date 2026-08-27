@@ -2187,6 +2187,7 @@ function abrirModal(equipo) {
   }
   $("nombreRedAviso").style.display = "none";
   actualizarAyudaMonitor();
+  actualizarContadorMantenimientoEquipo();
   $("modalOverlay").classList.add("open");
 }
 
@@ -2219,6 +2220,7 @@ function onCambioNombreRedEquipo() {
     aviso.className = "acta-estado";
     aviso.style.display = "";
     actualizarAyudaMonitor();
+    actualizarContadorMantenimientoEquipo();
   } else {
     aviso.style.display = "none";
     aviso.textContent = "";
@@ -4884,6 +4886,48 @@ const vistaTicketsGarantia = crearVistaLista({
   alClicFila: (r) => abrirModalTicketGarantia(r.ticket),
 });
 
+function registrosMantenimientoDeEquipo(nombreRed) {
+  const n = (nombreRed || "").trim();
+  if (!n) return [];
+  return mantenimientoEquiposData
+    .filter((m) => (m.equipoRef || "").trim() === n)
+    .sort((a, b) => (b.fechaIngreso || "").localeCompare(a.fechaIngreso || ""));
+}
+
+function actualizarContadorMantenimientoEquipo() {
+  $("contadorMantenimientoEquipo").textContent = registrosMantenimientoDeEquipo($("nombreRed").value).length;
+}
+
+function abrirHistorialMantenimientoEquipo() {
+  const nombreRed = $("nombreRed").value.trim();
+  const registros = registrosMantenimientoDeEquipo(nombreRed);
+  $("modalHistorialMantenimientoEquipoTitulo").textContent = `Historial de Mantenimiento — ${nombreRed || "N/A"} (${registros.length})`;
+
+  const tbody = $("tbodyHistorialMantenimientoEquipo");
+  tbody.innerHTML = registros.length
+    ? registros
+        .map(
+          (m) => `
+            <tr>
+              <td>${esc(formatearFechaSimple(m.fechaIngreso))}</td>
+              <td>${esc(formatearFechaSimple(m.fechaSalida))}</td>
+              <td>${esc(m.problema)}</td>
+              <td>${esc(m.solucion)}</td>
+              <td>${esc(m.tecnico)}</td>
+              <td>${esc(m.observaciones)}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="6" class="empty-state">Este equipo no tiene registros de mantenimiento.</td></tr>`;
+
+  $("modalHistorialMantenimientoEquipoOverlay").style.display = "flex";
+}
+
+function cerrarHistorialMantenimientoEquipo() {
+  $("modalHistorialMantenimientoEquipoOverlay").style.display = "none";
+}
+
 let mostrarHistorialMantenimientoCompleto = false;
 
 function obtenerMantenimientoEquipos() {
@@ -5367,6 +5411,9 @@ $("btnCancelarMantenimientoEquipos").addEventListener("click", cerrarModalManten
 $("btnEliminarModalMantenimientoEquipos").addEventListener("click", eliminarRegistroMantenimientoActual);
 $("meEquipo").addEventListener("change", actualizarUsuarioEquipoMantenimiento);
 $("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEquipos);
+$("btnVerMantenimientoDeEquipo").addEventListener("click", abrirHistorialMantenimientoEquipo);
+$("btnCerrarHistorialMantenimientoEquipo").addEventListener("click", cerrarHistorialMantenimientoEquipo);
+$("btnCerrarHistorialMantenimientoEquipo2").addEventListener("click", cerrarHistorialMantenimientoEquipo);
 $("btnToggleHistorialMantenimiento").addEventListener("click", alternarHistorialMantenimiento);
 $("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
 $("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);

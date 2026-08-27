@@ -928,6 +928,10 @@
             <input type="text" id="dominio" list="dl-dominio">
             <datalist id="dl-dominio"></datalist>
           </div>
+          <div class="glpi-row">
+            <label>Mantenimiento</label>
+            <button type="button" id="btnVerMantenimientoDeEquipo" class="btn btn-secondary">🔧 Ver historial (<span id="contadorMantenimientoEquipo">0</span>)</button>
+          </div>
         </div>
       </div>
 
@@ -1272,6 +1276,40 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal Historial de Mantenimiento de un equipo -->
+<div id="modalHistorialMantenimientoEquipoOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalHistorialMantenimientoEquipoTitulo">Historial de Mantenimiento</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarHistorialMantenimientoEquipo" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <section class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha de Ingreso</th>
+              <th>Fecha de Salida</th>
+              <th>Problema</th>
+              <th>Solución</th>
+              <th>Técnico</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyHistorialMantenimientoEquipo"></tbody>
+        </table>
+      </section>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" id="btnCerrarHistorialMantenimientoEquipo2" class="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
