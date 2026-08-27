@@ -448,10 +448,12 @@
         <section class="toolbar">
           <input type="text" id="buscador_mantenimientoEquipos" placeholder="Buscar por equipo, técnico, problema...">
           <div>
+            <button type="button" id="btnToggleHistorialMantenimiento" class="btn btn-secondary">🗂️ Ver historial completo</button>
             <button type="button" id="btnVerReporteMantenimiento" class="btn btn-secondary">📊 Reporte por Técnico</button>
             <button type="button" id="btnNuevoMantenimientoEquipo" class="btn btn-primary">+ Nuevo registro de mantenimiento</button>
           </div>
         </section>
+        <p id="mantenimientoFiltroAviso" class="subseccion-nota">Mostrando solo mantenimientos en proceso (sin Fecha de Salida). Haz clic en "Ver historial completo" para ver también los finalizados.</p>
         <section class="tabla-wrap">
           <table class="tabla">
             <thead>

@@ -4884,8 +4884,13 @@ const vistaTicketsGarantia = crearVistaLista({
   alClicFila: (r) => abrirModalTicketGarantia(r.ticket),
 });
 
+let mostrarHistorialMantenimientoCompleto = false;
+
 function obtenerMantenimientoEquipos() {
-  return mantenimientoEquiposData.map((m) => ({
+  const datos = mostrarHistorialMantenimientoCompleto
+    ? mantenimientoEquiposData
+    : mantenimientoEquiposData.filter((m) => !nonEmpty(m.fechaSalida));
+  return datos.map((m) => ({
     registro: m,
     celdas: `
       <td>${esc(m.equipoRef)}</td>
@@ -4897,6 +4902,20 @@ function obtenerMantenimientoEquipos() {
       <td>${esc(m.observaciones)}</td>
     `,
   }));
+}
+
+function alternarHistorialMantenimiento() {
+  mostrarHistorialMantenimientoCompleto = !mostrarHistorialMantenimientoCompleto;
+  const boton = $("btnToggleHistorialMantenimiento");
+  const aviso = $("mantenimientoFiltroAviso");
+  if (mostrarHistorialMantenimientoCompleto) {
+    boton.textContent = "🗂️ Ver solo en proceso";
+    aviso.textContent = 'Mostrando el historial completo (en proceso y finalizados). Haz clic en "Ver solo en proceso" para ocultar los ya finalizados.';
+  } else {
+    boton.textContent = "🗂️ Ver historial completo";
+    aviso.textContent = 'Mostrando solo mantenimientos en proceso (sin Fecha de Salida). Haz clic en "Ver historial completo" para ver también los finalizados.';
+  }
+  vistaMantenimientoEquipos.render();
 }
 
 const vistaMantenimientoEquipos = crearVistaLista({
@@ -5348,6 +5367,7 @@ $("btnCancelarMantenimientoEquipos").addEventListener("click", cerrarModalManten
 $("btnEliminarModalMantenimientoEquipos").addEventListener("click", eliminarRegistroMantenimientoActual);
 $("meEquipo").addEventListener("change", actualizarUsuarioEquipoMantenimiento);
 $("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEquipos);
+$("btnToggleHistorialMantenimiento").addEventListener("click", alternarHistorialMantenimiento);
 $("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
 $("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);
 $("btnCerrarReporteMantenimiento").addEventListener("click", () => {
