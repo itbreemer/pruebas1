@@ -2780,7 +2780,7 @@ function actaHTML(equipo, transaccion) {
           ${filaActa("Service Tag:", equipo.numeroSerial)}
           ${filaActa("Descripción Procesador:", equipo.procesador)}
           ${filaActa("Monitor:", descripcionMonitorEquipo(equipo))}
-          ${filaActa("No. Inventario Monitor:", equipo.numeroInventarioMonitor)}
+          ${filaActa("Activo Fijo Monitor:", equipo.numeroInventarioMonitor)}
           ${filaActa("Activo Fijo:", equipo.numeroInventario)}
         </div>
         <div class="formulario-derecha">
