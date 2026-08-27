@@ -441,6 +441,29 @@ main .btn-primary:hover { background: #163158; }
 .glpi-row textarea { resize: vertical; }
 .glpi-row input[readonly] { background: #f3f4f6; color: #4b5563; }
 
+.autocomplete-wrap { position: relative; width: 100%; }
+.autocomplete-lista {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 2px;
+}
+.autocomplete-lista.open { display: block; }
+.autocomplete-item { padding: 7px 10px; font-size: 0.82rem; cursor: pointer; }
+.autocomplete-item:hover { background: #eef1f6; }
+.autocomplete-item small { display: block; color: #6b7280; }
+.autocomplete-ayuda { font-size: 0.72rem; color: #6b7280; margin-top: 3px; }
+.autocomplete-ayuda.sin-match { color: #b45309; }
+
 .campo-con-boton { display: flex; gap: 6px; width: 100%; }
 .campo-con-boton input { flex: 1; }
 .btn-mini {

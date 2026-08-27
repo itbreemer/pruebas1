@@ -1787,36 +1787,67 @@ function descripcionMonitorEquipo(equipo) {
   return m ? `${m.descripcion || m.modelo} (S/N ${m.serial})` : valor;
 }
 
-function poblarSelectMonitor() {
-  const sel = $("monitor");
-  sel.innerHTML = "";
+function actualizarAyudaMonitor() {
+  const ayuda = $("monitorAyuda");
+  const valor = $("monitor").value.trim();
+  if (!valor) {
+    ayuda.textContent = "";
+    ayuda.classList.remove("sin-match");
+    return;
+  }
+  const m = buscarMonitorCatalogo(valor);
+  if (m) {
+    ayuda.textContent = `✓ ${m.descripcion || m.modelo} · Contrato ${m.contrato} (vence ${m.fechaFin})`;
+    ayuda.classList.remove("sin-match");
+  } else {
+    ayuda.textContent = "⚠ No coincide con un serial del catálogo (se guardará el texto tal cual)";
+    ayuda.classList.add("sin-match");
+  }
+}
 
-  const optVacio = document.createElement("option");
-  optVacio.value = "";
-  optVacio.textContent = "N/A";
-  sel.appendChild(optVacio);
-
+function renderSugerenciasMonitor(filtro) {
+  const lista = $("monitorSugerencias");
   const catalogo = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
-  const seriales = new Set(catalogo.map((m) => m.serial));
-  [...catalogo]
-    .sort((a, b) => (a.descripcion || a.modelo || "").localeCompare(b.descripcion || b.modelo || "", "es"))
-    .forEach((m) => {
-      const opt = document.createElement("option");
-      opt.value = m.serial;
-      opt.textContent = `${m.descripcion || m.modelo} (${m.serial})`;
-      sel.appendChild(opt);
-    });
+  const t = (filtro || "").trim().toLowerCase();
+  const resultados = (t ? catalogo.filter((m) => [m.serial, m.modelo, m.descripcion].join(" ").toLowerCase().includes(t)) : catalogo).slice(
+    0,
+    30
+  );
 
-  // Preserva valores capturados como texto libre antes de vincular al catalogo,
-  // para no perderlos al reabrir esos equipos.
-  valoresUnicos("monitor")
-    .filter((v) => v && !seriales.has(v))
-    .forEach((v) => {
-      const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = `${v} (fuera de catálogo)`;
-      sel.appendChild(opt);
+  lista.innerHTML = "";
+  if (!resultados.length) {
+    lista.innerHTML = `<div class="autocomplete-item" style="cursor:default;color:#9ca3af;">Sin coincidencias en el catálogo</div>`;
+    lista.classList.add("open");
+    return;
+  }
+
+  resultados.forEach((m) => {
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `${esc(m.descripcion || m.modelo)}<small>S/N ${esc(m.serial)} · Contrato ${esc(m.contrato)}</small>`;
+    // mousedown (no click) para que dispare antes del blur del input.
+    item.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      $("monitor").value = m.serial;
+      lista.classList.remove("open");
+      actualizarAyudaMonitor();
     });
+    lista.appendChild(item);
+  });
+  lista.classList.add("open");
+}
+
+function inicializarAutocompleteMonitor() {
+  const input = $("monitor");
+  const lista = $("monitorSugerencias");
+  input.addEventListener("focus", () => renderSugerenciasMonitor(""));
+  input.addEventListener("input", () => {
+    renderSugerenciasMonitor(input.value);
+    actualizarAyudaMonitor();
+  });
+  input.addEventListener("blur", () => {
+    setTimeout(() => lista.classList.remove("open"), 150);
+  });
 }
 
 function valoresUnicos(campo) {
@@ -1905,8 +1936,6 @@ function poblarFiltrosYDatalists() {
       dl.appendChild(opt);
     });
   });
-
-  poblarSelectMonitor();
 
   const datalistMapImpresoras = {
     "dl-impTipoEquipoImp": "tipoEquipoImp",
@@ -2143,6 +2172,7 @@ function abrirModal(equipo) {
     $("btnEliminarModal").style.display = "none";
   }
   $("nombreRedAviso").style.display = "none";
+  actualizarAyudaMonitor();
   $("modalOverlay").classList.add("open");
 }
 
@@ -2174,6 +2204,7 @@ function onCambioNombreRedEquipo() {
     aviso.textContent = `Se cargaron los datos del equipo existente (${encontrado.empresa || "N/A"} · ${encontrado.nombreEmpleado || "sin usuario"}). Revisa/edita lo que necesites y da clic en Guardar.`;
     aviso.className = "acta-estado";
     aviso.style.display = "";
+    actualizarAyudaMonitor();
   } else {
     aviso.style.display = "none";
     aviso.textContent = "";
@@ -5255,6 +5286,7 @@ $("btnSugerirIdGlpi").addEventListener("click", () => {
   $("idGlpi").value = siguienteIdGlpi();
 });
 $("nombreRed").addEventListener("input", onCambioNombreRedEquipo);
+inicializarAutocompleteMonitor();
 $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);
 $("btnEliminarModal").addEventListener("click", eliminarActual);

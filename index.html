@@ -952,7 +952,14 @@
         <summary>Monitor, disco e impresora/dispositivo asignado (para el Acta)</summary>
         <div class="glpi-grid">
           <div class="glpi-col">
-            <div class="glpi-row"><label for="monitor">Monitor</label><select id="monitor"><option value="">N/A</option></select></div>
+            <div class="glpi-row">
+              <label for="monitor">Monitor</label>
+              <div class="autocomplete-wrap">
+                <input type="text" id="monitor" placeholder="Escribe modelo, descripción o serial..." autocomplete="off">
+                <div id="monitorSugerencias" class="autocomplete-lista"></div>
+                <div id="monitorAyuda" class="autocomplete-ayuda"></div>
+              </div>
+            </div>
             <div class="glpi-row"><label for="codigoRam">Código RAM adicional</label><input type="text" id="codigoRam" list="dl-codigoRam" placeholder="N/A"><datalist id="dl-codigoRam"></datalist></div>
             <div class="glpi-row"><label for="tamanoDisco">Tamaño Disco (GB)</label><input type="text" id="tamanoDisco" list="dl-tamanoDisco" placeholder="N/A"><datalist id="dl-tamanoDisco"></datalist></div>
             <div class="glpi-row"><label for="datosImpresora">Datos Impresora Asig.</label><input type="text" id="datosImpresora" list="dl-datosImpresora" placeholder="N/A"><datalist id="dl-datosImpresora"></datalist></div>
