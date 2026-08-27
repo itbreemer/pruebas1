@@ -932,6 +932,10 @@
             <label>Mantenimiento</label>
             <button type="button" id="btnVerMantenimientoDeEquipo" class="btn btn-secondary">🔧 Ver historial (<span id="contadorMantenimientoEquipo">0</span>)</button>
           </div>
+          <div class="glpi-row">
+            <label>Garantías Lenovo</label>
+            <button type="button" id="btnVerGarantiaDeEquipo" class="btn btn-secondary">🛡️ Ver historial (<span id="contadorGarantiaEquipo">0</span>)</button>
+          </div>
         </div>
       </div>
 
@@ -1309,6 +1313,39 @@
       <div class="modal-actions">
         <div class="modal-actions-right">
           <button type="button" id="btnCerrarHistorialMantenimientoEquipo2" class="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Historial de Garantías Lenovo de un equipo -->
+<div id="modalHistorialGarantiaEquipoOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalHistorialGarantiaEquipoTitulo">Historial de Garantías</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarHistorialGarantiaEquipo" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <section class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Proveedor</th>
+              <th>N° Ticket</th>
+              <th>Fecha de Reporte</th>
+              <th>Estado</th>
+              <th>Falla Reportada</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyHistorialGarantiaEquipo"></tbody>
+        </table>
+      </section>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" id="btnCerrarHistorialGarantiaEquipo2" class="btn btn-secondary">Cerrar</button>
         </div>
       </div>
     </div>

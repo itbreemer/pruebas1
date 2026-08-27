@@ -2188,6 +2188,7 @@ function abrirModal(equipo) {
   $("nombreRedAviso").style.display = "none";
   actualizarAyudaMonitor();
   actualizarContadorMantenimientoEquipo();
+  actualizarContadorGarantiaEquipo();
   $("modalOverlay").classList.add("open");
 }
 
@@ -2221,6 +2222,7 @@ function onCambioNombreRedEquipo() {
     aviso.style.display = "";
     actualizarAyudaMonitor();
     actualizarContadorMantenimientoEquipo();
+  actualizarContadorGarantiaEquipo();
   } else {
     aviso.style.display = "none";
     aviso.textContent = "";
@@ -4928,6 +4930,47 @@ function cerrarHistorialMantenimientoEquipo() {
   $("modalHistorialMantenimientoEquipoOverlay").style.display = "none";
 }
 
+function registrosGarantiaDeEquipo(nombreRed) {
+  const n = (nombreRed || "").trim();
+  if (!n) return [];
+  return ticketsGarantiaData
+    .filter((t) => (t.equipoRef || "").trim() === n)
+    .sort((a, b) => (b.fechaReporte || "").localeCompare(a.fechaReporte || ""));
+}
+
+function actualizarContadorGarantiaEquipo() {
+  $("contadorGarantiaEquipo").textContent = registrosGarantiaDeEquipo($("nombreRed").value).length;
+}
+
+function abrirHistorialGarantiaEquipo() {
+  const nombreRed = $("nombreRed").value.trim();
+  const registros = registrosGarantiaDeEquipo(nombreRed);
+  $("modalHistorialGarantiaEquipoTitulo").textContent = `Historial de Garantías — ${nombreRed || "N/A"} (${registros.length})`;
+
+  const tbody = $("tbodyHistorialGarantiaEquipo");
+  tbody.innerHTML = registros.length
+    ? registros
+        .map(
+          (t) => `
+            <tr>
+              <td>${esc(t.proveedor)}</td>
+              <td>${esc(t.numeroTicket)}</td>
+              <td>${esc(formatearFechaSimple(t.fechaReporte))}</td>
+              <td><span class="badge">${esc(t.estado)}</span></td>
+              <td>${esc(t.descripcionFalla)}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="5" class="empty-state">Este equipo no tiene tickets de garantía reportados.</td></tr>`;
+
+  $("modalHistorialGarantiaEquipoOverlay").style.display = "flex";
+}
+
+function cerrarHistorialGarantiaEquipo() {
+  $("modalHistorialGarantiaEquipoOverlay").style.display = "none";
+}
+
 let mostrarHistorialMantenimientoCompleto = false;
 
 function obtenerMantenimientoEquipos() {
@@ -5414,6 +5457,9 @@ $("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEq
 $("btnVerMantenimientoDeEquipo").addEventListener("click", abrirHistorialMantenimientoEquipo);
 $("btnCerrarHistorialMantenimientoEquipo").addEventListener("click", cerrarHistorialMantenimientoEquipo);
 $("btnCerrarHistorialMantenimientoEquipo2").addEventListener("click", cerrarHistorialMantenimientoEquipo);
+$("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
+$("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);
+$("btnCerrarHistorialGarantiaEquipo2").addEventListener("click", cerrarHistorialGarantiaEquipo);
 $("btnToggleHistorialMantenimiento").addEventListener("click", alternarHistorialMantenimiento);
 $("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
 $("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);
