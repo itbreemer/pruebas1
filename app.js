@@ -4584,6 +4584,16 @@ function renderTablero() {
   const propiosEnRevision = propios.filter(esEnRevisionCronograma).length;
   const equiposPropios = propios.length - propiosEnRevision;
 
+  window.__debugTablero = {
+    totalEquipos: equipos.length,
+    equiposUsuario: equiposUsuario.length,
+    equiposUsuarioValidados: equiposUsuarioValidados.length,
+    propios: propios.length,
+    propiosEnRevision,
+    equiposPropios,
+  };
+  console.log("[debug tablero]", window.__debugTablero);
+
   if ($("vista-tablero").classList.contains("vista-active")) {
     $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
   }
@@ -5656,7 +5666,7 @@ $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
 $("btnDashboard").addEventListener("click", () => {
-  window.open("dashboard.html?v=20260828e", "dashboardInventarioTI", "width=1280,height=900");
+  window.open("dashboard.html?v=20260828f", "dashboardInventarioTI", "width=1280,height=900");
 });
 
 $("btnVerTodosDepartamentos").addEventListener("click", () => irACatalogoImpresorasFiltrado(null, ""));

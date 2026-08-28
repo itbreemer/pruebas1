@@ -240,6 +240,18 @@ function renderTodo(equiposCrudos) {
 
   pintarContratos(validados);
 
+  window.__debugDashboard = {
+    totalRaw: equiposCrudos.length,
+    trasExcluirDupChatarra: equipos.length,
+    noServidor: noServidor.length,
+    validados: validados.length,
+    validadosConContrato: validados.filter((e) => nonEmpty(e.contratos)).length,
+    propiosSinRiolsa: propiosSinRiolsa.length,
+    riolsaPropios: riolsaPropios.length,
+    totalPropios: propiosSinRiolsa.length + riolsaPropios.length,
+  };
+  console.log("[debug dashboard]", window.__debugDashboard);
+
   $("fecha-corte").textContent = `Actualizado ${new Date().toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
