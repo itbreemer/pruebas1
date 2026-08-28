@@ -4196,8 +4196,12 @@ function construirContratosLenovo(equiposValidados) {
       if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0 };
       if (fecha && !porContrato[numero].fecha) porContrato[numero].fecha = fecha;
 
+      // "Desktop" en este reporte agrupa todos los factores de forma de escritorio
+      // (Desktop, Mini PC, Mini Tower, Low Profile Desktop), no solo el tipo
+      // literal "Desktop" - de lo contrario Mini PC/Mini Tower caian en "Otros".
       const tipo = ALIAS_TIPO_EQUIPO[e.tipoEquipo] || e.tipoEquipo || "";
-      if (tipo === "Desktop") porContrato[numero].desktop++;
+      const esDesktopFamilia = ["Desktop", "Mini PC", "Mini Tower", "Low Profile Desktop"].includes(tipo);
+      if (esDesktopFamilia) porContrato[numero].desktop++;
       else if (tipo === "Notebook") porContrato[numero].laptop++;
       else porContrato[numero].otros++;
     });
@@ -4212,7 +4216,7 @@ let contratosLenovoFilas = [];
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
-  const datosDona = contratosLenovoFilas.slice(0, 8).map((f) => [f.numero, f.total]);
+  const datosDona = contratosLenovoFilas.map((f) => [f.numero, f.total]);
   pintarPanelConDona({
     idDona: "tableroContratoDona", idLista: "tableroContrato", campo: "contratoLenovo",
     atributoCampo: "data-campo-contrato-lenovo",
