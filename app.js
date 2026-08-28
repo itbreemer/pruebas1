@@ -4093,7 +4093,6 @@ function refrescarVistasSecundarias() {
   vistaUsuarios.render();
   vistaMonitores.render();
   vistaCatalogoMonitores.render();
-  vistaImpresoras.render();
   vistaCatalogoImpresoras.render();
   vistaCodigos.render();
   vistaDispositivos.render();
@@ -4128,10 +4127,7 @@ function cambiarVista(nombre) {
     vistaMonitores.render();
     vistaCatalogoMonitores.render();
   }
-  else if (nombre === "impresoras") {
-    vistaImpresoras.render();
-    vistaCatalogoImpresoras.render();
-  }
+  else if (nombre === "impresoras") vistaCatalogoImpresoras.render();
   else if (nombre === "dispositivos") vistaDispositivos.render();
   else if (nombre === "contratos") vistaContratos.render();
   else if (nombre === "contratosMoviles") vistaContratosMoviles.render();
@@ -5477,36 +5473,6 @@ const vistaDocumentosAnexoOficina = crearVistaLista({
   columnas: 5,
   obtenerFilas: obtenerDocumentosAnexoOficina,
   filtrar: (r, t) => [r.documento.referencia, r.documento.nombreArchivo].join(" ").toLowerCase().includes(t),
-});
-
-function obtenerImpresoras() {
-  return equipos
-    .filter(
-      (e) => nonEmpty(e.datosImpresora) || nonEmpty(e.serialImpresora) || nonEmpty(e.tipoImpresora) || nonEmpty(e.ipImpresora)
-    )
-    .map((e) => ({
-      equipo: e,
-      celdas: `
-        <td>${esc(e.datosImpresora)}</td>
-        <td>${esc(e.serialImpresora)}</td>
-        <td>${esc(e.tipoImpresora)}</td>
-        <td>${esc(e.ipImpresora)}</td>
-        <td>${esc(e.nombreRed)}</td>
-        <td>${esc(e.nombreEmpleado)}</td>
-      `,
-    }));
-}
-
-const vistaImpresoras = crearVistaLista({
-  prefix: "impresoras",
-  columnas: 6,
-  obtenerFilas: obtenerImpresoras,
-  filtrar: (r, t) =>
-    [r.equipo.datosImpresora, r.equipo.serialImpresora, r.equipo.tipoImpresora, r.equipo.ipImpresora, r.equipo.nombreRed]
-      .join(" ")
-      .toLowerCase()
-      .includes(t),
-  alClicFila: (r) => abrirModal(r.equipo),
 });
 
 function obtenerDispositivos() {
