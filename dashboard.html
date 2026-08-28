@@ -146,6 +146,7 @@
   }
 
   .bloque-impresoras { --acento: var(--morado-700); }
+  .bloque-contratos { --acento: var(--coral-700); }
 
   .leyenda-item-clickable {
     cursor: pointer; margin: 0 -8px; padding: 4px 8px; border-radius: 8px; transition: background 0.12s ease;
@@ -253,9 +254,28 @@
     </div>
   </div>
 
+  <div class="encabezado" style="margin-top: 32px; border-top: 1px solid var(--borde); padding-top: 28px; border-bottom: none; margin-bottom: 20px;">
+    <div>
+      <p class="rotulo">Vista en tiempo real - Contratos</p>
+      <h1>Contratos Lenovo</h1>
+      <p>Equipos por número de contrato</p>
+    </div>
+  </div>
+
+  <div class="bloques" style="margin-top: 4px;">
+    <div class="bloque bloque-contratos">
+      <p class="titulo">Contratos Lenovo</p>
+      <p class="nota">Equipos por contrato</p>
+      <div class="fila-metrica">
+        <div class="donut" id="contratos-donut"><span class="donut-total" id="contratos-total">—</span></div>
+        <div class="leyenda" id="contratos-leyenda"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<script src="impresoras.js?v=20260811g"></script>
-<script type="module" src="dashboard.js?v=20260811h"></script>
+<script src="impresoras.js?v=20260828a"></script>
+<script type="module" src="dashboard.js?v=20260828a"></script>
 </body>
 </html>

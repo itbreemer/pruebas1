@@ -31,6 +31,7 @@ const nonEmpty = (v) => !!(v && String(v).trim());
 const esPC = (e) => TIPOS_PC.includes((e.tipoEquipo || "").trim());
 const esLaptop = (e) => TIPOS_LAPTOP.includes((e.tipoEquipo || "").trim());
 const esRiolsa = (e) => (e.empresa || "").trim().toUpperCase() === "RIOL S.A.";
+const soloNumeroContrato = (valor) => (!valor ? valor : String(valor).trim().split(/\s*\(/)[0].trim());
 
 function animarNumero(el, valorFinal) {
   const yaPintado = el.dataset.valor !== undefined;
@@ -119,7 +120,9 @@ function generarPaleta(hex, n) {
 
 document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".leyenda-item-clickable");
-  if (fila) irOpener("irACatalogoImpresorasFiltrado", "tipo", fila.dataset.tipo);
+  if (!fila) return;
+  if (fila.dataset.tipo) irOpener("irACatalogoImpresorasFiltrado", "tipo", fila.dataset.tipo);
+  else if (fila.dataset.contrato) irOpener("irAContratosPorNumero", fila.dataset.contrato);
 });
 
 function pintarImpresoras(catalogo) {
@@ -151,6 +154,38 @@ function pintarImpresoras(catalogo) {
     .join("");
 }
 
+function pintarContratos(equiposValidados) {
+  const porContrato = {};
+  equiposValidados
+    .filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(e.contratos))
+    .forEach((e) => {
+      const numero = soloNumeroContrato(e.contratos) || "Sin número";
+      porContrato[numero] = (porContrato[numero] || 0) + 1;
+    });
+  const datos = Object.entries(porContrato).sort((a, b) => b[1] - a[1]);
+  const total = datos.reduce((s, [, n]) => s + n, 0);
+  const paleta = generarPaleta("#b03a2e", datos.length);
+
+  let acc = 0;
+  const paradas = datos.map(([, valor], i) => {
+    const desde = total > 0 ? (acc / total) * 100 : 0;
+    acc += valor;
+    const hasta = total > 0 ? (acc / total) * 100 : 0;
+    return `${paleta[i]} ${desde}% ${hasta}%`;
+  });
+  $("contratos-donut").style.background = datos.length ? `conic-gradient(${paradas.join(", ")})` : "";
+  animarNumero($("contratos-total"), total);
+
+  $("contratos-leyenda").innerHTML = datos
+    .map(
+      ([numero, valor], i) => `
+    <div class="leyenda-item leyenda-item-clickable" data-contrato="${esc(numero)}">
+      <span class="punto" style="background:${paleta[i]}"></span>${esc(numero)}<strong>${valor}</strong>
+    </div>`
+    )
+    .join("");
+}
+
 function renderTodo(equipos) {
   const noServidor = equipos.filter((e) => !esServidor(e));
   const validados = noServidor.filter((e) => !esEnRevision(e));
@@ -166,6 +201,8 @@ function renderTodo(equipos) {
   // Bloque 3: Equipos RIOLSA, todos (validados + en revision), sin servidor
   const riolsa = noServidor.filter(esRiolsa);
   pintarBloque("riolsa", riolsa.filter(esPC).length, riolsa.filter(esLaptop).length);
+
+  pintarContratos(validados);
 
   $("fecha-corte").textContent = `Actualizado ${new Date().toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}`;
 }
