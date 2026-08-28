@@ -259,6 +259,7 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .fila-dona-header {
   display: grid; grid-template-columns: 9px 1.4fr 1fr 0.6fr; gap: 8px;
   font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.02em;
+  font-weight: 700;
   padding: 0 0 4px;
 }
 .fila-dona-header span:nth-child(3) { text-align: center; }
