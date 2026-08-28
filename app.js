@@ -5656,7 +5656,7 @@ $("btnGenerarEImprimir").addEventListener("click", generarEImprimirActa);
 $("actaNombreRed").addEventListener("input", onCambioNombreRedActa);
 
 $("btnDashboard").addEventListener("click", () => {
-  window.open("dashboard.html?v=20260828b", "dashboardInventarioTI", "width=1280,height=900");
+  window.open("dashboard.html?v=20260828c", "dashboardInventarioTI", "width=1280,height=900");
 });
 
 $("btnVerTodosDepartamentos").addEventListener("click", () => irACatalogoImpresorasFiltrado(null, ""));
