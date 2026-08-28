@@ -108,6 +108,7 @@
   .bloque.clickable:hover::after { opacity: 1; }
 
   .bloque.lenovo { --acento: var(--azul-700); --acento2: var(--azul-300); }
+  .bloque.propiostotal { --acento: var(--verde-700); --acento2: var(--ambar-700); }
   .bloque.propios { --acento: var(--verde-700); --acento2: var(--verde-300); }
   .bloque.riolsa { --acento: var(--ambar-700); --acento2: var(--ambar-300); }
 
@@ -210,6 +211,18 @@
       </div>
     </div>
 
+    <div class="bloque propiostotal clickable" id="bloque-propiostotal" title="Ver equipos propios en el sistema">
+      <p class="titulo">Equipos Propios</p>
+      <p class="nota">Unidades de Negocio + RIOLSA</p>
+      <div class="fila-metrica">
+        <div class="donut" id="propiostotal-donut"><span class="donut-total" id="propiostotal-total">—</span></div>
+        <div class="leyenda">
+          <div class="leyenda-item"><span class="punto punto-pc"></span>Unidades de Negocio<strong id="propiostotal-pc-valor">—</strong></div>
+          <div class="leyenda-item"><span class="punto punto-laptop"></span>RIOLSA<strong id="propiostotal-lap-valor">—</strong></div>
+        </div>
+      </div>
+    </div>
+
     <div class="bloque propios clickable" id="bloque-propios" title="Ver equipos propios en el sistema">
       <p class="titulo">Equipos Unidades de Negocio</p>
       <p class="nota">Antigüedad de 5 a 11 años</p>
@@ -275,7 +288,7 @@
 
 </div>
 
-<script src="impresoras.js?v=20260828g"></script>
-<script type="module" src="dashboard.js?v=20260828g"></script>
+<script src="impresoras.js?v=20260828h"></script>
+<script type="module" src="dashboard.js?v=20260828h"></script>
 </body>
 </html>

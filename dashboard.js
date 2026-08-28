@@ -100,6 +100,7 @@ function irOpener(nombreFuncion, ...args) {
 }
 
 $("bloque-lenovo").addEventListener("click", () => irOpener("irAEquiposLenovo"));
+$("bloque-propiostotal").addEventListener("click", () => irOpener("irAEquiposPropios"));
 $("bloque-propios").addEventListener("click", () => irOpener("irAEquiposPropios"));
 $("bloque-riolsa").addEventListener("click", () => irOpener("irAEquiposRiolsaTodos"));
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -237,6 +238,10 @@ function renderTodo(equiposCrudos) {
   // de forma que Bloque 2 + Bloque 3 = "Equipos propios" del Tablero (incluye tipos que no son PC/Laptop)
   const riolsaPropios = validados.filter((e) => !nonEmpty(e.contratos) && esRiolsa(e));
   pintarBloque("riolsa", riolsaPropios.filter(esPC).length, riolsaPropios.filter(esLaptop).length, riolsaPropios.length);
+
+  // Bloque combinado: "Equipos Propios" = Bloque 2 + Bloque 3, mismo total que la tarjeta
+  // "Equipos propios" del Tablero, para no depender de que el usuario sume las dos tarjetas.
+  pintarBloque("propiostotal", propiosSinRiolsa.length, riolsaPropios.length, propiosSinRiolsa.length + riolsaPropios.length);
 
   pintarContratos(validados);
 
