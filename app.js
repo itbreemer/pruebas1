@@ -4229,7 +4229,7 @@ function mostrarDetalleContratoLenovo(numero) {
   const f = contratosLenovoFilas.find((c) => c.numero === numero);
   const tbody = $("tableroContratosLenovo");
   if (!f) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No se encontró información de este contrato.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No se encontró información de este contrato.</td></tr>`;
   } else {
     tbody.innerHTML = `
       <tr>
@@ -4237,7 +4237,6 @@ function mostrarDetalleContratoLenovo(numero) {
         <td>${esc(f.fecha) || "N/A"}</td>
         <td>${f.desktop}</td>
         <td>${f.laptop}</td>
-        <td>${f.otros}</td>
         <td><strong>${f.total}</strong></td>
       </tr>
     `;
