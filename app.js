@@ -4225,6 +4225,13 @@ function irAEquiposPorContrato(numero) {
 
 function renderContratosLenovo(equiposValidados) {
   const filas = construirContratosLenovo(equiposValidados);
+  const totalGeneral = filas.reduce((s, f) => s + f.total, 0);
+  const datosDona = filas.slice(0, 8).map((f) => [f.numero, f.total]);
+  pintarPanelConDona({
+    idDona: "tableroContratoDona", idLista: "tableroContrato", campo: "contratos",
+    datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
+  });
+
   const tbody = $("tableroContratosLenovo");
   if (!filas.length) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay equipos Lenovo con contrato capturado.</td></tr>`;
