@@ -130,8 +130,84 @@ resto de la app) — son dos inventarios distintos a propósito (Opción B que e
 ### Estado actual
 - Agente probado repetidamente en `LAPLNV250`; hardware/software se recolectan bien.
 - El pipeline de envío a Firestore pasó por varias iteraciones de bugs (ver arriba, puntos 4-7)
-  antes de llegar a una version que en teoría arma el JSON correctamente — **falta la
-  confirmación final** de que el último fix (punto 6) funciona en la máquina de prueba y que la
-  sección web "Inventario Automático" ya muestra los datos reales (no N/A).
+  hasta el fix del punto 6 (últimol) — **confirmado funcionando**: el documento en Firestore y
+  la vista web "Inventario Automático" ya muestran los datos reales (hardware/software completos,
+  no N/A, no `Keys`/`Values`/`Count`).
+- Se agregó detección del monitor físico conectado (`Get-ConnectedMonitors`, WMI `WmiMonitorID`
+  en `root\wmi`) — guarda fabricante/modelo/serial en `hardware.monitores`. Funciona
+  independiente de la marca de la PC. Puede fallar en VMs o con drivers de video genéricos (no
+  es bug, es limitación del hardware/driver).
 - Pendiente: distribuir vía GPO a más equipos del dominio; considerar restringir la API Key de
   Firebase (por IP o servicio) antes de distribución masiva.
+
+## Mejoras recientes a la app web principal (index.html / app.js)
+
+### Monitor vinculado al Catálogo de Monitores
+- El campo "Monitor" del equipo (antes texto libre) ahora es un **autocompletado** que busca en
+  `CATALOGO_MONITORES` (definido en `monitores.js`, ~180 monitores contratados con
+  serial/modelo/descripción/contrato/fechaFin) por serial, modelo o descripción a medida que se
+  escribe. Al seleccionar, se guarda el **serial** en `equipo.monitor` (sigue siendo un string
+  plano, compatible con el sistema genérico `FIELD_IDS`). Debajo del campo se muestra un mensaje
+  de confirmación con la descripción completa, contrato y fecha de vencimiento
+  (`actualizarAyudaMonitor`), o una advertencia si el valor no calza con el catálogo (texto
+  libre legado, se preserva).
+- Funciones clave en `app.js`: `buscarMonitorCatalogo`, `descripcionMonitorEquipo`,
+  `renderSugerenciasMonitor`, `inicializarAutocompleteMonitor`, `actualizarAyudaMonitor`.
+- **NO usar `<select>`** para esto — con ~180 opciones resultó inutilizable (había que scrollear
+  toda la lista). El autocompletado de texto libre + sugerencias filtradas es la solución que
+  funcionó bien.
+- El "Catálogo de monitores contratados (sin asignar a un equipo)" (`vistaCatalogoMonitores`) es
+  clickeable: busca qué equipo tiene ese serial asignado (`equipoAsignadoAMonitor`) y abre su
+  modal, o avisa que no está asignado aún.
+- Nuevo campo `equipo.numeroInventarioMonitor` ("No. Inventario Monitor") — el número de
+  activo fijo del monitor físico entregado (puede diferir del registrado si se entrega otro
+  monitor). Se imprime en el Acta como **"Activo Fijo Monitor:"** (mismo naming que "Activo Fijo:").
+  Campo `codigoRam` (Código RAM adicional) se dejó intacto a propósito — se usa en la Tarjeta de
+  Responsabilidad para laptops (columna "CODIGO RAM", vs "S/N MONITOR" en desktops).
+
+### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
+- **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de
+  mantenimientos de ESE equipo (`registrosMantenimientoDeEquipo`, `abrirHistorialMantenimientoEquipo`),
+  matcheado por `equipoRef === nombreRed`.
+- **"Garantías Lenovo"**: igual pero para `ticketsGarantiaData` (`registrosGarantiaDeEquipo`,
+  `abrirHistorialGarantiaEquipo`). **Importante**: el campo `tgEquipo` es texto libre (con
+  datalist de sugerencia `dl-nombreRedEquipo` para GBM, `dl-impresorasSerialCatalogo` para
+  Canella) — en la práctica varios tickets GBM se capturaron con el **numeroSerial** del equipo
+  en vez del `nombreRed` (confirmado: ticket de PCLNV139 usa su serial `PF3G9HQX` como
+  `equipoRef`). Por eso `registrosGarantiaDeEquipo` compara contra **ambos** valores
+  (nombreRed y numeroSerial, case-insensitive). Si se agregan más lookups de tickets de
+  garantía por equipo en el futuro, replicar esta doble comparación.
+- Ambos historiales se mantienen **separados a propósito** (no combinados en un solo reporte),
+  para llevar control independiente de mantenimiento interno vs. cobertura de garantía.
+
+### Mantenimiento de Equipos (sección completa)
+- Nuevo campo `fechaSalida` (opcional) — cuándo se completó el mantenimiento.
+- La tabla de mantenimiento **oculta por defecto** los registros ya finalizados (con
+  `fechaSalida`), mostrando solo los "en proceso". Botón "🗂️ Ver historial completo" alterna a
+  mostrar todo (`mostrarHistorialMantenimientoCompleto`, `alternarHistorialMantenimiento`).
+- El "Reporte por Técnico" ahora también lista los equipos atendidos por cada técnico (no solo
+  el conteo), con fechas ingreso→salida o "en proceso" (`generarReporteMantenimiento`).
+- **Auto-asignación de "Técnico GBM"**: si el equipo seleccionado es Lenovo (`fabricante`) y
+  tiene un contrato de renta activo (`nonEmpty(equipo.contratos)` — mismo criterio que el filtro
+  "equipos propios" de la vista Computadoras), el campo "Técnico que Revisó" se fuerza a
+  "Técnico GBM" (no al técnico logueado), ya que por contrato de arrendamiento solo GBM puede
+  darles mantenimiento. Esto aplica tanto a registros **nuevos** como al **reabrir/editar
+  existentes** (para poder corregir capturas previas a esta regla con solo abrir+guardar).
+  Función: `actualizarUsuarioEquipoMantenimiento`.
+- Checklist de "Solución Aplicada" incluye ahora Batería y Cargador (Mantenimiento Correctivo).
+
+### Tickets de Garantía
+- Nuevo campo `fechaResolucion` + columna calculada "Días de Respuesta"
+  (`diasRespuestaGarantia` = fechaResolucion − fechaReporte en días) en la tabla principal y en
+  el historial por equipo.
+
+### Otros
+- Botón "PBI Acta" eliminado (duplicaba "Generar Acta", sin lógica propia, era solo para
+  comparación puntual).
+
+### Patrón para reportes/listas nuevas en esta app
+Todas las secciones de lista siguen `crearVistaLista({prefix, columnas, obtenerFilas, filtrar,
+alClicFila})` (ver `app.js`). Los historiales "por equipo" (mantenimiento, garantía) en cambio
+son modales simples con tabla estática (no usan `crearVistaLista`, no necesitan paginación) que
+se repueblan cada vez que se abren, matcheando por `nombreRed` (y a veces `numeroSerial`) del
+equipo activo en el formulario.
