@@ -4181,6 +4181,74 @@ function contarPor(campo, { excluirServidores, soloServidores, excluirEnRevision
   return Object.entries(conteo).sort((a, b) => b[1] - a[1]);
 }
 
+function extraerFechaVenceContrato(valor) {
+  const m = /\(vence\s*([^)]+)\)/i.exec(String(valor || ""));
+  return m ? m[1].trim() : "";
+}
+
+function construirContratosLenovo(equiposValidados) {
+  const porContrato = {};
+  equiposValidados
+    .filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(e.contratos))
+    .forEach((e) => {
+      const numero = soloNumeroContrato(e.contratos) || "Sin número";
+      const fecha = extraerFechaVenceContrato(e.contratos);
+      if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0 };
+      if (fecha && !porContrato[numero].fecha) porContrato[numero].fecha = fecha;
+
+      const tipo = ALIAS_TIPO_EQUIPO[e.tipoEquipo] || e.tipoEquipo || "";
+      if (tipo === "Desktop") porContrato[numero].desktop++;
+      else if (tipo === "Notebook") porContrato[numero].laptop++;
+      else porContrato[numero].otros++;
+    });
+
+  return Object.entries(porContrato)
+    .map(([numero, d]) => ({ numero, ...d, total: d.desktop + d.laptop + d.otros }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function irAEquiposPorContrato(numero) {
+  $("buscador").value = "";
+  $("filtroEmpresa").value = "";
+  $("filtroStatus").value = "";
+  $("filtroTipo").value = "";
+  filtroCampoVacio = null;
+  filtroEnRevision = false;
+  filtroPropios = false;
+  filtroLenovo = false;
+  filtroRiolsaTodos = false;
+  $("buscador").value = numero;
+  paginaActual = 1;
+  cambiarVista("computadoras");
+  render();
+}
+
+function renderContratosLenovo(equiposValidados) {
+  const filas = construirContratosLenovo(equiposValidados);
+  const tbody = $("tableroContratosLenovo");
+  if (!filas.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay equipos Lenovo con contrato capturado.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filas
+    .map(
+      (f) => `
+        <tr class="clickable" data-contrato="${esc(f.numero)}">
+          <td>${esc(f.numero)}</td>
+          <td>${esc(f.fecha) || "N/A"}</td>
+          <td>${f.desktop}</td>
+          <td>${f.laptop}</td>
+          <td>${f.otros}</td>
+          <td><strong>${f.total}</strong></td>
+        </tr>
+      `
+    )
+    .join("");
+  tbody.querySelectorAll("tr[data-contrato]").forEach((tr) => {
+    tr.addEventListener("click", () => irAEquiposPorContrato(tr.dataset.contrato));
+  });
+}
+
 function irAListaEquiposFiltrada(campo, valor) {
   $("buscador").value = "";
   $("filtroEmpresa").value = "";
@@ -4539,6 +4607,7 @@ function renderTablero() {
   });
   $("tableroFabricante").innerHTML += totalHtml(totalSinServidores);
 
+  renderContratosLenovo(equiposUsuarioValidados);
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};
