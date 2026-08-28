@@ -49,12 +49,13 @@ function animarNumero(el, valorFinal) {
   requestAnimationFrame(paso);
 }
 
-function pintarBloque(prefijo, pc, laptop) {
-  const total = pc + laptop;
+function pintarBloque(prefijo, pc, laptop, totalReal) {
+  const clasificados = pc + laptop;
+  const total = totalReal !== undefined ? totalReal : clasificados;
   animarNumero($(`${prefijo}-total`), total);
   $(`${prefijo}-pc-valor`).textContent = pc;
   $(`${prefijo}-lap-valor`).textContent = laptop;
-  const pct = total > 0 ? Math.round((pc / total) * 100) : 50;
+  const pct = clasificados > 0 ? Math.round((pc / clasificados) * 100) : 50;
   $(`${prefijo}-donut`).style.setProperty("--pct", `${pct}%`);
 }
 
@@ -192,16 +193,16 @@ function renderTodo(equipos) {
 
   // Bloque 1: Equipos Lenovo (PC + Laptop), validados
   const lenovo = validados.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO");
-  pintarBloque("lenovo", lenovo.filter(esPC).length, lenovo.filter(esLaptop).length);
+  pintarBloque("lenovo", lenovo.filter(esPC).length, lenovo.filter(esLaptop).length, lenovo.length);
 
   // Bloque 2: Equipos propios, sin RIOLSA (validados, sin contrato)
   const propiosSinRiolsa = validados.filter((e) => !nonEmpty(e.contratos) && !esRiolsa(e));
-  pintarBloque("propios", propiosSinRiolsa.filter(esPC).length, propiosSinRiolsa.filter(esLaptop).length);
+  pintarBloque("propios", propiosSinRiolsa.filter(esPC).length, propiosSinRiolsa.filter(esLaptop).length, propiosSinRiolsa.length);
 
   // Bloque 3: Equipos RIOLSA propios (validados, sin contrato) — mutuamente excluyente con el bloque 2,
-  // de forma que Bloque 2 + Bloque 3 = "Equipos propios" del Tablero
+  // de forma que Bloque 2 + Bloque 3 = "Equipos propios" del Tablero (incluye tipos que no son PC/Laptop)
   const riolsaPropios = validados.filter((e) => !nonEmpty(e.contratos) && esRiolsa(e));
-  pintarBloque("riolsa", riolsaPropios.filter(esPC).length, riolsaPropios.filter(esLaptop).length);
+  pintarBloque("riolsa", riolsaPropios.filter(esPC).length, riolsaPropios.filter(esLaptop).length, riolsaPropios.length);
 
   pintarContratos(validados);
 
