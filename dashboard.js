@@ -26,12 +26,43 @@ const TIPOS_PC = ["Desktop", "Mini PC", "Mini Tower", "Low Profile Desktop"];
 const TIPOS_LAPTOP = ["Notebook", "Laptop"];
 
 const esServidor = (e) => TIPOS_SERVIDOR.includes((e.tipoEquipo || "").trim());
-const esEnRevision = (e) => (e.comentarios || "").includes(MARCA_CRONOGRAMA);
 const nonEmpty = (v) => !!(v && String(v).trim());
 const esPC = (e) => TIPOS_PC.includes((e.tipoEquipo || "").trim());
 const esLaptop = (e) => TIPOS_LAPTOP.includes((e.tipoEquipo || "").trim());
 const esRiolsa = (e) => (e.empresa || "").trim().toUpperCase() === "RIOL S.A.";
 const soloNumeroContrato = (valor) => (!valor ? valor : String(valor).trim().split(/\s*\(/)[0].trim());
+
+// Correcciones que app.js aplica solo en memoria (nunca se empujan a
+// Firestore, a propósito, para no arriesgar sobrescribir una edición real
+// más nueva de otro navegador — ver notas en quitarMarcaRevisionConfirmados
+// y compañía en app.js). Como este dashboard lee Firestore "en crudo", hay
+// que replicar aquí las mismas listas para que sus totales cuadren con el
+// Tablero. Si se editan esas listas en app.js, hay que copiarlas aquí también.
+const ID_DUPLICADO_P025194 = "cronograma-4";
+const IDS_CHATARRA_CONFIRMADA = [
+  "seed-30", "seed-394", "seed-432", "seed-755",
+  "seed-8", "seed-21", "seed-26", "seed-32", "seed-34", "seed-433", "seed-434",
+  "seed-441", "seed-443", "seed-445", "seed-452", "seed-453", "seed-454",
+  "seed-455", "seed-458", "seed-459", "seed-497", "seed-500", "seed-511",
+  "seed-512", "seed-734", "seed-752", "seed-758", "seed-773", "seed-797", "seed-799",
+  "seed-65", "seed-68", "seed-71", "seed-98", "seed-107", "seed-114", "seed-115",
+  "seed-119", "seed-342", "seed-361",
+  "seed-99", "seed-108", "seed-112", "seed-345", "seed-346", "seed-357", "seed-367",
+  "seed-376", "seed-380", "seed-383", "seed-386", "seed-439", "seed-771", "seed-795",
+  "seed-1", "seed-5", "seed-12", "seed-13", "seed-60", "seed-347", "seed-365",
+  "seed-399", "seed-400", "seed-403", "seed-504", "seed-505", "seed-517", "seed-772",
+  "pendiente-pf6686wt", "pendiente-pf662c4r", "pendiente-pf65l51z",
+  "pendiente-pf66acc4", "pendiente-pf661gjy",
+];
+const IDS_CONFIRMADOS_ACTIVOS = [
+  "seed-18", "seed-27", "seed-49", "seed-50", "seed-118", "seed-354",
+  "seed-379", "seed-405", "seed-461", "seed-766", "seed-774",
+  "seed-402", "seed-456", "seed-739",
+  "seed-42", "seed-393", "seed-733", "seed-735", "seed-736", "seed-737",
+  "seed-738", "seed-742", "seed-743", "seed-770", "seed-775",
+  "seed-335",
+];
+const esEnRevision = (e) => !IDS_CONFIRMADOS_ACTIVOS.includes(e.id) && (e.comentarios || "").includes(MARCA_CRONOGRAMA);
 
 function animarNumero(el, valorFinal) {
   const yaPintado = el.dataset.valor !== undefined;
@@ -187,7 +218,10 @@ function pintarContratos(equiposValidados) {
     .join("");
 }
 
-function renderTodo(equipos) {
+function renderTodo(equiposCrudos) {
+  const equipos = equiposCrudos.filter(
+    (e) => e.id !== ID_DUPLICADO_P025194 && !IDS_CHATARRA_CONFIRMADA.includes(e.id)
+  );
   const noServidor = equipos.filter((e) => !esServidor(e));
   const validados = noServidor.filter((e) => !esEnRevision(e));
 
