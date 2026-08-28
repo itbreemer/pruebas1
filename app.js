@@ -4224,6 +4224,31 @@ function ordenMesDia(fecha) {
   return parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
 }
 
+const NOMBRES_MES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function nombreMesDeFecha(fecha) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/\d{4}\s*$/.exec(String(fecha || "").trim());
+  return m ? NOMBRES_MES[parseInt(m[2], 10) - 1] || "" : "";
+}
+
+function renderListaContratosConMes(idLista, filas, hex) {
+  const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
+  const encabezado = `<div class="fila-dona-header"><span></span><span>Contrato</span><span>Mes</span><span>Equipos</span></div>`;
+  const filasHtml = filas
+    .map(
+      (f, i) => `
+        <div class="tablero-fila fila-dona fila-dona-mes clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+          <span class="punto-dona" style="background:${paleta[i]}"></span>
+          <span class="nombre-dona">${esc(f.numero)}</span>
+          <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
+          <span class="valor">${f.total}</span>
+        </div>
+      `
+    )
+    .join("");
+  $(idLista).innerHTML = encabezado + filasHtml;
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4243,6 +4268,7 @@ function renderContratosLenovo(equiposValidados) {
     atributoCampo: "data-campo-contrato-lenovo",
     datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#dc2626", modo: "B",
   });
+  renderListaContratosConMes("tableroContratoVence2027", filasVence2027, "#dc2626");
 
   $("contratoLenovoDetalleWrap").style.display = "none";
 }

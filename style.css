@@ -253,6 +253,14 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .fila-dona .nombre-dona { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fila-dona.atenuada { opacity: 0.3; }
 
+.fila-dona-mes { grid-template-columns: 9px 1fr auto auto; }
+.fila-dona-mes .mes-dona { color: #6b7280; font-size: 0.82rem; }
+.fila-dona-header {
+  display: grid; grid-template-columns: 9px 1fr auto auto; gap: 8px;
+  font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.02em;
+  padding: 0 0 4px;
+}
+
 @media (max-width: 860px) {
   .panel-cuerpo { flex-direction: column; align-items: center; }
   .app-shell { flex-direction: column; }
