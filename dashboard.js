@@ -194,9 +194,9 @@ function renderTodo(equipos) {
   const lenovo = validados.filter((e) => (e.fabricante || "").trim().toUpperCase() === "LENOVO");
   pintarBloque("lenovo", lenovo.filter(esPC).length, lenovo.filter(esLaptop).length);
 
-  // Bloque 2: Equipos propios, sin RIOLSA (validados, sin contrato)
-  const propiosSinRiolsa = validados.filter((e) => !nonEmpty(e.contratos) && !esRiolsa(e));
-  pintarBloque("propios", propiosSinRiolsa.filter(esPC).length, propiosSinRiolsa.filter(esLaptop).length);
+  // Bloque 2: Equipos propios (validados, sin contrato) — mismo criterio que "Equipos propios" del Tablero
+  const propios = validados.filter((e) => !nonEmpty(e.contratos));
+  pintarBloque("propios", propios.filter(esPC).length, propios.filter(esLaptop).length);
 
   // Bloque 3: Equipos RIOLSA, todos (validados + en revision), sin servidor
   const riolsa = noServidor.filter(esRiolsa);
