@@ -1831,10 +1831,20 @@ function renderSugerenciasMonitor(filtro) {
   const lista = $("monitorSugerencias");
   const catalogo = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
   const t = (filtro || "").trim().toLowerCase();
-  const resultados = (t ? catalogo.filter((m) => [m.serial, m.modelo, m.descripcion].join(" ").toLowerCase().includes(t)) : catalogo).slice(
-    0,
-    30
-  );
+  const filtrados = t ? catalogo.filter((m) => [m.serial, m.modelo, m.descripcion].join(" ").toLowerCase().includes(t)) : catalogo;
+
+  // Sugiere primero los monitores del mismo contrato que la desktop y que
+  // aún no estén asignados a ningún equipo: no hay dato que diga cuál serial
+  // exacto le corresponde a cada equipo (el archivo fuente no los relaciona),
+  // pero acotar por contrato + disponibilidad ahorra buscar entre ~180
+  // monitores. El usuario sigue confirmando el serial físico al elegir.
+  const contratoEquipo = soloNumeroContrato($("contratos")?.value || "");
+  const esCandidato = (m) => contratoEquipo && m.contrato === contratoEquipo && !equipoAsignadoAMonitor(m.serial);
+  const resultados = [...filtrados]
+    .map((m, idx) => ({ m, idx, candidato: esCandidato(m) }))
+    .sort((a, b) => (a.candidato === b.candidato ? a.idx - b.idx : a.candidato ? -1 : 1))
+    .slice(0, 30)
+    .map((x) => x.m);
 
   lista.innerHTML = "";
   if (!resultados.length) {
@@ -1846,7 +1856,8 @@ function renderSugerenciasMonitor(filtro) {
   resultados.forEach((m) => {
     const item = document.createElement("div");
     item.className = "autocomplete-item";
-    item.innerHTML = `${esc(m.descripcion || m.modelo)}<small>S/N ${esc(m.serial)} · Contrato ${esc(m.contrato)}</small>`;
+    const nota = esCandidato(m) ? " · Disponible de este contrato" : "";
+    item.innerHTML = `${esc(m.descripcion || m.modelo)}<small>S/N ${esc(m.serial)} · Contrato ${esc(m.contrato)}${esc(nota)}</small>`;
     // mousedown (no click) para que dispare antes del blur del input.
     item.addEventListener("mousedown", (e) => {
       e.preventDefault();
