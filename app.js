@@ -4367,31 +4367,14 @@ function irAEquiposRiolsaTodos() {
   render();
 }
 
-function irARevisionCronograma() {
-  $("buscador").value = "";
-  $("filtroEmpresa").value = "";
-  $("filtroStatus").value = "";
-  $("filtroTipo").value = "";
-  filtroCampoVacio = null;
-  filtroEnRevision = true;
-  filtroPropios = false;
-  filtroLenovo = false;
-  filtroRiolsaTodos = false;
-  paginaActual = 1;
-  cambiarVista("computadoras");
-  render();
-}
-
 document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".tablero-fila[data-campo]");
   if (fila) irAListaEquiposFiltrada(fila.dataset.campo, fila.dataset.valor);
-  if (ev.target.closest("#tarjetaEnRevision")) irARevisionCronograma();
   if (ev.target.closest("#tarjetaPropios")) irAEquiposPropios();
   if (ev.target.closest("#tarjetaTotales")) irATodosLosEquipos();
   if (ev.target.closest("#tarjetaLenovo")) irAEquiposLenovo();
   if (ev.target.closest("#tarjetaEmpresas")) irAEmpresasPanel();
   if (ev.target.closest("#tarjetaImpresoras")) irAImpresorasVista();
-  if (ev.target.closest(".tablero-fila-secundaria")) irARevisionCronograma();
 });
 
 let statCardsAnimadas = false;
@@ -4612,8 +4595,7 @@ function renderTablero() {
     construirStatCard(equiposLenovo, "Equipos Lenovo", { id: "tarjetaLenovo", claseColor: "color-indigo", clickable: true, icono: "laptop", titulo: "Ver equipos Lenovo" }) +
     construirStatCard(equiposPropios, "Equipos propios", { id: "tarjetaPropios", claseColor: "color-verde", clickable: true, icono: "pc", titulo: "Ver equipos propios" }) +
     construirStatCard(totalEmpresas, "Empresas", { id: "tarjetaEmpresas", claseColor: "color-fucsia", clickable: true, icono: "edificio", titulo: "Ver desglose por empresa" }) +
-    construirStatCard(impresoras.length, "Impresoras Canon", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora", titulo: "Ver catálogo de impresoras" }) +
-    construirStatCard(propiosEnRevision, "En revisión (no está en cronograma AD)", { id: "tarjetaEnRevision", clickable: true, secundaria: true, icono: "alerta", titulo: "Ver equipos en revisión" });
+    construirStatCard(impresoras.length, "Impresoras Canon", { id: "tarjetaImpresoras", claseColor: "color-teal", clickable: true, icono: "impresora", titulo: "Ver catálogo de impresoras" });
 
   if (!statCardsAnimadas) {
     statCardsAnimadas = true;
