@@ -4207,54 +4207,45 @@ function construirContratosLenovo(equiposValidados) {
     .sort((a, b) => b.total - a.total);
 }
 
-function irAEquiposPorContrato(numero) {
-  $("buscador").value = "";
-  $("filtroEmpresa").value = "";
-  $("filtroStatus").value = "";
-  $("filtroTipo").value = "";
-  filtroCampoVacio = null;
-  filtroEnRevision = false;
-  filtroPropios = false;
-  filtroLenovo = false;
-  filtroRiolsaTodos = false;
-  $("buscador").value = numero;
-  paginaActual = 1;
-  cambiarVista("computadoras");
-  render();
-}
+let contratosLenovoFilas = [];
 
 function renderContratosLenovo(equiposValidados) {
-  const filas = construirContratosLenovo(equiposValidados);
-  const totalGeneral = filas.reduce((s, f) => s + f.total, 0);
-  const datosDona = filas.slice(0, 8).map((f) => [f.numero, f.total]);
+  contratosLenovoFilas = construirContratosLenovo(equiposValidados);
+  const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
+  const datosDona = contratosLenovoFilas.slice(0, 8).map((f) => [f.numero, f.total]);
   pintarPanelConDona({
-    idDona: "tableroContratoDona", idLista: "tableroContrato", campo: "contratos",
+    idDona: "tableroContratoDona", idLista: "tableroContrato", campo: "contratoLenovo",
+    atributoCampo: "data-campo-contrato-lenovo",
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
-
-  const tbody = $("tableroContratosLenovo");
-  if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay equipos Lenovo con contrato capturado.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = filas
-    .map(
-      (f) => `
-        <tr class="clickable" data-contrato="${esc(f.numero)}">
-          <td>${esc(f.numero)}</td>
-          <td>${esc(f.fecha) || "N/A"}</td>
-          <td>${f.desktop}</td>
-          <td>${f.laptop}</td>
-          <td>${f.otros}</td>
-          <td><strong>${f.total}</strong></td>
-        </tr>
-      `
-    )
-    .join("");
-  tbody.querySelectorAll("tr[data-contrato]").forEach((tr) => {
-    tr.addEventListener("click", () => irAEquiposPorContrato(tr.dataset.contrato));
-  });
+  $("contratoLenovoDetalleWrap").style.display = "none";
 }
+
+function mostrarDetalleContratoLenovo(numero) {
+  const f = contratosLenovoFilas.find((c) => c.numero === numero);
+  const tbody = $("tableroContratosLenovo");
+  if (!f) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No se encontró información de este contrato.</td></tr>`;
+  } else {
+    tbody.innerHTML = `
+      <tr>
+        <td>${esc(f.numero)}</td>
+        <td>${esc(f.fecha) || "N/A"}</td>
+        <td>${f.desktop}</td>
+        <td>${f.laptop}</td>
+        <td>${f.otros}</td>
+        <td><strong>${f.total}</strong></td>
+      </tr>
+    `;
+  }
+  $("contratoLenovoDetalleTitulo").textContent = `Detalle del contrato ${numero}`;
+  $("contratoLenovoDetalleWrap").style.display = "";
+}
+
+document.addEventListener("click", (ev) => {
+  const fila = ev.target.closest(".tablero-fila[data-campo-contrato-lenovo]");
+  if (fila) mostrarDetalleContratoLenovo(fila.dataset.valor);
+});
 
 function irAListaEquiposFiltrada(campo, valor) {
   $("buscador").value = "";
