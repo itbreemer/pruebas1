@@ -173,6 +173,20 @@ También se corrigió que los círculos del dashboard solo sumaban PC + Laptop p
 central (dejando fuera equipos con `tipoEquipo` de otras familias) — ahora `pintarBloque` recibe
 un total real explícito además del desglose PC/Laptop.
 
+**Verificación final (con `window.__debugTablero` / `window.__debugDashboard` temporales,
+ya quitados)**: el total sí cuadraba (208 = 190 "Equipos Unidades de Negocio" + 18 "Equipos
+RIOLSA"). La confusión real del usuario fue de lectura: hay que fijarse en el **número grande
+del centro de la dona** (el total real de esa categoría), no en la suma de PC+Laptop de la
+leyenda de al lado (esa leyenda solo cuenta los clasificados como Desktop/Notebook; el resto de
+`tipoEquipo` queda fuera de la leyenda pero sí está en el número central).
+
+**Otra causa real de números "viejos" en pantalla**: `index.html` referencia `app.js` y
+`style.css` con un parámetro `?v=` de cache-busting que hay que **subir manualmente cada vez
+que se editan esos archivos** (igual que ya se hacía con `dashboard.html`/`dashboard.js`). Si
+se te olvida, el navegador puede seguir sirviendo una copia en caché sin los últimos cambios
+aunque el archivo en el repo ya esté actualizado. Antes de dar un cambio de `app.js`/`style.css`
+por publicado, confirmar que el `?v=` en `index.html` se subió también.
+
 ## Mejoras recientes a la app web principal (index.html / app.js)
 
 ### Monitor vinculado al Catálogo de Monitores
