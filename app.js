@@ -4213,6 +4213,11 @@ function construirContratosLenovo(equiposValidados) {
 
 let contratosLenovoFilas = [];
 
+function fechaVenceEnAnio(fecha, anio) {
+  const m = /\/(\d{4})\s*$/.exec(String(fecha || "").trim());
+  return !!m && m[1] === String(anio);
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4222,6 +4227,15 @@ function renderContratosLenovo(equiposValidados) {
     atributoCampo: "data-campo-contrato-lenovo",
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
+
+  const filasVence2027 = contratosLenovoFilas.filter((f) => fechaVenceEnAnio(f.fecha, 2027));
+  const totalVence2027 = filasVence2027.reduce((s, f) => s + f.total, 0);
+  pintarPanelConDona({
+    idDona: "tableroContratoVence2027Dona", idLista: "tableroContratoVence2027", campo: "contratoLenovo",
+    atributoCampo: "data-campo-contrato-lenovo",
+    datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#dc2626", modo: "B",
+  });
+
   $("contratoLenovoDetalleWrap").style.display = "none";
 }
 
