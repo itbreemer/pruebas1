@@ -4280,7 +4280,7 @@ function mostrarDetalleContratoLenovo(numero) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No se encontró información de este contrato.</td></tr>`;
   } else {
     tbody.innerHTML = `
-      <tr>
+      <tr class="clickable" data-ir-contrato="${esc(numero)}">
         <td>${esc(f.numero)}</td>
         <td>${esc(f.fecha) || "N/A"}</td>
         <td>${f.desktop}</td>
@@ -4288,9 +4288,16 @@ function mostrarDetalleContratoLenovo(numero) {
         <td><strong>${f.total}</strong></td>
       </tr>
     `;
+    tbody.querySelector("tr[data-ir-contrato]").addEventListener("click", () => irAContratosPorNumero(numero));
   }
   $("contratoLenovoDetalleTitulo").textContent = `Detalle del contrato ${numero}`;
   $("contratoLenovoDetalleWrap").style.display = "";
+}
+
+function irAContratosPorNumero(numero) {
+  cambiarVista("contratos");
+  $("buscador_contratos").value = numero;
+  vistaContratos.render();
 }
 
 document.addEventListener("click", (ev) => {
