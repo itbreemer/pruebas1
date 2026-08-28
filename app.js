@@ -4218,6 +4218,12 @@ function fechaVenceEnAnio(fecha, anio) {
   return !!m && m[1] === String(anio);
 }
 
+function ordenMesDia(fecha) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/\d{4}\s*$/.exec(String(fecha || "").trim());
+  if (!m) return 9999;
+  return parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4228,7 +4234,9 @@ function renderContratosLenovo(equiposValidados) {
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
 
-  const filasVence2027 = contratosLenovoFilas.filter((f) => fechaVenceEnAnio(f.fecha, 2027));
+  const filasVence2027 = contratosLenovoFilas
+    .filter((f) => fechaVenceEnAnio(f.fecha, 2027))
+    .sort((a, b) => ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
   const totalVence2027 = filasVence2027.reduce((s, f) => s + f.total, 0);
   pintarPanelConDona({
     idDona: "tableroContratoVence2027Dona", idLista: "tableroContratoVence2027", campo: "contratoLenovo",
