@@ -178,8 +178,8 @@ const FIELD_IDS = [
   "dominio",
   "procesador", "memoria", "tipoDisco", "firmwareInventario",
   "soVersion", "soNucleo", "soSerial", "subentidades", "proyecto",
-  "monitor", "numeroInventarioMonitor", "tamanoDisco", "datosImpresora", "serialImpresora",
-  "tipoImpresora", "nombreDispositivo", "serialDispositivo",
+  "monitor", "numeroInventarioMonitor", "tamanoDisco",
+  "nombreDispositivo", "serialDispositivo",
   "puesto", "fechaIngresoEquipo", "codigoRam", "memoriaDescripcion",
 ];
 
@@ -1940,9 +1940,6 @@ function poblarFiltrosYDatalists() {
     "dl-dpi": "dpi",
     "dl-dominio": "dominio",
     "dl-tamanoDisco": "tamanoDisco",
-    "dl-datosImpresora": "datosImpresora",
-    "dl-serialImpresora": "serialImpresora",
-    "dl-tipoImpresora": "tipoImpresora",
     "dl-nombreDispositivo": "nombreDispositivo",
     "dl-serialDispositivo": "serialDispositivo",
     "dl-contratos": "contratos",
@@ -2771,20 +2768,13 @@ function actaHTML(equipo, transaccion) {
       <div class="acta-top3">
         <div class="etiqueta">Status de Equipo:</div>
         <div class="valor">${esc(equipo.status)}</div>
-        <div class="etiqueta">Datos Impresora Asig:</div>
-        <div class="valor">${esc(equipo.datosImpresora)}</div>
-        <div class="etiqueta">Ip Impresora Asig:</div>
-        <div class="valor">${esc(equipo.ipImpresora)}</div>
-
         <div class="etiqueta">Código Empleado:</div>
         <div class="valor">${esc(equipo.codigoEmpleado)}</div>
-        <div class="etiqueta">Serial Impresora Asig:</div>
-        <div class="valor">${esc(equipo.serialImpresora)}</div>
-        <div class="etiqueta">Tipo Impresora Asig:</div>
-        <div class="valor">${esc(equipo.tipoImpresora)}</div>
-
         <div class="etiqueta">DPI/No. Pasaporte:</div>
         <div class="valor">${esc(equipo.dpi)}</div>
+
+        <div class="etiqueta">Ip Impresora Asig:</div>
+        <div class="valor">${esc(equipo.ipImpresora)}</div>
         <div class="etiqueta">Nombre Dispositivo:</div>
         <div class="valor">${esc(equipo.nombreDispositivo)}</div>
         <div class="etiqueta">Serial Dispositivo:</div>
