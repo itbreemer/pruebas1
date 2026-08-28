@@ -4296,9 +4296,94 @@ function irAContratosPorNumero(numero) {
   vistaContratos.render();
 }
 
+function construirContratosMonitores() {
+  const catalogo = typeof CATALOGO_MONITORES !== "undefined" && Array.isArray(CATALOGO_MONITORES) ? CATALOGO_MONITORES : [];
+  const porContrato = {};
+  catalogo.forEach((m) => {
+    const numero = (m.contrato || "").trim() || "Sin número";
+    if (!porContrato[numero]) porContrato[numero] = { fecha: m.fechaFin || "", total: 0 };
+    if (m.fechaFin && !porContrato[numero].fecha) porContrato[numero].fecha = m.fechaFin;
+    porContrato[numero].total++;
+  });
+  return Object.entries(porContrato)
+    .map(([numero, d]) => ({ numero, ...d }))
+    .sort((a, b) => b.total - a.total);
+}
+
+let contratosMonitorFilas = [];
+
+function renderListaContratosMonitorConMes(idLista, filas, hex) {
+  const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
+  const encabezado = `<div class="fila-dona-header"><span></span><span>Contrato</span><span>Mes</span><span>Monitores</span></div>`;
+  const filasHtml = filas
+    .map(
+      (f, i) => `
+        <div class="tablero-fila fila-dona fila-dona-mes clickable" data-idx="${i}" data-campo-contrato-monitor="contratoMonitor" data-valor="${esc(f.numero)}">
+          <span class="punto-dona" style="background:${paleta[i]}"></span>
+          <span class="nombre-dona">${esc(f.numero)}</span>
+          <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
+          <span class="valor">${f.total}</span>
+        </div>
+      `
+    )
+    .join("");
+  $(idLista).innerHTML = encabezado + filasHtml;
+}
+
+function renderContratosMonitores() {
+  contratosMonitorFilas = construirContratosMonitores();
+  const totalGeneral = contratosMonitorFilas.reduce((s, f) => s + f.total, 0);
+  const datosDona = contratosMonitorFilas.map((f) => [f.numero, f.total]);
+  pintarPanelConDona({
+    idDona: "tableroContratoMonitorDona", idLista: "tableroContratoMonitor", campo: "contratoMonitor",
+    atributoCampo: "data-campo-contrato-monitor",
+    datosTop: datosDona, total: totalGeneral, hex: "#0891b2", modo: "B",
+  });
+
+  const filasVence2026 = contratosMonitorFilas
+    .filter((f) => fechaVenceEnAnio(f.fecha, 2026))
+    .sort((a, b) => ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
+  const totalVence2026 = filasVence2026.reduce((s, f) => s + f.total, 0);
+  pintarPanelConDona({
+    idDona: "tableroContratoMonitorVence2026Dona", idLista: "tableroContratoMonitorVence2026", campo: "contratoMonitor",
+    atributoCampo: "data-campo-contrato-monitor",
+    datosTop: filasVence2026.map((f) => [f.numero, f.total]), total: totalVence2026, hex: "#dc2626", modo: "B",
+  });
+  renderListaContratosMonitorConMes("tableroContratoMonitorVence2026", filasVence2026, "#dc2626");
+
+  $("contratoMonitorDetalleWrap").style.display = "none";
+}
+
+function mostrarDetalleContratoMonitor(numero) {
+  const f = contratosMonitorFilas.find((c) => c.numero === numero);
+  const tbody = $("tableroContratosMonitor");
+  if (!f) {
+    tbody.innerHTML = `<tr><td colspan="3" class="empty-state">No se encontró información de este contrato.</td></tr>`;
+  } else {
+    tbody.innerHTML = `
+      <tr class="clickable" data-ir-contrato-monitor="${esc(numero)}">
+        <td>${esc(f.numero)}</td>
+        <td>${esc(f.fecha) || "N/A"}</td>
+        <td><strong>${f.total}</strong></td>
+      </tr>
+    `;
+    tbody.querySelector("tr[data-ir-contrato-monitor]").addEventListener("click", () => irAMonitoresPorContrato(numero));
+  }
+  $("contratoMonitorDetalleTitulo").textContent = `Detalle del contrato ${numero}`;
+  $("contratoMonitorDetalleWrap").style.display = "";
+}
+
+function irAMonitoresPorContrato(numero) {
+  cambiarVista("monitores");
+  $("buscador_catalogoMonitores").value = numero;
+  vistaCatalogoMonitores.render();
+}
+
 document.addEventListener("click", (ev) => {
   const fila = ev.target.closest(".tablero-fila[data-campo-contrato-lenovo]");
   if (fila) mostrarDetalleContratoLenovo(fila.dataset.valor);
+  const filaMonitor = ev.target.closest(".tablero-fila[data-campo-contrato-monitor]");
+  if (filaMonitor) mostrarDetalleContratoMonitor(filaMonitor.dataset.valor);
 });
 
 function irAListaEquiposFiltrada(campo, valor) {
@@ -4642,6 +4727,7 @@ function renderTablero() {
   $("tableroFabricante").innerHTML += totalHtml(totalSinServidores);
 
   renderContratosLenovo(equiposUsuarioValidados);
+  renderContratosMonitores();
 
   const contarImpresorasPor = (campo) => {
     const conteo = {};

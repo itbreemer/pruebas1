@@ -160,6 +160,37 @@
           </table>
         </section>
 
+        <h3 class="subseccion-titulo">Contratos de Monitores</h3>
+        <div class="tablero-grid">
+          <div class="tablero-panel">
+            <h3>Por Contrato (todos)</h3>
+            <div class="panel-cuerpo">
+              <div id="tableroContratoMonitorDona" class="panel-dona"></div>
+              <div id="tableroContratoMonitor" class="tablero-lista"></div>
+            </div>
+          </div>
+          <div class="tablero-panel">
+            <h3>Contratos que vencen en 2026</h3>
+            <div class="panel-cuerpo">
+              <div id="tableroContratoMonitorVence2026Dona" class="panel-dona"></div>
+              <div id="tableroContratoMonitorVence2026" class="tablero-lista"></div>
+            </div>
+          </div>
+        </div>
+        <section class="tabla-wrap" id="contratoMonitorDetalleWrap" style="display:none;">
+          <h3 id="contratoMonitorDetalleTitulo" class="subseccion-titulo" style="margin-top:0;"></h3>
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Contrato</th>
+                <th>Fecha de Vencimiento</th>
+                <th>Monitores</th>
+              </tr>
+            </thead>
+            <tbody id="tableroContratosMonitor"></tbody>
+          </table>
+        </section>
+
       </section>
 
       <!-- Computadoras -->
@@ -2314,11 +2345,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script src="data.js?v=20260820c"></script>
-<script src="monitores.js"></script>
+<script src="monitores.js?v=20260828a"></script>
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260828c"></script>
+<script src="app.js?v=20260828d"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
