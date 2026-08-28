@@ -5498,6 +5498,44 @@ const vistaContratos = crearVistaLista({
   alClicFila: (r) => abrirModal(r.equipo),
 });
 
+function aplicarFechaVencimientoContrato() {
+  const resultado = $("bulkContratoResultado");
+  const numero = $("bulkContratoNumero").value.trim();
+  const fecha = $("bulkContratoFecha").value.trim();
+
+  resultado.className = "acta-estado";
+  resultado.style.display = "";
+
+  if (!numero || !fecha) {
+    resultado.textContent = "Escribe el número de contrato y la fecha de vencimiento.";
+    return;
+  }
+  if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha)) {
+    resultado.textContent = "La fecha debe tener el formato dd/mm/aaaa (ej. 19/06/2029).";
+    return;
+  }
+
+  const afectados = equipos.filter((e) => soloNumeroContrato(e.contratos) === numero);
+  if (!afectados.length) {
+    resultado.textContent = `No se encontró ningún equipo con el contrato "${numero}".`;
+    return;
+  }
+
+  afectados.forEach((e) => {
+    e.contratos = `${numero} (vence ${fecha})`;
+    sincronizarEquipo(e);
+  });
+  guardarDatos();
+  render();
+  refrescarVistasSecundarias();
+  vistaContratos.render();
+
+  resultado.textContent = `✓ Fecha de vencimiento actualizada a ${fecha} en ${afectados.length} equipo(s) del contrato ${numero}.`;
+  $("bulkContratoNumero").value = "";
+  $("bulkContratoFecha").value = "";
+}
+
+$("btnAplicarFechaContrato").addEventListener("click", aplicarFechaVencimientoContrato);
 $("btnNuevo").addEventListener("click", () => abrirModal(null));
 $("btnSugerirIdGlpi").addEventListener("click", () => {
   $("idGlpi").value = siguienteIdGlpi();

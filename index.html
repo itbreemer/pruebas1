@@ -560,6 +560,15 @@
         <section class="toolbar">
           <input type="text" id="buscador_contratos" placeholder="Buscar por contrato, equipo, usuario, empresa...">
         </section>
+        <section class="tablero-conteo">
+          <p class="subseccion-nota" style="margin-bottom:8px;">Actualizar fecha de vencimiento de un contrato (se aplica a todos los equipos que tengan ese número):</p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="text" id="bulkContratoNumero" placeholder="Número de contrato (ej. 8030022620)" style="flex:1; min-width:200px;">
+            <input type="text" id="bulkContratoFecha" placeholder="dd/mm/aaaa" style="width:140px;">
+            <button type="button" id="btnAplicarFechaContrato" class="btn btn-primary">Aplicar a todos los equipos</button>
+          </div>
+          <p id="bulkContratoResultado" class="acta-estado" style="display:none;"></p>
+        </section>
         <section class="tabla-wrap">
           <table class="tabla">
             <thead>
