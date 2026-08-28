@@ -4777,6 +4777,7 @@ function crearVistaLista({ prefix, columnas, obtenerFilas, filtrar, alClicFila }
 function obtenerUsuarios() {
   const mapa = new Map();
   equipos.forEach((e) => {
+    if (esServidor(e)) return;
     if (!nonEmpty(e.nombreEmpleado) && !nonEmpty(e.usuarioDominio)) return;
     const clave = `${(e.nombreEmpleado || "").trim().toLowerCase()}|${(e.usuarioDominio || "").trim().toLowerCase()}`;
     if (!mapa.has(clave)) {
