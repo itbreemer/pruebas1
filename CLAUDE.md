@@ -140,6 +140,39 @@ resto de la app) — son dos inventarios distintos a propósito (Opción B que e
 - Pendiente: distribuir vía GPO a más equipos del dominio; considerar restringir la API Key de
   Firebase (por IP o servicio) antes de distribución masiva.
 
+## Dashboard flotante (dashboard.html / dashboard.js)
+
+Ventana emergente de solo lectura (`window.open` desde `app.js`, botón del Tablero) con
+tarjetas donut en vivo: Equipos Lenovo, Equipos Unidades de Negocio, Equipos RIOLSA, Impresoras
+Canon, Contratos Lenovo. A diferencia de la app principal, **lee la colección `equipos` de
+Firestore directamente** (no pasa por `app.js`/`data.js`).
+
+### Bug importante ya resuelto: los totales no cuadraban con el Tablero
+`app.js` aplica varias correcciones **solo en memoria, nunca se empujan a Firestore a
+propósito** (para no arriesgar que una fecha "reciente" forzada le gane en la fusión a una
+edición real más nueva hecha en otro navegador — ver comentarios en `quitarMarcaRevisionConfirmados`,
+`corregirEmpresasMalCapturadas`, `corregirComentariosUsoRiolsa`, `corregirTipoEquipoMalClasificado`
+en `app.js`), además de dos exclusiones (`eliminarDuplicadoP025194`, `eliminarChatarraConfirmada`)
+que si empujan `sincronizarEliminacion` pero dependen de que algún navegador haya cargado
+`index.html` después del cambio para que ya se haya borrado de Firestore.
+
+Como `dashboard.js` lee Firestore "en crudo", estas correcciones NO se aplicaban ahí, causando
+que la tarjeta "Equipos propios" del dashboard diera menos que la del Tablero (ej. 190 vs 208):
+~24 equipos en `IDS_CONFIRMADOS_ACTIVOS` seguían marcados "en revisión" en el doc crudo de
+Firestore aunque el Tablero ya les quita esa marca localmente.
+
+**Fix aplicado**: se duplicaron en `dashboard.js` las listas `ID_DUPLICADO_P025194`,
+`IDS_CHATARRA_CONFIRMADA` e `IDS_CONFIRMADOS_ACTIVOS` (mismas que `app.js`) y se replicó la
+lógica de exclusión/override de "en revisión". **Importante para el futuro**: si se agregan o
+quitan IDs de esas listas en `app.js`, hay que copiar el cambio también en `dashboard.js`, o los
+totales del dashboard se desincronizarán de nuevo del Tablero. Si esto vuelve a pasar muy
+seguido, considerar mover el cálculo a un documento resumen en Firestore que `app.js` publique
+y `dashboard.js` solo lea (evitaría la duplicación, pero es un cambio más grande).
+
+También se corrigió que los círculos del dashboard solo sumaban PC + Laptop para el número
+central (dejando fuera equipos con `tipoEquipo` de otras familias) — ahora `pintarBloque` recibe
+un total real explícito además del desglose PC/Laptop.
+
 ## Mejoras recientes a la app web principal (index.html / app.js)
 
 ### Monitor vinculado al Catálogo de Monitores
