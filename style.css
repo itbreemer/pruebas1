@@ -334,6 +334,12 @@ main .btn-primary:hover { background: #163158; }
 }
 .tabla tbody tr { cursor: pointer; }
 .tabla tbody tr:hover { background: var(--fila-hover); }
+
+/* Inventario Automático: mismo layout de columnas que la vista "Computadoras" de
+   GLPI, con tipografía más chica/compacta para que las 10 columnas quepan bien. */
+.tabla-glpi { font-size: 0.78rem; }
+.tabla-glpi thead th { padding: 8px 10px; font-size: 0.75rem; }
+.tabla-glpi tbody td { padding: 6px 10px; }
 .tabla .badge {
   display: inline-block;
   font-size: 0.72rem;

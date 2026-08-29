@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260828a">
+<link rel="stylesheet" href="style.css?v=20260829a">
 </head>
 <body>
 
@@ -290,21 +290,22 @@
       <section id="vista-equiposTIv2" class="vista">
         <p class="subseccion-nota">Datos técnicos recolectados automáticamente por el Agente de Inventario TI en cada equipo (hardware, software, red). Se actualiza solo, sin captura manual. Hacé clic en un equipo para ver el detalle completo (antivirus, firewall, memoria por ranura, discos, controladores, USB, sonido, puertos, ranuras de expansión y software).</p>
         <section class="toolbar">
-          <input type="text" id="buscador_equiposTIv2" placeholder="Buscar por nombre de equipo, usuario, IP, SO...">
+          <input type="text" id="buscador_equiposTIv2" placeholder="Buscar por nombre, fabricante, serial, modelo, SO...">
         </section>
         <section class="tabla-wrap">
-          <table class="tabla">
+          <table class="tabla tabla-glpi">
             <thead>
               <tr>
-                <th>Equipo</th>
-                <th>Usuario</th>
-                <th>Procesador</th>
-                <th>RAM</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Fabricante</th>
+                <th>Número de Serial</th>
+                <th>Tipo</th>
+                <th>Modelo</th>
                 <th>Sistema Operativo</th>
-                <th>Monitor</th>
-                <th>IP</th>
-                <th>Serial</th>
-                <th>Última Actualización</th>
+                <th>Ubicación</th>
+                <th>Última Modificación</th>
+                <th>Procesador</th>
               </tr>
             </thead>
             <tbody id="tbody_equiposTIv2"></tbody>
@@ -2333,7 +2334,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260829a"></script>
+<script src="app.js?v=20260829b"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>

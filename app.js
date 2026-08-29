@@ -4942,20 +4942,24 @@ function obtenerEquiposTIv2() {
   return equiposTIv2Data.map((e) => {
     const hw = e.hardware || {};
     const cpu = hw.procesador || {};
-    const ram = hw.memoria || {};
     const so = hw.sistemaOperativo || {};
     return {
       dato: e,
+      // Mismo orden de columnas que la vista "Computadoras" de GLPI (Nombre, Estado,
+      // Fabricante, Número de Serial, Tipo, Modelo, Sistema Operativo, Ubicación,
+      // Última Modificación, Procesador). Estado y Ubicación quedan vacíos: el agente
+      // no los recolecta (son campos de gestión manual, no datos técnicos del equipo).
       celdas: `
         <td>${esc(e.computadora || e.equipoId)}</td>
-        <td>${esc(e.usuario)}</td>
-        <td>${esc(cpu.nombre)}</td>
-        <td>${esc(ram.total)}</td>
-        <td>${esc(so.nombre)}</td>
-        <td>${esc(formatearMonitorTIv2(hw))}</td>
-        <td>${esc(hw.ipPrincipal)}</td>
+        <td></td>
+        <td>${esc(hw.fabricante)}</td>
         <td>${esc(hw.serialNumber)}</td>
+        <td>${esc(hw.tipoEquipo)}</td>
+        <td>${esc(hw.modelo)}</td>
+        <td>${esc(so.nombre)}</td>
+        <td></td>
         <td>${esc(formatearFechaHora(e.timestamp))}</td>
+        <td>${esc(cpu.nombre)}</td>
       `,
     };
   });
@@ -4963,12 +4967,12 @@ function obtenerEquiposTIv2() {
 
 const vistaEquiposTIv2 = crearVistaLista({
   prefix: "equiposTIv2",
-  columnas: 9,
+  columnas: 10,
   obtenerFilas: obtenerEquiposTIv2,
   filtrar: (r, t) => {
     const hw = r.dato.hardware || {};
     const so = hw.sistemaOperativo || {};
-    const texto = [r.dato.computadora, r.dato.equipoId, r.dato.usuario, hw.ipPrincipal, so.nombre, formatearMonitorTIv2(hw)]
+    const texto = [r.dato.computadora, r.dato.equipoId, hw.fabricante, hw.serialNumber, hw.tipoEquipo, hw.modelo, so.nombre]
       .join(" ")
       .toLowerCase();
     return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
