@@ -288,7 +288,7 @@
 
       <!-- Inventario Automático (Agente TI) -->
       <section id="vista-equiposTIv2" class="vista">
-        <p class="subseccion-nota">Datos técnicos recolectados automáticamente por el Agente de Inventario TI en cada equipo (hardware, software, red). Se actualiza solo, sin captura manual.</p>
+        <p class="subseccion-nota">Datos técnicos recolectados automáticamente por el Agente de Inventario TI en cada equipo (hardware, software, red). Se actualiza solo, sin captura manual. Hacé clic en un equipo para ver el detalle completo (antivirus, firewall, memoria por ranura, discos, controladores, USB, sonido, puertos, ranuras de expansión y software).</p>
         <section class="toolbar">
           <input type="text" id="buscador_equiposTIv2" placeholder="Buscar por nombre de equipo, usuario, IP, SO...">
         </section>
@@ -1373,6 +1373,24 @@
   </div>
 </div>
 
+<!-- Modal de detalle de equipo (Inventario Automático / equiposTI_v2) -->
+<div id="modalDetalleEquipoTIv2Overlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalDetalleEquipoTIv2Titulo">Detalle del equipo</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarDetalleEquipoTIv2" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body" id="cuerpoDetalleEquipoTIv2"></div>
+    <div class="modal-actions">
+      <div class="modal-actions-right">
+        <button type="button" id="btnCerrarDetalleEquipoTIv2_2" class="btn btn-secondary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de contrato móvil (nuevo / editar) -->
 <div id="modalContratoMovilOverlay" class="modal-overlay no-print">
   <div class="modal">
@@ -2315,7 +2333,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260828g"></script>
+<script src="app.js?v=20260829a"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>

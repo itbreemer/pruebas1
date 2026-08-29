@@ -4973,7 +4973,187 @@ const vistaEquiposTIv2 = crearVistaLista({
       .toLowerCase();
     return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
   },
+  alClicFila: abrirDetalleEquipoTIv2,
 });
+
+function filaDetalleTIv2(etiqueta, valor) {
+  return `<div class="glpi-row"><label>${etiqueta}</label><div>${esc(valor)}</div></div>`;
+}
+
+function tablaDetalleTIv2(columnas, filas) {
+  if (!filas.length) return `<p class="subseccion-nota">Sin datos.</p>`;
+  const encabezado = columnas.map((c) => `<th>${c}</th>`).join("");
+  const cuerpo = filas.map((f) => `<tr>${f.map((v) => `<td>${esc(v)}</td>`).join("")}</tr>`).join("");
+  return `<section class="tabla-wrap"><table class="tabla"><thead><tr>${encabezado}</tr></thead><tbody>${cuerpo}</tbody></table></section>`;
+}
+
+function abrirDetalleEquipoTIv2(item) {
+  const e = item.dato;
+  const hw = e.hardware || {};
+  const sw = e.software || {};
+  const cpu = hw.procesador || {};
+  const ram = hw.memoria || {};
+  const so = hw.sistemaOperativo || {};
+
+  $("modalDetalleEquipoTIv2Titulo").textContent = `Detalle — ${e.computadora || e.equipoId || "N/A"}`;
+
+  const secciones = [];
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">General</h3>
+    <div class="glpi-grid">
+      <div class="glpi-col">
+        ${filaDetalleTIv2("Equipo", e.computadora || e.equipoId)}
+        ${filaDetalleTIv2("Usuario", e.usuario)}
+        ${filaDetalleTIv2("Dominio", e.dominio)}
+      </div>
+      <div class="glpi-col">
+        ${filaDetalleTIv2("IP Principal", hw.ipPrincipal)}
+        ${filaDetalleTIv2("MAC Principal", hw.macPrincipal)}
+        ${filaDetalleTIv2("Última Actualización", formatearFechaHora(e.timestamp))}
+      </div>
+    </div>
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Hardware</h3>
+    <div class="glpi-grid">
+      <div class="glpi-col">
+        ${filaDetalleTIv2("Fabricante", hw.fabricante)}
+        ${filaDetalleTIv2("Modelo", hw.modelo)}
+        ${filaDetalleTIv2("Tipo", hw.tipoEquipo)}
+        ${filaDetalleTIv2("Serial", hw.serialNumber)}
+      </div>
+      <div class="glpi-col">
+        ${filaDetalleTIv2("Versión BIOS", hw.biosVersion)}
+        ${filaDetalleTIv2("Fecha BIOS", hw.biosFecha)}
+        ${filaDetalleTIv2("Procesador", cpu.nombre)}
+        ${filaDetalleTIv2("Núcleos / Hilos", cpu.nucleos != null ? `${cpu.nucleos} / ${cpu.hilos}` : "")}
+      </div>
+    </div>
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Sistema Operativo</h3>
+    <div class="glpi-grid">
+      <div class="glpi-col">
+        ${filaDetalleTIv2("Nombre", so.nombre)}
+        ${filaDetalleTIv2("Versión", so.version)}
+      </div>
+      <div class="glpi-col">
+        ${filaDetalleTIv2("Build", so.build)}
+        ${filaDetalleTIv2("Arquitectura", so.arquitectura)}
+        ${filaDetalleTIv2("Encendido (horas)", so.tiempoEncendido)}
+        ${filaDetalleTIv2("Fecha de Arranque", so.fechaArranque)}
+      </div>
+    </div>
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Memoria RAM (${esc(ram.total)})</h3>
+    ${tablaDetalleTIv2(
+      ["Ranura", "Capacidad", "Fabricante", "Velocidad", "N° Parte"],
+      (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.fabricante, m.velocidad, m.numeroParte])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Discos</h3>
+    ${tablaDetalleTIv2(
+      ["Unidad", "Tamaño", "Espacio Libre", "% Uso"],
+      (hw.discos || []).map((d) => [d.unidad, d.tamanio, d.espacioLibre, d.porcentajeUso != null ? `${d.porcentajeUso}%` : ""])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Red</h3>
+    ${tablaDetalleTIv2(
+      ["Adaptador", "Descripción", "MAC", "IP", "Estado", "Velocidad"],
+      (hw.redAdaptadores || []).map((n) => [n.nombre, n.descripcion, n.mac, n.ip, n.estado, n.velocidad])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Monitores</h3>
+    ${tablaDetalleTIv2(
+      ["Fabricante", "Modelo", "Serial", "Activo"],
+      (hw.monitores || []).map((m) => [m.fabricante, m.modelo, m.serial, m.activo ? "Sí" : "No"])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Antivirus</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Habilitado", "Actualizado"],
+      (hw.antivirus || []).map((a) => [a.nombre, a.habilitado ? "Sí" : "No", a.actualizado ? "Sí" : "No"])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Firewall</h3>
+    ${tablaDetalleTIv2(
+      ["Perfil", "Activo"],
+      (hw.firewall || []).map((f) => [f.perfil, f.activo ? "Sí" : "No"])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Controladores PCI (${(hw.controladores || []).length})</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Fabricante", "Device ID"],
+      (hw.controladores || []).map((c) => [c.nombre, c.fabricante, c.deviceId])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Dispositivos USB (${(hw.usbDispositivos || []).length})</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Fabricante", "Device ID"],
+      (hw.usbDispositivos || []).map((u) => [u.nombre, u.fabricante, u.deviceId])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Tarjetas de Sonido</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Fabricante"],
+      (hw.tarjetasSonido || []).map((t) => [t.nombre, t.fabricante])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Puertos Físicos</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Tipo", "Descripción"],
+      (hw.puertos || []).map((p) => [p.nombre, p.tipo, p.descripcion])
+    )}
+  `);
+
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Ranuras de Expansión</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Estado", "Tipo"],
+      (hw.slots || []).map((s) => [s.nombre, s.estado, s.tipo])
+    )}
+  `);
+
+  const softwareLista = sw.softwareInstalado || [];
+  secciones.push(`
+    <h3 class="ingreso-subtitulo">Software (${sw.cantidadSoftware || softwareLista.length || 0} programas instalados)</h3>
+    ${tablaDetalleTIv2(
+      ["Nombre", "Versión", "Fabricante"],
+      softwareLista.slice(0, 100).map((s) => [s.nombre, s.version, s.fabricante])
+    )}
+    ${softwareLista.length > 100 ? `<p class="subseccion-nota">Mostrando los primeros 100 de ${softwareLista.length} programas.</p>` : ""}
+  `);
+
+  $("cuerpoDetalleEquipoTIv2").innerHTML = secciones.join("");
+  $("modalDetalleEquipoTIv2Overlay").style.display = "flex";
+}
+
+function cerrarDetalleEquipoTIv2() {
+  $("modalDetalleEquipoTIv2Overlay").style.display = "none";
+}
 
 function obtenerTicketsGarantia() {
   return ticketsGarantiaData.map((t) => ({
@@ -5590,6 +5770,9 @@ $("btnCerrarHistorialMantenimientoEquipo2").addEventListener("click", cerrarHist
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo2").addEventListener("click", cerrarHistorialGarantiaEquipo);
+
+$("btnCerrarDetalleEquipoTIv2").addEventListener("click", cerrarDetalleEquipoTIv2);
+$("btnCerrarDetalleEquipoTIv2_2").addEventListener("click", cerrarDetalleEquipoTIv2);
 $("btnToggleHistorialMantenimiento").addEventListener("click", alternarHistorialMantenimiento);
 $("btnVerReporteMantenimiento").addEventListener("click", mostrarReporteMantenimiento);
 $("btnDescargarReporteMantenimientoPDF").addEventListener("click", descargarReporteMantenimientoPDF);
