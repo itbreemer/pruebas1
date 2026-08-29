@@ -162,6 +162,7 @@ function Get-ComputerHardware {
             $bios = Get-CimInstance Win32_BIOS
             $hardware.serialNumber = $bios.SerialNumber
             $hardware.biosVersion = $bios.Version
+            $hardware.biosFecha = if ($bios.ReleaseDate) { $bios.ReleaseDate.ToString("yyyy-MM-dd") } else { "N/A" }
         }
         catch {
             LogWarning "No se pudo obtener número serial: $_"
@@ -183,12 +184,24 @@ function Get-ComputerHardware {
             $hardware.procesador = @{ nombre = "N/A" }
         }
 
-        # Memoria RAM
+        # Memoria RAM (total + desglose por modulo/ranura, igual que GLPI)
         try {
             $ram = Get-CimInstance Win32_ComputerSystem
+            $modulos = @()
+            Get-CimInstance Win32_PhysicalMemory | ForEach-Object {
+                $modulos += @{
+                    ranura = $_.DeviceLocator
+                    capacidad = "$([math]::Round($_.Capacity / 1GB, 2)) GB"
+                    fabricante = $_.Manufacturer
+                    velocidad = "$($_.Speed) MHz"
+                    numeroParte = $(if ($_.PartNumber) { $_.PartNumber.Trim() } else { "N/A" })
+                }
+            }
             $hardware.memoria = @{
                 total = "$([math]::Round($ram.TotalPhysicalMemory / 1GB, 2)) GB"
                 totalBytes = $ram.TotalPhysicalMemory
+                modulos = $modulos
+                ranurasUsadas = $modulos.Count
             }
         }
         catch {
@@ -223,6 +236,7 @@ function Get-ComputerHardware {
                 build = $os.BuildNumber
                 arquitectura = $os.OSArchitecture
                 tiempoEncendido = [math]::Round((New-TimeSpan -Start $os.LastBootUpTime).TotalHours, 2)
+                fechaArranque = $os.LastBootUpTime.ToString("yyyy-MM-dd HH:mm:ss")
             }
         }
         catch {
@@ -278,6 +292,67 @@ function Get-ComputerHardware {
             $hardware.monitores = @()
         }
 
+        # Antivirus instalado (Windows Defender u otro), via WMI SecurityCenter2
+        try {
+            $hardware.antivirus = Get-Antivirus
+        }
+        catch {
+            LogWarning "No se pudo obtener info de antivirus: $_"
+            $hardware.antivirus = @()
+        }
+
+        # Firewall de Windows (perfiles Dominio/Publico/Privado)
+        try {
+            $hardware.firewall = Get-FirewallStatus
+        }
+        catch {
+            LogWarning "No se pudo obtener estado de firewall: $_"
+            $hardware.firewall = @()
+        }
+
+        # Controladores PCI, dispositivos USB, tarjetas de sonido, puertos fisicos y
+        # ranuras de expansion - mismo nivel de detalle que el agente oficial de GLPI,
+        # para tener un inventario equivalente mientras se aprueba/despliega GLPI.
+        try {
+            $hardware.controladores = Get-PciControllers
+        }
+        catch {
+            LogWarning "No se pudo obtener controladores PCI: $_"
+            $hardware.controladores = @()
+        }
+
+        try {
+            $hardware.usbDispositivos = Get-UsbDevices
+        }
+        catch {
+            LogWarning "No se pudo obtener dispositivos USB: $_"
+            $hardware.usbDispositivos = @()
+        }
+
+        try {
+            $hardware.tarjetasSonido = Get-SoundDevices
+        }
+        catch {
+            LogWarning "No se pudo obtener tarjetas de sonido: $_"
+            $hardware.tarjetasSonido = @()
+        }
+
+        try {
+            $hardware.puertos = Get-PhysicalPorts
+        }
+        catch {
+            LogWarning "No se pudo obtener puertos físicos: $_"
+            $hardware.puertos = @()
+        }
+
+        try {
+            $hardware.slots = Get-ExpansionSlots
+        }
+        catch {
+            LogWarning "No se pudo obtener ranuras de expansión: $_"
+            $hardware.slots = @()
+        }
+
         LogSuccess "Información de hardware recolectada correctamente"
         return $hardware
     }
@@ -313,6 +388,138 @@ function Get-ConnectedMonitors {
         LogWarning "No se pudo consultar WmiMonitorID (puede requerir permisos de administrador): $_"
     }
     return $monitores
+}
+
+function Get-Antivirus {
+    $productos = @()
+    try {
+        Get-CimInstance -Namespace "root/SecurityCenter2" -ClassName AntivirusProduct -ErrorAction Stop | ForEach-Object {
+            # El productState de SecurityCenter2 no es un estandar documentado por
+            # Microsoft; es la convencion (no oficial pero ampliamente usada, incluye
+            # Windows Defender) donde el 2do y 3er byte hex indican habilitado/actualizado.
+            $estadoHex = '{0:X6}' -f [int]$_.productState
+            $bytesActivo = $estadoHex.Substring(2, 2)
+            $bytesActualizado = $estadoHex.Substring(4, 2)
+            $productos += @{
+                nombre = $_.displayName
+                habilitado = $bytesActivo -in @('10', '11')
+                actualizado = $bytesActualizado -eq '00'
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar antivirus (root/SecurityCenter2): $_"
+    }
+    return $productos
+}
+
+function Get-FirewallStatus {
+    $perfiles = @()
+    try {
+        Get-NetFirewallProfile -ErrorAction Stop | ForEach-Object {
+            $perfiles += @{
+                perfil = $_.Name
+                activo = [bool]$_.Enabled
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar el estado del firewall (Get-NetFirewallProfile): $_"
+    }
+    return $perfiles
+}
+
+function Get-PciControllers {
+    $controladores = @()
+    try {
+        Get-CimInstance Win32_PnPEntity -ErrorAction Stop | Where-Object { $_.PNPDeviceID -like "PCI\*" -and $_.Name } | ForEach-Object {
+            $controladores += @{
+                nombre = $_.Name
+                fabricante = $_.Manufacturer
+                deviceId = $_.PNPDeviceID
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar controladores PCI (Win32_PnPEntity): $_"
+    }
+    return $controladores
+}
+
+function Get-UsbDevices {
+    $dispositivos = @()
+    try {
+        Get-CimInstance Win32_PnPEntity -ErrorAction Stop | Where-Object { $_.PNPDeviceID -like "USB\*" -and $_.Name } | ForEach-Object {
+            $dispositivos += @{
+                nombre = $_.Name
+                fabricante = $_.Manufacturer
+                deviceId = $_.PNPDeviceID
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar dispositivos USB (Win32_PnPEntity): $_"
+    }
+    return $dispositivos
+}
+
+function Get-SoundDevices {
+    $tarjetas = @()
+    try {
+        Get-CimInstance Win32_SoundDevice -ErrorAction Stop | ForEach-Object {
+            $tarjetas += @{
+                nombre = $_.Name
+                fabricante = $_.Manufacturer
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar tarjetas de sonido (Win32_SoundDevice): $_"
+    }
+    return $tarjetas
+}
+
+function Get-PhysicalPorts {
+    # Win32_PortConnector depende de la tabla SMBIOS Tipo 8, que muchos fabricantes
+    # (sobre todo laptops y maquinas virtuales) no reportan - un arreglo vacio es
+    # un resultado normal, no un error.
+    $puertos = @()
+    try {
+        Get-CimInstance Win32_PortConnector -ErrorAction Stop | ForEach-Object {
+            $puertos += @{
+                nombre = $_.Tag
+                tipo = ($_.ConnectorType -join ", ")
+                descripcion = $_.ExternalReferenceDesignator
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar puertos físicos (Win32_PortConnector): $_"
+    }
+    return $puertos
+}
+
+function Get-ExpansionSlots {
+    $slots = @()
+    try {
+        Get-CimInstance Win32_SystemSlot -ErrorAction Stop | ForEach-Object {
+            # CurrentUsage: 3 = Available (libre), 4 = In Use (usada)
+            $estado = switch ($_.CurrentUsage) {
+                3 { "free" }
+                4 { "used" }
+                default { "N/A" }
+            }
+            $slots += @{
+                nombre = $_.SlotDesignation
+                estado = $estado
+                tipo = $_.SlotType
+            }
+        }
+    }
+    catch {
+        LogWarning "No se pudo consultar ranuras de expansión (Win32_SystemSlot): $_"
+    }
+    return $slots
 }
 
 # ============================================================================
