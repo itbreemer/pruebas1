@@ -5001,157 +5001,216 @@ function abrirDetalleEquipoTIv2(item) {
 
   $("modalDetalleEquipoTIv2Titulo").textContent = `Detalle — ${e.computadora || e.equipoId || "N/A"}`;
 
-  const secciones = [];
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">General</h3>
-    <div class="glpi-grid">
-      <div class="glpi-col">
-        ${filaDetalleTIv2("Equipo", e.computadora || e.equipoId)}
-        ${filaDetalleTIv2("Usuario", e.usuario)}
-        ${filaDetalleTIv2("Dominio", e.dominio)}
-      </div>
-      <div class="glpi-col">
-        ${filaDetalleTIv2("IP Principal", hw.ipPrincipal)}
-        ${filaDetalleTIv2("MAC Principal", hw.macPrincipal)}
-        ${filaDetalleTIv2("Última Actualización", formatearFechaHora(e.timestamp))}
-      </div>
-    </div>
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Hardware</h3>
-    <div class="glpi-grid">
-      <div class="glpi-col">
-        ${filaDetalleTIv2("Fabricante", hw.fabricante)}
-        ${filaDetalleTIv2("Modelo", hw.modelo)}
-        ${filaDetalleTIv2("Tipo", hw.tipoEquipo)}
-        ${filaDetalleTIv2("Serial", hw.serialNumber)}
-      </div>
-      <div class="glpi-col">
-        ${filaDetalleTIv2("Versión BIOS", hw.biosVersion)}
-        ${filaDetalleTIv2("Fecha BIOS", hw.biosFecha)}
-        ${filaDetalleTIv2("Procesador", cpu.nombre)}
-        ${filaDetalleTIv2("Núcleos / Hilos", cpu.nucleos != null ? `${cpu.nucleos} / ${cpu.hilos}` : "")}
-      </div>
-    </div>
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Sistema Operativo</h3>
-    <div class="glpi-grid">
-      <div class="glpi-col">
-        ${filaDetalleTIv2("Nombre", so.nombre)}
-        ${filaDetalleTIv2("Versión", so.version)}
-      </div>
-      <div class="glpi-col">
-        ${filaDetalleTIv2("Build", so.build)}
-        ${filaDetalleTIv2("Arquitectura", so.arquitectura)}
-        ${filaDetalleTIv2("Encendido (horas)", so.tiempoEncendido)}
-        ${filaDetalleTIv2("Fecha de Arranque", so.fechaArranque)}
-      </div>
-    </div>
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Memoria RAM (${esc(ram.total)})</h3>
-    ${tablaDetalleTIv2(
-      ["Ranura", "Capacidad", "Fabricante", "Velocidad", "N° Parte"],
-      (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.fabricante, m.velocidad, m.numeroParte])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Discos</h3>
-    ${tablaDetalleTIv2(
-      ["Unidad", "Tamaño", "Espacio Libre", "% Uso"],
-      (hw.discos || []).map((d) => [d.unidad, d.tamanio, d.espacioLibre, d.porcentajeUso != null ? `${d.porcentajeUso}%` : ""])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Red</h3>
-    ${tablaDetalleTIv2(
-      ["Adaptador", "Descripción", "MAC", "IP", "Estado", "Velocidad"],
-      (hw.redAdaptadores || []).map((n) => [n.nombre, n.descripcion, n.mac, n.ip, n.estado, n.velocidad])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Monitores</h3>
-    ${tablaDetalleTIv2(
-      ["Fabricante", "Modelo", "Serial", "Activo"],
-      (hw.monitores || []).map((m) => [m.fabricante, m.modelo, m.serial, m.activo ? "Sí" : "No"])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Antivirus</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Habilitado", "Actualizado"],
-      (hw.antivirus || []).map((a) => [a.nombre, a.habilitado ? "Sí" : "No", a.actualizado ? "Sí" : "No"])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Firewall</h3>
-    ${tablaDetalleTIv2(
-      ["Perfil", "Activo"],
-      (hw.firewall || []).map((f) => [f.perfil, f.activo ? "Sí" : "No"])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Controladores PCI (${(hw.controladores || []).length})</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Fabricante", "Device ID"],
-      (hw.controladores || []).map((c) => [c.nombre, c.fabricante, c.deviceId])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Dispositivos USB (${(hw.usbDispositivos || []).length})</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Fabricante", "Device ID"],
-      (hw.usbDispositivos || []).map((u) => [u.nombre, u.fabricante, u.deviceId])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Tarjetas de Sonido</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Fabricante"],
-      (hw.tarjetasSonido || []).map((t) => [t.nombre, t.fabricante])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Puertos Físicos</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Tipo", "Descripción"],
-      (hw.puertos || []).map((p) => [p.nombre, p.tipo, p.descripcion])
-    )}
-  `);
-
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Ranuras de Expansión</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Estado", "Tipo"],
-      (hw.slots || []).map((s) => [s.nombre, s.estado, s.tipo])
-    )}
-  `);
-
   const softwareLista = sw.softwareInstalado || [];
-  secciones.push(`
-    <h3 class="ingreso-subtitulo">Software (${sw.cantidadSoftware || softwareLista.length || 0} programas instalados)</h3>
-    ${tablaDetalleTIv2(
-      ["Nombre", "Versión", "Fabricante"],
-      softwareLista.slice(0, 100).map((s) => [s.nombre, s.version, s.fabricante])
-    )}
-    ${softwareLista.length > 100 ? `<p class="subseccion-nota">Mostrando los primeros 100 de ${softwareLista.length} programas.</p>` : ""}
-  `);
 
-  $("cuerpoDetalleEquipoTIv2").innerHTML = secciones.join("");
+  // Cada pestaña replica una categoría del sidebar de GLPI (Computadora > pestañas con
+  // contador), en vez del scroll único anterior.
+  const tabs = [
+    {
+      id: "general",
+      label: "General",
+      html: `
+        <div class="glpi-grid">
+          <div class="glpi-col">
+            ${filaDetalleTIv2("Equipo", e.computadora || e.equipoId)}
+            ${filaDetalleTIv2("Usuario", e.usuario)}
+            ${filaDetalleTIv2("Dominio", e.dominio)}
+          </div>
+          <div class="glpi-col">
+            ${filaDetalleTIv2("IP Principal", hw.ipPrincipal)}
+            ${filaDetalleTIv2("MAC Principal", hw.macPrincipal)}
+            ${filaDetalleTIv2("Última Actualización", formatearFechaHora(e.timestamp))}
+          </div>
+        </div>
+      `,
+    },
+    {
+      id: "hardware",
+      label: "Hardware",
+      html: `
+        <div class="glpi-grid">
+          <div class="glpi-col">
+            ${filaDetalleTIv2("Fabricante", hw.fabricante)}
+            ${filaDetalleTIv2("Modelo", hw.modelo)}
+            ${filaDetalleTIv2("Tipo", hw.tipoEquipo)}
+            ${filaDetalleTIv2("Serial", hw.serialNumber)}
+          </div>
+          <div class="glpi-col">
+            ${filaDetalleTIv2("Versión BIOS", hw.biosVersion)}
+            ${filaDetalleTIv2("Fecha BIOS", hw.biosFecha)}
+            ${filaDetalleTIv2("Procesador", cpu.nombre)}
+            ${filaDetalleTIv2("Núcleos / Hilos", cpu.nucleos != null ? `${cpu.nucleos} / ${cpu.hilos}` : "")}
+          </div>
+        </div>
+      `,
+    },
+    {
+      id: "so",
+      label: "Sistema Operativo",
+      count: 1,
+      html: `
+        <div class="glpi-grid">
+          <div class="glpi-col">
+            ${filaDetalleTIv2("Nombre", so.nombre)}
+            ${filaDetalleTIv2("Versión", so.version)}
+          </div>
+          <div class="glpi-col">
+            ${filaDetalleTIv2("Build", so.build)}
+            ${filaDetalleTIv2("Arquitectura", so.arquitectura)}
+            ${filaDetalleTIv2("Encendido (horas)", so.tiempoEncendido)}
+            ${filaDetalleTIv2("Fecha de Arranque", so.fechaArranque)}
+          </div>
+        </div>
+      `,
+    },
+    {
+      id: "ram",
+      label: "Memoria RAM",
+      count: (ram.modulos || []).length,
+      html: `
+        <p class="subseccion-nota">Total: ${esc(ram.total)}</p>
+        ${tablaDetalleTIv2(
+          ["Ranura", "Capacidad", "Fabricante", "Velocidad", "N° Parte"],
+          (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.fabricante, m.velocidad, m.numeroParte])
+        )}
+      `,
+    },
+    {
+      id: "discos",
+      label: "Discos",
+      count: (hw.discos || []).length,
+      html: tablaDetalleTIv2(
+        ["Unidad", "Tamaño", "Espacio Libre", "% Uso"],
+        (hw.discos || []).map((d) => [d.unidad, d.tamanio, d.espacioLibre, d.porcentajeUso != null ? `${d.porcentajeUso}%` : ""])
+      ),
+    },
+    {
+      id: "red",
+      label: "Red",
+      count: (hw.redAdaptadores || []).length,
+      html: tablaDetalleTIv2(
+        ["Adaptador", "Descripción", "MAC", "IP", "Estado", "Velocidad"],
+        (hw.redAdaptadores || []).map((n) => [n.nombre, n.descripcion, n.mac, n.ip, n.estado, n.velocidad])
+      ),
+    },
+    {
+      id: "monitores",
+      label: "Monitores",
+      count: (hw.monitores || []).length,
+      html: tablaDetalleTIv2(
+        ["Fabricante", "Modelo", "Serial", "Activo"],
+        (hw.monitores || []).map((m) => [m.fabricante, m.modelo, m.serial, m.activo ? "Sí" : "No"])
+      ),
+    },
+    {
+      id: "antivirus",
+      label: "Antivirus",
+      count: (hw.antivirus || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Habilitado", "Actualizado"],
+        (hw.antivirus || []).map((a) => [a.nombre, a.habilitado ? "Sí" : "No", a.actualizado ? "Sí" : "No"])
+      ),
+    },
+    {
+      id: "firewall",
+      label: "Firewall",
+      count: (hw.firewall || []).length,
+      html: tablaDetalleTIv2(
+        ["Perfil", "Activo"],
+        (hw.firewall || []).map((f) => [f.perfil, f.activo ? "Sí" : "No"])
+      ),
+    },
+    {
+      id: "pci",
+      label: "Controladores PCI",
+      count: (hw.controladores || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Fabricante", "Device ID"],
+        (hw.controladores || []).map((c) => [c.nombre, c.fabricante, c.deviceId])
+      ),
+    },
+    {
+      id: "usb",
+      label: "Dispositivos USB",
+      count: (hw.usbDispositivos || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Fabricante", "Device ID"],
+        (hw.usbDispositivos || []).map((u) => [u.nombre, u.fabricante, u.deviceId])
+      ),
+    },
+    {
+      id: "sonido",
+      label: "Tarjetas de Sonido",
+      count: (hw.tarjetasSonido || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Fabricante"],
+        (hw.tarjetasSonido || []).map((t) => [t.nombre, t.fabricante])
+      ),
+    },
+    {
+      id: "puertos",
+      label: "Puertos Físicos",
+      count: (hw.puertos || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Tipo", "Descripción"],
+        (hw.puertos || []).map((p) => [p.nombre, p.tipo, p.descripcion])
+      ),
+    },
+    {
+      id: "slots",
+      label: "Ranuras de Expansión",
+      count: (hw.slots || []).length,
+      html: tablaDetalleTIv2(
+        ["Nombre", "Estado", "Tipo"],
+        (hw.slots || []).map((s) => [s.nombre, s.estado, s.tipo])
+      ),
+    },
+    {
+      id: "software",
+      label: "Programas",
+      count: sw.cantidadSoftware || softwareLista.length || 0,
+      html: `
+        ${tablaDetalleTIv2(
+          ["Nombre", "Versión", "Fabricante"],
+          softwareLista.slice(0, 100).map((s) => [s.nombre, s.version, s.fabricante])
+        )}
+        ${softwareLista.length > 100 ? `<p class="subseccion-nota">Mostrando los primeros 100 de ${softwareLista.length} programas.</p>` : ""}
+      `,
+    },
+  ];
+
+  $("tabsDetalleTIv2").innerHTML = tabs
+    .map(
+      (t, i) => `
+        <button type="button" class="detalle-tiv2-tab${i === 0 ? " active" : ""}" data-tiv2-tab="${t.id}">
+          <span>${t.label}</span>
+          ${t.count != null ? `<span class="tiv2-tab-contador">${t.count}</span>` : ""}
+        </button>
+      `
+    )
+    .join("");
+
+  $("cuerpoDetalleEquipoTIv2").innerHTML = tabs
+    .map(
+      (t, i) => `
+        <section class="detalle-tiv2-panel${i === 0 ? " active" : ""}" data-tiv2-panel="${t.id}">
+          <h3 class="ingreso-subtitulo">${t.label}</h3>
+          ${t.html}
+        </section>
+      `
+    )
+    .join("");
+
+  $("tabsDetalleTIv2").querySelectorAll("[data-tiv2-tab]").forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const idPestania = boton.dataset.tiv2Tab;
+      $("tabsDetalleTIv2").querySelectorAll("[data-tiv2-tab]").forEach((b) => b.classList.toggle("active", b === boton));
+      $("cuerpoDetalleEquipoTIv2").querySelectorAll("[data-tiv2-panel]").forEach((p) => {
+        p.classList.toggle("active", p.dataset.tiv2Panel === idPestania);
+      });
+    });
+  });
+
   $("modalDetalleEquipoTIv2Overlay").style.display = "flex";
 }
 

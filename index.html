@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260829a">
+<link rel="stylesheet" href="style.css?v=20260829c">
 </head>
 <body>
 
@@ -1376,14 +1376,17 @@
 
 <!-- Modal de detalle de equipo (Inventario Automático / equiposTI_v2) -->
 <div id="modalDetalleEquipoTIv2Overlay" class="modal-overlay no-print">
-  <div class="modal">
+  <div class="modal modal-ancho modal-detalle-tiv2">
     <div class="modal-header">
       <h2 id="modalDetalleEquipoTIv2Titulo">Detalle del equipo</h2>
       <div class="modal-header-actions">
         <button id="btnCerrarDetalleEquipoTIv2" class="btn-close">&times;</button>
       </div>
     </div>
-    <div class="modal-body" id="cuerpoDetalleEquipoTIv2"></div>
+    <div class="modal-body modal-body-tiv2">
+      <nav id="tabsDetalleTIv2" class="detalle-tiv2-tabs"></nav>
+      <div id="cuerpoDetalleEquipoTIv2" class="detalle-tiv2-contenido"></div>
+    </div>
     <div class="modal-actions">
       <div class="modal-actions-right">
         <button type="button" id="btnCerrarDetalleEquipoTIv2_2" class="btn btn-secondary">Cerrar</button>
@@ -2334,7 +2337,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260829b"></script>
+<script src="app.js?v=20260829c"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>

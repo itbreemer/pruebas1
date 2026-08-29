@@ -529,6 +529,59 @@ main .btn-primary:hover { background: #163158; }
 .btn-outline-header { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
 .btn-outline-header:hover { background: rgba(255,255,255,0.15); }
 
+/* Detalle de equipo (Inventario Automático): sidebar de pestañas con contador, estilo GLPI */
+.modal-ancho { max-width: 1180px; }
+.modal-body-tiv2 { display: flex; gap: 0; padding: 0; overflow: hidden; height: 72vh; }
+.detalle-tiv2-tabs {
+  flex-shrink: 0;
+  width: 220px;
+  overflow-y: auto;
+  border-right: 1px solid var(--borde);
+  background: #f8f9fb;
+  padding: 8px 0;
+}
+.detalle-tiv2-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 9px 16px;
+  font-size: 0.84rem;
+  color: #374151;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.detalle-tiv2-tab:hover { background: #eef1f6; }
+.detalle-tiv2-tab.active {
+  background: #fff;
+  border-left-color: var(--azul);
+  color: var(--azul);
+  font-weight: 600;
+}
+.detalle-tiv2-tab .tiv2-tab-contador {
+  background: #e5e9f0;
+  color: #4b5563;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  font-weight: 600;
+}
+.detalle-tiv2-tab.active .tiv2-tab-contador { background: var(--azul-claro); color: var(--azul); }
+.detalle-tiv2-contenido { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.detalle-tiv2-panel { display: none; }
+.detalle-tiv2-panel.active { display: block; }
+
+@media (max-width: 760px) {
+  .modal-body-tiv2 { flex-direction: column; height: auto; max-height: 72vh; }
+  .detalle-tiv2-tabs { width: 100%; border-right: none; border-bottom: 1px solid var(--borde); display: flex; overflow-x: auto; }
+  .detalle-tiv2-tab { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+  .detalle-tiv2-tab.active { border-left-color: transparent; border-bottom-color: var(--azul); }
+}
+
 .modal-acta .modal-body { padding-top: 20px; }
 .glpi-row-ancho { grid-template-columns: 220px 1fr; margin-bottom: 4px; }
 .acta-estado {
