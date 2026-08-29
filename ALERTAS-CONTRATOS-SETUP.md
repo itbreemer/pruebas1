@@ -38,7 +38,7 @@ biblioteca gratuita de la comunidad "FirestoreGoogleAppsScript":
 1. En el editor de Apps Script, panel izquierdo → **Bibliotecas** (ícono
    de +).
 2. Pega este ID de script:
-   `1VUSl4b1r1eoNcRWotZM3e87ygkzHqK6M1u5cVsxD9U04h5qU5rNJINGF`
+   `1VUSl4b1r1eoNcRWotZM3e87ygkxvXltOgyDZhixqncz9lQ3MjfT1iKFw`
 3. **Buscar** → selecciona la versión más reciente → **Añadir**.
 4. Deja el nombre identificador como `FirestoreApp` (así lo referencia el
    script).
