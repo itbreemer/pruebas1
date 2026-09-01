@@ -762,30 +762,7 @@ main .btn-primary:hover { background: #163158; }
 
 .ingreso-subtitulo { color: var(--azul); font-size: 0.95rem; margin: 16px 0 6px; }
 
-.reportes-panel {
-  background: #fff;
-  border: 1px solid var(--borde);
-  border-radius: 10px;
-  padding: 16px;
-  margin-top: 16px;
-}
-.reportes-panel h3 { margin: 0 0 4px; font-size: 0.95rem; color: var(--azul); }
-.reportes-panel p { margin: 0 0 12px; font-size: 0.8rem; color: #6b7280; }
-.reportes-fila {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 0;
-  border-top: 1px solid #eef1f6;
-}
-.reportes-fila:first-of-type { border-top: none; }
-.reportes-fila .reportes-etiqueta { font-weight: 600; font-size: 0.85rem; flex: 0 0 260px; }
-.reportes-fila input { flex: 1; min-width: 200px; }
 .modal-ingreso { max-width: 1040px; }
-
-.doc-acciones { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
-.doc-acciones .btn { padding: 4px 10px; font-size: 0.8rem; }
 
 @media print {
   .no-print { display: none !important; }
