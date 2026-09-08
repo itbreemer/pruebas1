@@ -967,6 +967,7 @@ function abrirModalImpresorasPorToner(tonerBaseClave) {
 
   if (esColor) {
     contenedorColores.style.display = "grid";
+    contenedorColores.style.gridTemplateColumns = "";
     contenedorColores.innerHTML = COLORES_CMYK.map((color) => {
       const letra = COLOR_LETRA_TONER[color];
       const filaColor = filas.find((f) => tonerBaseYColor(f.toner).color === color);
@@ -993,29 +994,33 @@ function abrirModalImpresorasPorToner(tonerBaseClave) {
       ? impresorasUnicas.map((f) => `<tr><td>${esc(f.serial)}</td><td>${esc(f.modelo)}</td></tr>`).join("")
       : `<tr><td colspan="2" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
   } else {
-    contenedorColores.style.display = "none";
-    contenedorColores.innerHTML = "";
-
-    thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th><th>Stock Actual</th></tr>`;
-    tbody.innerHTML = impresorasUnicas.length
-      ? impresorasUnicas
-          .map(
-            (f) => `
-              <tr>
-                <td>${esc(f.serial)}</td>
-                <td>${esc(f.modelo)}</td>
-                <td><input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stockActual)}" data-stock-toner-plano="${esc(normalizarTextoComparar(f.toner))}"></td>
-              </tr>
-            `
-          )
-          .join("")
-      : `<tr><td colspan="3" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
-    tbody.querySelectorAll("input[data-stock-toner-plano]").forEach((input) => {
+    // Un Tóner B/N también puede ser compatible con varias impresoras (ej.
+    // GPR39 con 6 impresoras) — igual que con los de color, el Stock es UNO
+    // solo compartido, no por impresora: se captura en una sola casilla
+    // arriba (no una por fila), para no dar a entender que cada impresora
+    // tiene su propio stock separado.
+    contenedorColores.style.display = "grid";
+    contenedorColores.style.gridTemplateColumns = "max-content";
+    const tonerTexto = filas.length ? filas[0].toner : nombreBase;
+    const stock = filas.length ? filas[0].stockActual : "";
+    contenedorColores.innerHTML = `
+      <div class="color-casilla-toner">
+        <span class="nombre">${esc(nombreBase)}</span>
+        <span class="etiqueta-stock">Stock</span>
+        <input type="number" min="0" class="input" value="${esc(stock)}" data-stock-toner-color="${esc(normalizarTextoComparar(tonerTexto))}">
+      </div>
+    `;
+    contenedorColores.querySelectorAll("input[data-stock-toner-color]").forEach((input) => {
       input.addEventListener("change", () => {
-        actualizarStockDeToner(input.dataset.stockTonerPlano, input.value.trim());
+        actualizarStockDeToner(input.dataset.stockTonerColor, input.value.trim());
         renderResumenToner();
       });
     });
+
+    thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th></tr>`;
+    tbody.innerHTML = impresorasUnicas.length
+      ? impresorasUnicas.map((f) => `<tr><td>${esc(f.serial)}</td><td>${esc(f.modelo)}</td></tr>`).join("")
+      : `<tr><td colspan="2" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
   }
 
   $("modalImpresorasPorTonerOverlay").style.display = "flex";
