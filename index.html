@@ -400,34 +400,6 @@
           </table>
         </section>
 
-        <section class="toolbar">
-          <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por Toner, Serial, Modelo o Color...">
-          <button type="button" id="btnMigrarStockToner" class="btn btn-secondary">🔄 Migrar desde Impresoras</button>
-          <button type="button" id="btnNuevoContadorImpresora" class="btn btn-primary">+ Nuevo registro</button>
-        </section>
-        <section class="tabla-wrap">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>Toner</th>
-                <th>Serial</th>
-                <th>Modelo</th>
-                <th>Color</th>
-                <th>Cantidad Impresoras</th>
-                <th>Stock Actual</th>
-              </tr>
-            </thead>
-            <tbody id="tbody_contadoresImpresoras"></tbody>
-          </table>
-        </section>
-        <section class="paginacion">
-          <button id="btnPrimero_contadoresImpresoras">&laquo;</button>
-          <button id="btnAnterior_contadoresImpresoras">&lsaquo;</button>
-          <span id="infoPagina_contadoresImpresoras"></span>
-          <button id="btnSiguiente_contadoresImpresoras">&rsaquo;</button>
-          <button id="btnUltimo_contadoresImpresoras">&raquo;</button>
-        </section>
-
         <h3 class="subseccion-titulo" style="margin-top: 28px;">📤 Salidas de Tóner</h3>
         <p class="subseccion-nota">Registra cada vale de salida — al guardar se rebaja automático esa cantidad del Stock Actual de ese Tóner (el mismo del Resumen de arriba). Escribe el Serial, el Modelo o el # de Toner (lo que tengas a la mano) y elige la coincidencia; Modelo, Ubicación y Toner se completan solos.</p>
         <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
@@ -473,6 +445,36 @@
             <input type="date" id="repTonerHasta">
           </label>
           <button type="button" id="btnDescargarReporteToner" class="btn btn-secondary">📄 Descargar reporte PDF (Stock + Salidas)</button>
+        </section>
+
+        <h3 class="subseccion-titulo" style="margin-top: 28px;">🔎 Detalle completo</h3>
+        <p class="subseccion-nota">Una fila por impresora, con su Toner/color y stock — úsalo para editar un registro puntual o migrar desde el catálogo de Impresoras.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por Toner, Serial, Modelo o Color...">
+          <button type="button" id="btnMigrarStockToner" class="btn btn-secondary">🔄 Migrar desde Impresoras</button>
+          <button type="button" id="btnNuevoContadorImpresora" class="btn btn-primary">+ Nuevo registro</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Toner</th>
+                <th>Serial</th>
+                <th>Modelo</th>
+                <th>Color</th>
+                <th>Cantidad Impresoras</th>
+                <th>Stock Actual</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_contadoresImpresoras"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_contadoresImpresoras">&laquo;</button>
+          <button id="btnAnterior_contadoresImpresoras">&lsaquo;</button>
+          <span id="infoPagina_contadoresImpresoras"></span>
+          <button id="btnSiguiente_contadoresImpresoras">&rsaquo;</button>
+          <button id="btnUltimo_contadoresImpresoras">&raquo;</button>
         </section>
       </section>
 
