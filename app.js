@@ -744,7 +744,10 @@ function ajustarStockToner(tonerTexto, delta) {
 // catálogo de Impresoras (informativo, de solo lectura) y llena el
 // desplegable de Toner solo con las variantes que de verdad le sirven a esa
 // impresora (una por color, o una sola si es B/N), mostrando su stock.
-function poblarCamposSalidaToner(prefijo) {
+// `tonerPreseleccionado` se usa al elegir una sugerencia del buscador (ver
+// renderSugerenciasSalidaToner) para dejar marcado exactamente el Toner/color
+// que se buscó, en vez del primero de la lista.
+function poblarCamposSalidaToner(prefijo, tonerPreseleccionado) {
   const serial = $(`${prefijo}Serial`).value.trim();
   const claveSerial = normalizarTextoComparar(serial);
   const impresora = impresorasData.find((p) => normalizarTextoComparar(p.serial) === claveSerial);
@@ -753,11 +756,61 @@ function poblarCamposSalidaToner(prefijo) {
 
   const opciones = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.serial) === claveSerial);
   const select = $(`${prefijo}Toner`);
-  const valorPrevio = select.value;
+  const valorPrevio = tonerPreseleccionado ?? select.value;
   select.innerHTML = opciones.length
     ? opciones.map((c) => `<option value="${esc(c.toner)}">${esc(c.toner)} (stock: ${esc(c.stockActual || 0)})</option>`).join("")
     : `<option value="">Sin Toner registrado para este Serial</option>`;
   if (opciones.some((c) => c.toner === valorPrevio)) select.value = valorPrevio;
+}
+
+// Buscador único de Serial/Modelo/Toner para el formulario de Salidas —
+// mismo patrón que el autocompletado de Monitor (ver renderSugerenciasMonitor):
+// el bodeguero muchas veces solo sabe uno de los tres datos, así que se busca
+// por cualquiera de ellos y al elegir una coincidencia se completa todo lo
+// demás (Modelo, Ubicación y el Toner exacto que se buscó).
+function renderSugerenciasSalidaToner(prefijo, filtro) {
+  const lista = $(`${prefijo}SerialSugerencias`);
+  if (!lista) return;
+  const t = (filtro || "").trim().toLowerCase();
+  const filtrados = t
+    ? contadoresImpresorasData.filter((c) => [c.serial, c.modelo, c.toner].join(" ").toLowerCase().includes(t))
+    : contadoresImpresorasData;
+  const resultados = filtrados.slice(0, 30);
+
+  lista.innerHTML = "";
+  if (!resultados.length) {
+    lista.innerHTML = `<div class="autocomplete-item" style="cursor:default;color:#9ca3af;">Sin coincidencias</div>`;
+    lista.classList.add("open");
+    return;
+  }
+
+  resultados.forEach((c) => {
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `${esc(c.toner)}<small>Serial ${esc(c.serial)} · ${esc(c.modelo)} · Stock: ${esc(c.stockActual || 0)}</small>`;
+    item.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      $(`${prefijo}Serial`).value = c.serial;
+      lista.classList.remove("open");
+      poblarCamposSalidaToner(prefijo, c.toner);
+    });
+    lista.appendChild(item);
+  });
+  lista.classList.add("open");
+}
+
+function inicializarAutocompleteSalidaToner(prefijo) {
+  const input = $(`${prefijo}Serial`);
+  const lista = $(`${prefijo}SerialSugerencias`);
+  if (!input || !lista) return;
+  input.addEventListener("focus", () => renderSugerenciasSalidaToner(prefijo, input.value));
+  input.addEventListener("input", () => {
+    renderSugerenciasSalidaToner(prefijo, input.value);
+    poblarCamposSalidaToner(prefijo);
+  });
+  input.addEventListener("blur", () => {
+    setTimeout(() => lista.classList.remove("open"), 150);
+  });
 }
 
 function renderSalidasToner() {
@@ -4380,9 +4433,9 @@ $("btnMigrarStockToner").addEventListener("click", migrarStockTonerDesdeImpresor
 $("btnCerrarImpresorasPorToner").addEventListener("click", cerrarModalImpresorasPorToner);
 $("btnCerrarImpresorasPorToner2").addEventListener("click", cerrarModalImpresorasPorToner);
 
-$("svSerial").addEventListener("input", () => poblarCamposSalidaToner("sv"));
+inicializarAutocompleteSalidaToner("sv");
 $("formSalidaToner").addEventListener("submit", onSubmitNuevaSalidaToner);
-$("esvSerial").addEventListener("input", () => poblarCamposSalidaToner("esv"));
+inicializarAutocompleteSalidaToner("esv");
 $("formEditarSalidaToner").addEventListener("submit", onSubmitEditarSalidaToner);
 $("btnCancelarSalidaToner").addEventListener("click", cerrarModalSalidaToner);
 $("btnCerrarModalSalidaToner").addEventListener("click", cerrarModalSalidaToner);

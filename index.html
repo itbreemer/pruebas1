@@ -429,11 +429,16 @@
         </section>
 
         <h3 class="subseccion-titulo" style="margin-top: 28px;">📤 Salidas de Tóner</h3>
-        <p class="subseccion-nota">Registra cada vale de salida — al guardar se rebaja automático esa cantidad del Stock Actual de ese Tóner (el mismo del Resumen de arriba). Elige el Serial y el Modelo/Ubicación se completan solos; el Toner solo lista lo compatible con esa impresora, con su stock actual.</p>
+        <p class="subseccion-nota">Registra cada vale de salida — al guardar se rebaja automático esa cantidad del Stock Actual de ese Tóner (el mismo del Resumen de arriba). Escribe el Serial, el Modelo o el # de Toner (lo que tengas a la mano) y elige la coincidencia; Modelo, Ubicación y Toner se completan solos.</p>
         <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
           <form id="formSalidaToner" class="form-salida-toner">
             <label>No. Vale<input type="text" id="svNoVale" required></label>
-            <label>Serial<input type="text" id="svSerial" list="dl-impresorasSerialCatalogo" required></label>
+            <label>Serial, Modelo o Toner
+              <div class="autocomplete-wrap">
+                <input type="text" id="svSerial" autocomplete="off" required>
+                <div class="autocomplete-lista" id="svSerialSugerencias"></div>
+              </div>
+            </label>
             <label>Modelo<input type="text" id="svModelo" disabled></label>
             <label>Ubicación<input type="text" id="svUbicacion" disabled></label>
             <label>Toner<select id="svToner" required></select></label>
@@ -1061,7 +1066,12 @@
         <input type="hidden" id="esvId">
         <div class="form-salida-toner">
           <label>No. Vale<input type="text" id="esvNoVale" required></label>
-          <label>Serial<input type="text" id="esvSerial" list="dl-impresorasSerialCatalogo" required></label>
+          <label>Serial, Modelo o Toner
+            <div class="autocomplete-wrap">
+              <input type="text" id="esvSerial" autocomplete="off" required>
+              <div class="autocomplete-lista" id="esvSerialSugerencias"></div>
+            </div>
+          </label>
           <label>Modelo<input type="text" id="esvModelo" disabled></label>
           <label>Ubicación<input type="text" id="esvUbicacion" disabled></label>
           <label>Toner<select id="esvToner" required></select></label>
@@ -1588,7 +1598,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260908m"></script>
+<script src="app.js?v=20260908n"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
