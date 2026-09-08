@@ -459,6 +459,17 @@ main .btn-primary:hover { background: #163158; }
 .color-casilla-toner .etiqueta-stock { font-size: 0.66rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.03em; }
 .color-casilla-toner input { width: 70px; text-align: center; }
 
+/* Salidas de Tóner: formulario de registro/edición (Serial autocompleta
+   Modelo/Ubicación de solo lectura; Toner lista solo lo compatible con esa
+   impresora). */
+.form-salida-toner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 14px; align-items: end; }
+.form-salida-toner label { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--azul); }
+.form-salida-toner input, .form-salida-toner select {
+  padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; font-size: 0.85rem; font-weight: 400; color: var(--texto);
+}
+.form-salida-toner input:disabled { background: var(--fondo); color: #6b7280; }
+@media (max-width: 900px) { .form-salida-toner { grid-template-columns: repeat(2, 1fr); } }
+
 /* Formulario estilo GLPI: dos columnas, filas etiqueta/valor */
 .glpi-grid {
   display: grid;

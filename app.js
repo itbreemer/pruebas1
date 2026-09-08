@@ -5,6 +5,7 @@ const CODIGOS_STORAGE_KEY = "codigosImpresionTI_v1";
 const TICKETS_GARANTIA_STORAGE_KEY = "ticketsGarantiaTI_v1";
 const MANTENIMIENTO_EQUIPOS_STORAGE_KEY = "mantenimientoEquiposTI_v1";
 const CONTADORES_IMPRESORAS_STORAGE_KEY = "contadoresImpresorasTI_v1";
+const SALIDAS_TONER_STORAGE_KEY = "salidasTonerTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -84,6 +85,7 @@ let codigosData = [];
 let ticketsGarantiaData = [];
 let mantenimientoEquiposData = [];
 let contadoresImpresorasData = [];
+let salidasTonerData = [];
 let equiposTIv2Data = [];
 
 let TECNICO_ACTUAL = "";
@@ -663,6 +665,321 @@ function eliminarRegistroContadorImpresoraActual() {
     refrescarVistasSecundarias();
     cerrarModalContadorImpresora();
   }
+}
+
+/* ---------- Salidas de Tóner (vales entregados al bodeguero, ver salidas-toner-sync.js) ---------- */
+// Cada salida rebaja automáticamente el Stock Actual del Tóner exacto
+// (incluye el color, si aplica) del que salió — así el bodeguero nunca
+// tiene que restar a mano en el Resumen.
+
+function cargarSalidasToner() {
+  try {
+    salidasTonerData = JSON.parse(localStorage.getItem(SALIDAS_TONER_STORAGE_KEY)) || [];
+  } catch (err) {
+    salidasTonerData = [];
+  }
+}
+
+function guardarSalidasToner() {
+  localStorage.setItem(SALIDAS_TONER_STORAGE_KEY, JSON.stringify(salidasTonerData));
+}
+
+function obtenerSalidasTonerActuales() {
+  return salidasTonerData;
+}
+
+function establecerSalidasTonerDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((r) => [r.id, r]));
+  const combinados = [];
+  const idsLocales = new Set();
+
+  salidasTonerData.forEach((local) => {
+    idsLocales.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    // Igual que con Stock Tóner: si ya no está en lo remoto es porque se
+    // eliminó — no hay que resucitarlo tratándolo como "más nuevo".
+    if (!remoto) return;
+    if ((local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarSalidaToner(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsLocales.has(remoto.id)) combinados.push(remoto);
+  });
+
+  salidasTonerData = combinados.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  guardarSalidasToner();
+  renderSalidasToner();
+}
+
+function sincronizarSalidaToner(registro) {
+  if (window.FirestoreSyncSalidasToner && typeof window.FirestoreSyncSalidasToner.guardarSalidaToner === "function") {
+    window.FirestoreSyncSalidasToner.guardarSalidaToner(registro);
+  }
+}
+
+function sincronizarEliminacionSalidaToner(id) {
+  if (window.FirestoreSyncSalidasToner && typeof window.FirestoreSyncSalidasToner.eliminarSalidaToner === "function") {
+    window.FirestoreSyncSalidasToner.eliminarSalidaToner(id);
+  }
+}
+
+// Suma (o resta, con delta negativo) al Stock Actual de un Tóner exacto
+// (texto completo, incluye color) — se usa al registrar/editar/eliminar una
+// Salida, para no tener que tocar el Resumen a mano.
+function ajustarStockToner(tonerTexto, delta) {
+  if (!delta) return;
+  const clave = normalizarTextoComparar(tonerTexto);
+  if (!clave) return;
+  const filaConStock = contadoresImpresorasData.find((c) => normalizarTextoComparar(c.toner) === clave);
+  const actual = filaConStock ? Number(filaConStock.stockActual) || 0 : 0;
+  actualizarStockDeToner(clave, String(actual + delta));
+}
+
+// Al elegir/escribir el Serial: autocompleta Modelo/Ubicación desde el
+// catálogo de Impresoras (informativo, de solo lectura) y llena el
+// desplegable de Toner solo con las variantes que de verdad le sirven a esa
+// impresora (una por color, o una sola si es B/N), mostrando su stock.
+function poblarCamposSalidaToner(prefijo) {
+  const serial = $(`${prefijo}Serial`).value.trim();
+  const claveSerial = normalizarTextoComparar(serial);
+  const impresora = impresorasData.find((p) => normalizarTextoComparar(p.serial) === claveSerial);
+  $(`${prefijo}Modelo`).value = impresora ? impresora.modelo || "" : "";
+  $(`${prefijo}Ubicacion`).value = impresora ? impresora.ubicacion || "" : "";
+
+  const opciones = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.serial) === claveSerial);
+  const select = $(`${prefijo}Toner`);
+  const valorPrevio = select.value;
+  select.innerHTML = opciones.length
+    ? opciones.map((c) => `<option value="${esc(c.toner)}">${esc(c.toner)} (stock: ${esc(c.stockActual || 0)})</option>`).join("")
+    : `<option value="">Sin Toner registrado para este Serial</option>`;
+  if (opciones.some((c) => c.toner === valorPrevio)) select.value = valorPrevio;
+}
+
+function renderSalidasToner() {
+  const tbody = $("tbodySalidasToner");
+  if (!tbody) return;
+  tbody.innerHTML = salidasTonerData.length
+    ? salidasTonerData
+        .map(
+          (s) => `
+            <tr data-salida-id="${esc(s.id)}">
+              <td>${esc(s.noVale)}</td>
+              <td>${esc(s.serial)}</td>
+              <td>${esc(s.modelo)}</td>
+              <td>${esc(s.ubicacion)}</td>
+              <td>${esc(s.toner)}</td>
+              <td>${esc(s.cantidad)}</td>
+              <td>${esc(s.fecha)}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="7" class="empty-state">Sin salidas registradas todavía.</td></tr>`;
+
+  tbody.querySelectorAll("tr[data-salida-id]").forEach((tr) => {
+    tr.addEventListener("click", () => abrirModalSalidaToner(tr.dataset.salidaId));
+  });
+}
+
+function onSubmitNuevaSalidaToner(e) {
+  e.preventDefault();
+  const datos = {
+    noVale: $("svNoVale").value.trim(),
+    serial: $("svSerial").value.trim(),
+    modelo: $("svModelo").value.trim(),
+    ubicacion: $("svUbicacion").value.trim(),
+    toner: $("svToner").value,
+    cantidad: Number($("svCantidad").value) || 0,
+    fecha: $("svFecha").value,
+  };
+  if (!datos.serial || !datos.toner) {
+    alert("Indica el Serial y el Toner de la impresora");
+    return;
+  }
+  if (!datos.cantidad || datos.cantidad <= 0) {
+    alert("Indica una Cantidad mayor a 0");
+    return;
+  }
+
+  datos.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  datos.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  salidasTonerData.unshift(datos);
+  ajustarStockToner(datos.toner, -datos.cantidad);
+
+  guardarSalidasToner();
+  sincronizarSalidaToner(datos);
+  renderSalidasToner();
+  e.target.reset();
+  $("svModelo").value = "";
+  $("svUbicacion").value = "";
+  $("svToner").innerHTML = "";
+}
+
+let salidaTonerActualId = null;
+
+function abrirModalSalidaToner(id) {
+  const registro = salidasTonerData.find((s) => s.id === id);
+  if (!registro) return;
+  salidaTonerActualId = id;
+  $("esvId").value = registro.id;
+  $("esvNoVale").value = registro.noVale || "";
+  $("esvSerial").value = registro.serial || "";
+  poblarCamposSalidaToner("esv");
+  $("esvToner").value = registro.toner || "";
+  $("esvCantidad").value = registro.cantidad || "";
+  $("esvFecha").value = registro.fecha || "";
+  $("modalSalidaTonerOverlay").style.display = "flex";
+}
+
+function cerrarModalSalidaToner() {
+  salidaTonerActualId = null;
+  $("modalSalidaTonerOverlay").style.display = "none";
+}
+
+function onSubmitEditarSalidaToner(e) {
+  e.preventDefault();
+  const idx = salidasTonerData.findIndex((s) => s.id === salidaTonerActualId);
+  if (idx === -1) return;
+  const anterior = salidasTonerData[idx];
+
+  const datos = {
+    id: anterior.id,
+    noVale: $("esvNoVale").value.trim(),
+    serial: $("esvSerial").value.trim(),
+    modelo: $("esvModelo").value.trim(),
+    ubicacion: $("esvUbicacion").value.trim(),
+    toner: $("esvToner").value,
+    cantidad: Number($("esvCantidad").value) || 0,
+    fecha: $("esvFecha").value,
+  };
+  if (!datos.serial || !datos.toner) {
+    alert("Indica el Serial y el Toner de la impresora");
+    return;
+  }
+  if (!datos.cantidad || datos.cantidad <= 0) {
+    alert("Indica una Cantidad mayor a 0");
+    return;
+  }
+  datos.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  // Se devuelve al Stock lo que esta salida había rebajado antes de aplicar
+  // los datos corregidos (aunque haya cambiado de Toner/color), para que el
+  // ajuste nunca quede descuadrado.
+  ajustarStockToner(anterior.toner, anterior.cantidad);
+  ajustarStockToner(datos.toner, -datos.cantidad);
+
+  salidasTonerData[idx] = datos;
+  guardarSalidasToner();
+  sincronizarSalidaToner(datos);
+  renderSalidasToner();
+  cerrarModalSalidaToner();
+}
+
+function eliminarSalidaTonerActual() {
+  const idx = salidasTonerData.findIndex((s) => s.id === salidaTonerActualId);
+  if (idx === -1) return;
+  if (!confirm("¿Eliminar esta Salida de Tóner? Se devolverá la cantidad al Stock Actual.")) return;
+  const registro = salidasTonerData[idx];
+  ajustarStockToner(registro.toner, registro.cantidad);
+  salidasTonerData.splice(idx, 1);
+  guardarSalidasToner();
+  sincronizarEliminacionSalidaToner(registro.id);
+  renderSalidasToner();
+  cerrarModalSalidaToner();
+}
+
+// Reporte de auditoría: Stock Actual (todos los Tóner) + Salidas del rango
+// de fechas elegido, en un PDF descargable listo para enviar/imprimir.
+function datosStockTonerParaReporte() {
+  const grupos = {};
+  contadoresImpresorasData.forEach((c) => {
+    const { base, color } = tonerBaseYColor(c.toner);
+    const clave = normalizarTextoComparar(base);
+    if (!clave) return;
+    if (!grupos[clave]) grupos[clave] = { base, esColor: false, stockPorColor: {}, stockPlano: "" };
+    const g = grupos[clave];
+    if (color) {
+      g.esColor = true;
+      if (g.stockPorColor[color] === undefined) g.stockPorColor[color] = c.stockActual || 0;
+    } else if (g.stockPlano === "") {
+      g.stockPlano = c.stockActual || 0;
+    }
+  });
+  return Object.values(grupos).sort((a, b) => a.base.localeCompare(b.base));
+}
+
+function descargarReporteStockToner() {
+  const desde = $("repTonerDesde").value;
+  const hasta = $("repTonerHasta").value;
+  const salidasFiltradas = salidasTonerData
+    .filter((s) => (!desde || (s.fecha || "") >= desde) && (!hasta || (s.fecha || "") <= hasta))
+    .sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+
+  const filasStock = datosStockTonerParaReporte()
+    .map(
+      (g) => `
+        <tr>
+          <td>${esc(g.base)}</td>
+          <td>${g.esColor ? COLORES_CMYK.map((c) => `${COLOR_LETRA_TONER[c]}: ${esc(g.stockPorColor[c] ?? "-")}`).join(" &middot; ") : esc(g.stockPlano)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const filasSalidas = salidasFiltradas
+    .map(
+      (s) => `
+        <tr>
+          <td>${esc(s.noVale)}</td>
+          <td>${esc(s.serial)}</td>
+          <td>${esc(s.modelo)}</td>
+          <td>${esc(s.ubicacion)}</td>
+          <td>${esc(s.toner)}</td>
+          <td>${esc(s.cantidad)}</td>
+          <td>${esc(s.fecha)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const rangoTexto = desde || hasta ? `Salidas del ${desde || "inicio"} al ${hasta || "hoy"}` : "Todas las Salidas";
+
+  const contenedor = document.createElement("div");
+  contenedor.style.cssText = "position: fixed; left: -9999px; top: 0; width: 1100px; padding: 20px; background: #fff; font-family: Arial, sans-serif;";
+  contenedor.innerHTML = `
+    <h2 style="margin: 0 0 4px; color: #1c3d6e;">Reporte de Stock Tóner Bodega 2</h2>
+    <p style="margin: 0 0 18px; color: #555; font-size: 13px;">Generado el ${new Date().toLocaleString()} — ${esc(rangoTexto)}</p>
+    <h3 style="margin: 0 0 8px; color: #1c3d6e;">Stock Actual</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px;" border="1" cellpadding="6">
+      <thead><tr style="background: #eaf0fb;"><th>Toner</th><th>Stock</th></tr></thead>
+      <tbody>${filasStock || `<tr><td colspan="2">Sin datos</td></tr>`}</tbody>
+    </table>
+    <h3 style="margin: 0 0 8px; color: #1c3d6e;">Salidas</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;" border="1" cellpadding="6">
+      <thead><tr style="background: #eaf0fb;"><th>No. Vale</th><th>Serial</th><th>Modelo</th><th>Ubicación</th><th>Toner</th><th>Cant.</th><th>Fecha</th></tr></thead>
+      <tbody>${filasSalidas || `<tr><td colspan="7">Sin salidas en este rango</td></tr>`}</tbody>
+    </table>
+  `;
+  document.body.appendChild(contenedor);
+
+  const opt = {
+    margin: 10,
+    filename: `reporte-stock-toner-${new Date().toISOString().split("T")[0]}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: "landscape", unit: "mm", format: "a4" },
+  };
+  html2pdf()
+    .set(opt)
+    .from(contenedor)
+    .save()
+    .then(() => contenedor.remove())
+    .catch(() => contenedor.remove());
 }
 
 // Una impresora se excluye si su Tipo (o Tipo de equipo) contiene "plotter",
@@ -2500,6 +2817,7 @@ function refrescarVistasSecundarias() {
   vistaMantenimientoEquipos.render();
   vistaContadoresImpresoras.render();
   renderResumenToner();
+  renderSalidasToner();
   vistaEquiposTIv2.render();
 }
 
@@ -4062,6 +4380,15 @@ $("btnMigrarStockToner").addEventListener("click", migrarStockTonerDesdeImpresor
 $("btnCerrarImpresorasPorToner").addEventListener("click", cerrarModalImpresorasPorToner);
 $("btnCerrarImpresorasPorToner2").addEventListener("click", cerrarModalImpresorasPorToner);
 
+$("svSerial").addEventListener("input", () => poblarCamposSalidaToner("sv"));
+$("formSalidaToner").addEventListener("submit", onSubmitNuevaSalidaToner);
+$("esvSerial").addEventListener("input", () => poblarCamposSalidaToner("esv"));
+$("formEditarSalidaToner").addEventListener("submit", onSubmitEditarSalidaToner);
+$("btnCancelarSalidaToner").addEventListener("click", cerrarModalSalidaToner);
+$("btnCerrarModalSalidaToner").addEventListener("click", cerrarModalSalidaToner);
+$("btnEliminarSalidaToner").addEventListener("click", eliminarSalidaTonerActual);
+$("btnDescargarReporteToner").addEventListener("click", descargarReporteStockToner);
+
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo2").addEventListener("click", cerrarHistorialGarantiaEquipo);
@@ -4117,6 +4444,8 @@ cargarCodigos();
 cargarTicketsGarantia();
 cargarMantenimientoEquipos();
 cargarContadoresImpresoras();
+cargarSalidasToner();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
+renderSalidasToner();

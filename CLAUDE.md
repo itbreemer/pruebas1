@@ -309,6 +309,39 @@ escribe el nombre del tóner ahí, no encuentra nada; solo busca IP/serial/model
 ubicación/empresa/tipo. Sin este fix, resolver "el usuario solo me dio el nombre del Tóner" sigue
 necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en vez de por Impresoras.
 
+### Compatibilidad de Tóner por impresora y Salidas de Tóner
+
+- **Agrupado por # de Tóner base**: cuando 2+ impresoras a color comparten el mismo # de Tóner
+  (ej. "16"), antes el Resumen por Tóner mostraba 4 filas repetidas (una por color) por cada
+  impresora, así que "Cantidad Impresoras" nunca cuadraba con el total real (61). Fix:
+  `tonerBaseYColor(toner)` separa el texto en `{ base, color }` quitando el sufijo " - COLOR";
+  `renderResumenToner()` ahora agrupa por ese `base` y cuenta **Seriales únicos** (no filas), así
+  la suma del Resumen siempre da 61 sin importar cuántos colores tenga cada Tóner.
+- **Modal "Impresoras con Tóner"** (`abrirModalImpresorasPorToner`): para un Tóner a color muestra
+  4 casillas fijas N/C/M/Y con su Stock editable (uno compartido por color, no por impresora) y
+  abajo la lista de impresoras compatibles (Serial/Modelo, deduplicadas por Serial). Para un Tóner
+  B/N compartido por varias impresoras (ej. GPR39 con 6), el mismo problema existía en su versión
+  simple: el Stock se mostraba repetido en cada fila de impresora, dando a entender que cada una
+  tenía su propio stock. Fix: también se muestra en **una sola casilla** arriba (sin las 4
+  letras, solo el nombre del Tóner) y la tabla de abajo queda sin columna de Stock.
+- **Salidas de Tóner** (nueva sub-sección dentro de "Stock Tóner Bodega 2", colección Firestore
+  `salidasToner`, `salidas-toner-sync.js` con el mismo patrón anti-resurrección que
+  `contadores-impresoras-sync.js`): formulario para registrar vales de salida (No. Vale, Serial,
+  Modelo/Ubicación autocompletados de solo lectura desde el catálogo de Impresoras — la Ubicación
+  es dónde está esa impresora, NO de dónde se sacó el tóner en bodega —, Toner con desplegable
+  filtrado a las variantes compatibles con ese Serial mostrando su stock, Cantidad, Fecha). Al
+  guardar, `ajustarStockToner(tonerTexto, delta)` rebaja automático esa cantidad del Stock Actual
+  exacto de ese Tóner/color (mismo mecanismo que usa `actualizarStockDeToner`). Clic en una fila
+  del historial abre un modal de edición/eliminación: al editar se **revierte** el efecto anterior
+  sobre el stock (aunque haya cambiado de Toner/color) antes de aplicar los datos corregidos; al
+  eliminar se devuelve la cantidad al Stock, como si la salida nunca hubiera pasado. Requiere la
+  regla de Firestore estándar en la colección `salidasToner`:
+  `match /salidasToner/{salidaId} { allow read, write: if request.auth != null; }`.
+- **Reporte de auditoría** (`descargarReporteStockToner`, botón "📄 Descargar reporte PDF"): arma
+  un `<div>` fuera de pantalla con la tabla de Stock Actual (agrupado igual que el Resumen) +
+  las Salidas filtradas por un rango de fechas (`repTonerDesde`/`repTonerHasta`, ambos opcionales),
+  y lo descarga con `html2pdf()` — mismo patrón que `descargarReporteMantenimientoPDF`.
+
 **Bug real encontrado (no corregido, no era parte de esta tarea) en `mantenimiento-equipos-sync.js`**:
 la función en `app.js` que aplica los cambios remotos se llama `establecerMantenimientoEquiposDesdeSync`,
 pero el sync file llama a `window.establecerRegistrosMantenimientoDesdeSync` (nombre distinto) —
