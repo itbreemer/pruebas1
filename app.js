@@ -697,12 +697,31 @@ function impresoraDebeExcluirseDeStockToner(p) {
 // usuario ya lo lleva en su Excel real (ej. "TONER T10 - CYAN", "TONER T10
 // - MAGENTA"...). Las B/N siguen siendo 1 sola fila (1 solo cartucho).
 const COLORES_CMYK = ["Negro", "Cyan", "Magenta", "Amarillo"];
+const COLOR_LETRA_TONER = { Negro: "N", Cyan: "C", Magenta: "M", Amarillo: "Y" };
 
 function variantesDeTonerParaImpresora(p) {
   const toner = (p.gpr || "").trim();
   const esColor = normalizarTextoComparar(p.tipo).includes("color");
   if (!esColor) return [{ toner, color: (p.tipo || "").trim() || "B/N" }];
   return COLORES_CMYK.map((color) => ({ toner: `${toner} - ${color.toUpperCase()}`, color }));
+}
+
+// Varias impresoras (distinto Serial) pueden ser compatibles con el mismo #
+// de Tóner físico — para no duplicar/inflar el conteo, todo lo que agrupa o
+// resume por Tóner (Resumen, modal de detalle) usa el # BASE, quitando el
+// sufijo " - COLOR" que agrega variantesDeTonerParaImpresora. Así "16 -
+// AMARILLO" y "16 - NEGRO" caen en el mismo grupo "16", y cada impresora
+// (aunque tenga 4 filas, una por color) solo cuenta una vez.
+function tonerBaseYColor(toner) {
+  const t = (toner || "").trim();
+  const tUpper = t.toUpperCase();
+  for (const color of COLORES_CMYK) {
+    const sufijo = ` - ${color.toUpperCase()}`;
+    if (tUpper.endsWith(sufijo)) {
+      return { base: t.slice(0, t.length - sufijo.length).trim(), color };
+    }
+  }
+  return { base: t, color: null };
 }
 
 function migrarStockTonerDesdeImpresoras() {
@@ -831,48 +850,62 @@ const vistaContadoresImpresoras = crearVistaLista({
   alClicFila: (r) => abrirModalContadorImpresora(r.registro),
 });
 
-// Resumen por Tóner: un Tóner por fila (sin repetir), con la Cantidad de
-// Impresoras que ya se calcula igual que en la tabla principal. Al hacer
-// clic (fuera del campo de Stock) se abre el detalle de qué impresoras
-// (Serial/Modelo/Color/Stock) usan exactamente ese Tóner — así 61 impresoras
-// siempre cuadran con la suma de "Cantidad Impresoras" de este resumen.
+// Resumen por Tóner: un Tóner BASE por fila (sin repetir por color), con la
+// Cantidad de Impresoras contada por Serial único — así, aunque una
+// impresora a color tenga 4 filas internas (una por color), solo cuenta una
+// vez, y la suma de "Cantidad Impresoras" de este resumen siempre cuadra
+// con las 61 impresoras reales. Al hacer clic (fuera del campo de Stock) se
+// abre el detalle de qué impresoras usan exactamente ese Tóner.
 //
-// El Stock Actual se captura UNA vez por Tóner aquí mismo (no por impresora
-// — el bodeguero no tiene que repetir el mismo número en las 16 filas que
-// comparten un tóner): al guardar, se le pega a TODAS las filas de ese
-// Tóner (`actualizarStockDeToner`), así la tabla principal y el detalle por
-// impresora también quedan al día.
+// El Stock Actual se captura UNA vez por Tóner (no por impresora): para un
+// Tóner de impresoras a color se ve como un resumen de sus 4 colores
+// (N/C/M/Y, solo lectura aquí — se edita en el modal de detalle); para un
+// Tóner B/N sigue siendo un solo campo editable aquí mismo, igual que
+// antes. `actualizarStockDeToner` sigue aplicando el cambio a TODAS las
+// filas que comparten el mismo texto exacto de Tóner (incluye su color).
 function renderResumenToner() {
-  const conteo = {};
-  const nombreOriginal = {};
-  const stockPorToner = {};
+  const grupos = {};
   contadoresImpresorasData.forEach((c) => {
-    const clave = normalizarTextoComparar(c.toner);
+    const { base, color } = tonerBaseYColor(c.toner);
+    const clave = normalizarTextoComparar(base);
     if (!clave) return;
-    conteo[clave] = (conteo[clave] || 0) + 1;
-    if (!nombreOriginal[clave]) nombreOriginal[clave] = (c.toner || "").trim();
-    if (stockPorToner[clave] === undefined && c.stockActual !== undefined && c.stockActual !== "") {
-      stockPorToner[clave] = c.stockActual;
+    if (!grupos[clave]) {
+      grupos[clave] = { base, seriales: new Set(), esColor: false, stockPorColor: {}, stockPlano: "" };
+    }
+    const g = grupos[clave];
+    if (c.serial) g.seriales.add(normalizarTextoComparar(c.serial));
+    if (color) {
+      g.esColor = true;
+      if (g.stockPorColor[color] === undefined && c.stockActual !== undefined && c.stockActual !== "") {
+        g.stockPorColor[color] = c.stockActual;
+      }
+    } else if (g.stockPlano === "" && c.stockActual !== undefined && c.stockActual !== "") {
+      g.stockPlano = c.stockActual;
     }
   });
 
-  const filas = Object.keys(conteo)
-    .map((clave) => ({ clave, toner: nombreOriginal[clave], cantidad: conteo[clave], stock: stockPorToner[clave] ?? "" }))
-    .sort((a, b) => a.toner.localeCompare(b.toner));
+  const filas = Object.keys(grupos)
+    .map((clave) => ({ clave, ...grupos[clave], cantidad: grupos[clave].seriales.size }))
+    .sort((a, b) => a.base.localeCompare(b.base));
 
   const tbody = $("tbodyResumenToner");
   if (!tbody) return;
   tbody.innerHTML = filas.length
     ? filas
-        .map(
-          (f) => `
+        .map((f) => {
+          const celdaStock = f.esColor
+            ? `<span class="stock-mini-toner">${COLORES_CMYK.map(
+                (color) => `<span class="punto punto-${COLOR_LETRA_TONER[color]}">${esc(f.stockPorColor[color] ?? "-")}</span>`
+              ).join("")}</span>`
+            : `<input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stockPlano)}" data-stock-toner="${esc(f.clave)}">`;
+          return `
             <tr data-toner-clave="${esc(f.clave)}">
-              <td>${esc(f.toner)}</td>
+              <td>${esc(f.base)}</td>
               <td>${esc(f.cantidad)}</td>
-              <td><input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stock)}" data-stock-toner="${esc(f.clave)}"></td>
+              <td>${celdaStock}</td>
             </tr>
-          `
-        )
+          `;
+        })
         .join("")
     : `<tr><td colspan="3" class="empty-state">Sin datos todavía.</td></tr>`;
 
@@ -908,26 +941,82 @@ function actualizarStockDeToner(tonerClave, stockActual) {
   refrescarVistasSecundarias();
 }
 
-function abrirModalImpresorasPorToner(tonerClave) {
-  const filas = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.toner) === tonerClave);
-  const nombreToner = filas[0]?.toner || tonerClave;
-  $("modalImpresorasPorTonerTitulo").textContent = `Impresoras con Tóner "${nombreToner}" (${filas.length})`;
+// tonerBaseClave viene de renderResumenToner: ya es el # de Tóner BASE
+// (sin sufijo de color). Aquí se separan las impresoras compatibles
+// (únicas por Serial, sin importar si tienen 1 o 4 filas internas) de los
+// 4 casilleros de color, para no repetir la misma impresora 4 veces.
+function abrirModalImpresorasPorToner(tonerBaseClave) {
+  const filas = contadoresImpresorasData.filter((c) => normalizarTextoComparar(tonerBaseYColor(c.toner).base) === tonerBaseClave);
+  const nombreBase = filas.length ? tonerBaseYColor(filas[0].toner).base : tonerBaseClave;
 
+  const impresorasUnicas = [];
+  const serialesVistos = new Set();
+  filas.forEach((f) => {
+    const claveSerial = normalizarTextoComparar(f.serial);
+    if (serialesVistos.has(claveSerial)) return;
+    serialesVistos.add(claveSerial);
+    impresorasUnicas.push(f);
+  });
+
+  $("modalImpresorasPorTonerTitulo").textContent = `Impresoras con Tóner "${nombreBase}" (${impresorasUnicas.length})`;
+
+  const esColor = filas.some((f) => tonerBaseYColor(f.toner).color);
+  const contenedorColores = $("coloresTonerModal");
+  const thead = $("theadImpresorasPorToner");
   const tbody = $("tbodyImpresorasPorToner");
-  tbody.innerHTML = filas.length
-    ? filas
-        .map(
-          (f) => `
-            <tr>
-              <td>${esc(f.serial)}</td>
-              <td>${esc(f.modelo)}</td>
-              <td>${esc(f.color)}</td>
-              <td>${esc(f.stockActual)}</td>
-            </tr>
-          `
-        )
-        .join("")
-    : `<tr><td colspan="4" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
+
+  if (esColor) {
+    contenedorColores.style.display = "grid";
+    contenedorColores.innerHTML = COLORES_CMYK.map((color) => {
+      const letra = COLOR_LETRA_TONER[color];
+      const filaColor = filas.find((f) => tonerBaseYColor(f.toner).color === color);
+      const tonerTextoColor = filaColor ? filaColor.toner : `${nombreBase} - ${color.toUpperCase()}`;
+      const stock = filaColor ? filaColor.stockActual : "";
+      return `
+        <div class="color-casilla-toner">
+          <span class="letra letra-${letra}">${letra}</span>
+          <span class="nombre">${color}</span>
+          <span class="etiqueta-stock">Stock</span>
+          <input type="number" min="0" class="input" value="${esc(stock)}" data-stock-toner-color="${esc(normalizarTextoComparar(tonerTextoColor))}">
+        </div>
+      `;
+    }).join("");
+    contenedorColores.querySelectorAll("input[data-stock-toner-color]").forEach((input) => {
+      input.addEventListener("change", () => {
+        actualizarStockDeToner(input.dataset.stockTonerColor, input.value.trim());
+        renderResumenToner();
+      });
+    });
+
+    thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th></tr>`;
+    tbody.innerHTML = impresorasUnicas.length
+      ? impresorasUnicas.map((f) => `<tr><td>${esc(f.serial)}</td><td>${esc(f.modelo)}</td></tr>`).join("")
+      : `<tr><td colspan="2" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
+  } else {
+    contenedorColores.style.display = "none";
+    contenedorColores.innerHTML = "";
+
+    thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th><th>Stock Actual</th></tr>`;
+    tbody.innerHTML = impresorasUnicas.length
+      ? impresorasUnicas
+          .map(
+            (f) => `
+              <tr>
+                <td>${esc(f.serial)}</td>
+                <td>${esc(f.modelo)}</td>
+                <td><input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stockActual)}" data-stock-toner-plano="${esc(normalizarTextoComparar(f.toner))}"></td>
+              </tr>
+            `
+          )
+          .join("")
+      : `<tr><td colspan="3" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
+    tbody.querySelectorAll("input[data-stock-toner-plano]").forEach((input) => {
+      input.addEventListener("change", () => {
+        actualizarStockDeToner(input.dataset.stockTonerPlano, input.value.trim());
+        renderResumenToner();
+      });
+    });
+  }
 
   $("modalImpresorasPorTonerOverlay").style.display = "flex";
 }

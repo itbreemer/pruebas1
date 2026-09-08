@@ -386,7 +386,7 @@
         <p class="acta-estado">Stock de tóner en Bodega 2 por impresora — "Cantidad Impresoras" cuenta solo cuántas comparten el mismo Toner; "Stock Actual" se captura y actualiza a mano.</p>
 
         <h3 class="subseccion-titulo">📋 Resumen por Tóner</h3>
-        <p class="subseccion-nota">Un Tóner por fila (sin repetir) — captura aquí el Stock Actual una sola vez por Tóner (se aplica a todas las impresoras que lo comparten). Haz clic en la fila (fuera del campo de Stock) para ver qué impresoras específicas lo usan.</p>
+        <p class="subseccion-nota">Un Tóner por fila (agrupado por # base, sin repetir por color) — "Cantidad Impresoras" cuenta impresoras físicas distintas, así siempre cuadra con el total real. Haz clic en la fila (fuera del campo de Stock) para ver el detalle: para Tóner de impresoras a color, sus 4 colores (N/C/M/Y) y qué impresoras son compatibles.</p>
         <section class="tabla-wrap" style="margin-bottom: 24px;">
           <table class="tabla">
             <thead>
@@ -982,9 +982,10 @@
       </div>
     </div>
     <div class="modal-body">
+      <div id="coloresTonerModal" class="colores-toner-grid" style="display: none;"></div>
       <section class="tabla-wrap">
         <table class="tabla">
-          <thead>
+          <thead id="theadImpresorasPorToner">
             <tr>
               <th>Serial</th>
               <th>Modelo</th>
@@ -1512,7 +1513,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260908j"></script>
+<script src="app.js?v=20260908k"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
