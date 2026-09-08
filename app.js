@@ -68,7 +68,9 @@ const CONTADOR_IMPRESORA_CAMPO_POR_ID = {
 
 // Ubicaciones que el usuario pidió NO migrar desde el catálogo de Impresoras
 // (comparación sin distinguir mayúsculas/minúsculas ni espacios extra).
-const UBICACIONES_EXCLUIDAS_STOCK_TONER = ["riolsa", "san fernando", "flor del campo", "km 98"];
+// "Flor del Campo" se quitó de esta lista: esa impresora es de Inmobiliaria
+// y sí debe llevar control de Stock Tóner, igual que las demás.
+const UBICACIONES_EXCLUIDAS_STOCK_TONER = ["riolsa", "san fernando", "km 98"];
 
 // Exclusión explícita por Serial — para casos donde el campo Ubicación/
 // Departamento no trae ninguna de las palabras de arriba (no se puede

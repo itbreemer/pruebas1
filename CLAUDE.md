@@ -289,8 +289,14 @@ matcheando por Serial normalizado para no duplicar en corridas repetidas — al 
 actualiza Toner/Modelo/Color de lo que ya existía, **nunca pisa el Stock Actual** ya capturado a
 mano. Excluye (a pedido explícito del usuario, por decisión de negocio, no por error de datos):
 impresoras cuyo `tipo` o `tipoEquipoImp` contenga "plotter", y las que tengan `ubicacion` que
-**contenga** (no que sea exactamente igual a) "Riolsa", "San Fernando", "Flor del Campo" o "Km
-98" — constantes `impresoraDebeExcluirseDeStockToner`/`UBICACIONES_EXCLUIDAS_STOCK_TONER`.
+**contenga** (no que sea exactamente igual a) "Riolsa", "San Fernando" o "Km 98" — constantes
+`impresoraDebeExcluirseDeStockToner`/`UBICACIONES_EXCLUIDAS_STOCK_TONER`.
+
+**"Flor del Campo" se quitó de la lista de exclusión**: originalmente estaba excluida junto con
+Riolsa/San Fernando/Km 98, pero el usuario averiguó que esa impresora es de **Inmobiliaria** y sí
+debe llevar control de Stock Tóner como las demás. Al quitarla de `UBICACIONES_EXCLUIDAS_STOCK_TONER`,
+cualquier impresora en esa ubicación entra a la migración (no solo la puntual que se mencionó) —
+el total esperado después de re-ejecutar "Migrar desde Impresoras" sube de 61 a 62.
 
 **Bug real ya corregido**: la primera versión comparaba `ubicacion` por **igualdad exacta**
 (`===` sobre el valor normalizado) — con 69 impresoras y 8 a excluir (2 Plotters, 1 Km 98, 1
