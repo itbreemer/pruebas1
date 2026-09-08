@@ -288,8 +288,20 @@ stock a partir de `impresorasData` (Toner=`gpr`, Serial=`serial`, Modelo=`modelo
 matcheando por Serial normalizado para no duplicar en corridas repetidas — al re-ejecutar solo
 actualiza Toner/Modelo/Color de lo que ya existía, **nunca pisa el Stock Actual** ya capturado a
 mano. Excluye (a pedido explícito del usuario, por decisión de negocio, no por error de datos):
-impresoras con `tipo === "Plotter"`, y las que tengan `ubicacion` (normalizada) igual a "Riolsa",
-"San Fernando", "Flor del Campo" o "Km 98" — constante `UBICACIONES_EXCLUIDAS_STOCK_TONER`.
+impresoras cuyo `tipo` o `tipoEquipoImp` contenga "plotter", y las que tengan `ubicacion` que
+**contenga** (no que sea exactamente igual a) "Riolsa", "San Fernando", "Flor del Campo" o "Km
+98" — constantes `impresoraDebeExcluirseDeStockToner`/`UBICACIONES_EXCLUIDAS_STOCK_TONER`.
+
+**Bug real ya corregido**: la primera versión comparaba `ubicacion` por **igualdad exacta**
+(`===` sobre el valor normalizado) — con 69 impresoras y 8 a excluir (2 Plotters, 1 Km 98, 1
+Flor del Campo, 3 San Fernando, 1 Riolsa) solo se excluyeron 7, dejando pasar 62 en vez de 61
+(el usuario detectó la discrepancia comparando el total de su catálogo contra lo migrado). Causa:
+alguna `ubicacion` real trae texto adicional al nombre exacto (ej. "Riolsa - Planta 1"), así que
+la igualdad exacta no la reconocía como excluida. Fix: comparación por "contiene"
+(`ubicacion.includes(u)`) en vez de igualdad, y también se revisa `tipoEquipoImp` (no solo
+`tipo`) para detectar Plotters. Además, re-ejecutar la migración ahora también **limpia**
+cualquier registro que ya se hubiera migrado por error y que con este criterio sí debería
+excluirse (antes la migración solo agregaba/actualizaba, nunca quitaba).
 
 **Pendiente/sin resolver, señalado al usuario pero no implementado**: el buscador del catálogo de
 "Impresoras" (`vistaCatalogoImpresoras`) no busca por el campo Tóner (`gpr`) — si el bodeguero
