@@ -691,14 +691,31 @@ function impresoraDebeExcluirseDeStockToner(p) {
 // el Stock Actual ya capturado a mano, solo crea lo que falte, y además
 // LIMPIA cualquier registro que ya se hubiera migrado por error y que ahora
 // (con el criterio de exclusión mejorado) sí debería excluirse.
+// Una impresora "Colores" físicamente usa 4 cartuchos independientes (uno
+// por color), cada uno con su propio stock — por eso genera 4 filas (una
+// por color) en vez de una sola fila genérica "Colores", igual a como el
+// usuario ya lo lleva en su Excel real (ej. "TONER T10 - CYAN", "TONER T10
+// - MAGENTA"...). Las B/N siguen siendo 1 sola fila (1 solo cartucho).
+const COLORES_CMYK = ["Negro", "Cyan", "Magenta", "Amarillo"];
+
+function variantesDeTonerParaImpresora(p) {
+  const toner = (p.gpr || "").trim();
+  const esColor = normalizarTextoComparar(p.tipo).includes("color");
+  if (!esColor) return [{ toner, color: (p.tipo || "").trim() || "B/N" }];
+  return COLORES_CMYK.map((color) => ({ toner: `${toner} - ${color.toUpperCase()}`, color }));
+}
+
 function migrarStockTonerDesdeImpresoras() {
-  if (!confirm("¿Migrar el catálogo de Impresoras a Stock Tóner Bodega 2?\n\nSe excluyen: Plotters, Riolsa, San Fernando, Flor del Campo y Km 98.")) return;
+  if (!confirm("¿Migrar el catálogo de Impresoras a Stock Tóner Bodega 2?\n\nSe excluyen: Plotters, Riolsa, San Fernando, Flor del Campo y Km 98.\nLas impresoras a color generan 4 filas (Negro/Cyan/Magenta/Amarillo).")) return;
 
   const porSerialImpresora = new Map(
     impresorasData.map((p) => [normalizarTextoComparar(p.serial), p]).filter(([clave]) => clave)
   );
-  const existentesPorSerial = new Map(
-    contadoresImpresorasData.map((r) => [normalizarTextoComparar(r.serial), r])
+  // Clave = Serial + Color (no solo Serial), porque ahora una misma
+  // impresora a color puede tener hasta 4 filas — sin el Color en la clave
+  // se pisarían entre sí.
+  const existentesPorClave = new Map(
+    contadoresImpresorasData.map((r) => [`${normalizarTextoComparar(r.serial)}|${normalizarTextoComparar(r.color)}`, r])
   );
   const ahora = new Date().toISOString().slice(0, 16);
   let creados = 0;
@@ -713,37 +730,38 @@ function migrarStockTonerDesdeImpresoras() {
       omitidos++;
       return;
     }
-    const toner = (p.gpr || "").trim();
     const serial = (p.serial || "").trim();
-    if (!toner || !serial) {
+    if (!(p.gpr || "").trim() || !serial) {
       omitidos++;
       return;
     }
 
-    const clave = normalizarTextoComparar(serial);
-    const existente = existentesPorSerial.get(clave);
-    if (existente) {
-      existente.toner = toner;
-      existente.modelo = (p.modelo || "").trim();
-      existente.color = (p.tipo || "").trim();
-      existente.ultimaModificacion = ahora;
-      tocados.push(existente);
-      actualizados++;
-    } else {
-      const nuevo = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-        toner,
-        serial,
-        modelo: (p.modelo || "").trim(),
-        color: (p.tipo || "").trim(),
-        stockActual: "",
-        ultimaModificacion: ahora,
-      };
-      contadoresImpresorasData.push(nuevo);
-      existentesPorSerial.set(clave, nuevo);
-      tocados.push(nuevo);
-      creados++;
-    }
+    variantesDeTonerParaImpresora(p).forEach(({ toner, color }) => {
+      const clave = `${normalizarTextoComparar(serial)}|${normalizarTextoComparar(color)}`;
+      const existente = existentesPorClave.get(clave);
+      if (existente) {
+        existente.toner = toner;
+        existente.modelo = (p.modelo || "").trim();
+        existente.color = color;
+        existente.ultimaModificacion = ahora;
+        tocados.push(existente);
+        actualizados++;
+      } else {
+        const nuevo = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random() + tocados.length),
+          toner,
+          serial,
+          modelo: (p.modelo || "").trim(),
+          color,
+          stockActual: "",
+          ultimaModificacion: ahora,
+        };
+        contadoresImpresorasData.push(nuevo);
+        existentesPorClave.set(clave, nuevo);
+        tocados.push(nuevo);
+        creados++;
+      }
+    });
   });
 
   contadoresImpresorasData = contadoresImpresorasData.filter((r) => {
@@ -753,6 +771,13 @@ function migrarStockTonerDesdeImpresoras() {
     // fila nunca se revisaba y una exclusión explícita por Serial no surtía
     // efecto).
     if (SERIALES_EXCLUIDOS_STOCK_TONER_NORMALIZADOS.includes(serialFila)) {
+      idsAEliminar.push(r.id);
+      eliminados++;
+      return false;
+    }
+    // Fila vieja del esquema anterior (una sola fila genérica "Colores" por
+    // impresora a color) — ya quedó reemplazada por las 4 filas por color.
+    if (normalizarTextoComparar(r.color) === "colores") {
       idsAEliminar.push(r.id);
       eliminados++;
       return false;
