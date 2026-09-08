@@ -69,6 +69,12 @@ const CONTADOR_IMPRESORA_CAMPO_POR_ID = {
 // (comparación sin distinguir mayúsculas/minúsculas ni espacios extra).
 const UBICACIONES_EXCLUIDAS_STOCK_TONER = ["riolsa", "san fernando", "flor del campo", "km 98"];
 
+// Exclusión explícita por Serial — para casos donde el campo Ubicación/
+// Departamento no trae ninguna de las palabras de arriba (no se puede
+// detectar por texto) pero el usuario confirmó que esa impresora puntual no
+// debe migrarse a Stock Tóner Bodega 2.
+const SERIALES_EXCLUIDOS_STOCK_TONER = ["23D23076"];
+
 function normalizarTextoComparar(v) {
   return (v || "").toString().trim().toLowerCase();
 }
@@ -655,7 +661,10 @@ function eliminarRegistroContadorImpresoraActual() {
 // campos separados en el catálogo y el lugar (ej. "San Fernando") puede
 // haberse capturado en cualquiera de los dos según el caso, así que hay que
 // revisar ambos para no dejar pasar impresoras que sí deben excluirse.
+const SERIALES_EXCLUIDOS_STOCK_TONER_NORMALIZADOS = SERIALES_EXCLUIDOS_STOCK_TONER.map(normalizarTextoComparar);
+
 function impresoraDebeExcluirseDeStockToner(p) {
+  if (SERIALES_EXCLUIDOS_STOCK_TONER_NORMALIZADOS.includes(normalizarTextoComparar(p.serial))) return true;
   const tipo = normalizarTextoComparar(p.tipo);
   const tipoEquipo = normalizarTextoComparar(p.tipoEquipoImp);
   if (tipo.includes("plotter") || tipoEquipo.includes("plotter")) return true;
