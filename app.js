@@ -105,10 +105,19 @@ function esCorreoBodega(correo) {
   return EMAILS_BODEGA.includes((correo || "").trim().toLowerCase());
 }
 
+// Botones de la barra superior que son de Computadoras/Equipos (no del
+// menú lateral, por eso quedaban fuera del filtro anterior) — no aplican
+// para el bodeguero, solo "Salir" se queda.
+const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "contadorTotal"];
+
 window.aplicarRestriccionesPorRol = (correo) => {
   const esBodega = esCorreoBodega(correo);
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.style.display = esBodega && btn.dataset.vista !== "contadoresImpresoras" ? "none" : "";
+  });
+  IDS_BOTONES_HEADER_SOLO_IT.forEach((id) => {
+    const el = $(id);
+    if (el) el.style.display = esBodega ? "none" : "";
   });
   if (esBodega) cambiarVista("contadoresImpresoras");
 };
