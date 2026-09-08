@@ -555,12 +555,18 @@ function obtenerContadoresImpresorasActuales() {
 function establecerContadoresImpresorasDesdeSync(remotos) {
   const remotosPorId = new Map(remotos.map((r) => [r.id, r]));
   const combinados = [];
-  const idsVistos = new Set();
+  const idsLocales = new Set();
 
   contadoresImpresorasData.forEach((local) => {
-    idsVistos.add(local.id);
+    idsLocales.add(local.id);
     const remoto = remotosPorId.get(local.id);
-    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+    // Si ya no está en lo remoto es porque se eliminó (acá o en otro
+    // navegador) — antes esto se interpretaba como "lo local es más nuevo,
+    // hay que volver a subirlo", lo cual RESUCITABA cualquier fila que se
+    // borrara mientras otro navegador la tuviera cacheada. No hay que
+    // reconciliar contra un id que ya no existe: simplemente se descarta.
+    if (!remoto) return;
+    if ((local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
       combinados.push(local);
       sincronizarContadorImpresora(local);
     } else {
@@ -569,10 +575,14 @@ function establecerContadoresImpresorasDesdeSync(remotos) {
   });
 
   remotos.forEach((remoto) => {
-    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+    if (!idsLocales.has(remoto.id)) combinados.push(remoto);
   });
 
-  contadoresImpresorasData = combinados.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  // Ya no hay "fecha" en este modelo (dejó de ser un historial de lecturas) —
+  // se ordena por Toner y luego Serial para que la lista sea legible.
+  contadoresImpresorasData = combinados.sort(
+    (a, b) => (a.toner || "").localeCompare(b.toner || "") || (a.serial || "").localeCompare(b.serial || "")
+  );
   guardarContadoresImpresoras();
   refrescarVistasSecundarias();
 }
