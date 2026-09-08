@@ -32,6 +32,7 @@
       <button type="button" class="nav-item" data-vista="usuarios" data-titulo="Usuarios">👤 Usuarios</button>
       <button type="button" class="nav-item" data-vista="monitores" data-titulo="Monitores">🖥️ Monitores</button>
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
+      <button type="button" class="nav-item" data-vista="contadoresImpresoras" data-titulo="Contador de Impresoras">🔢 Contador de Impresoras</button>
       <button type="button" class="nav-item" data-vista="ticketsGarantia" data-titulo="Tickets de Garantía">🎫 Tickets de Garantía</button>
       <button type="button" class="nav-item" data-vista="mantenimientoEquipos" data-titulo="Mantenimiento de Equipos">🔧 Mantenimiento de Equipos</button>
       <button type="button" class="nav-item" data-vista="equiposTIv2" data-titulo="Inventario Automático">🤖 Inventario Automático</button>
@@ -377,6 +378,39 @@
           <span id="infoPagina_codigos"></span>
           <button id="btnSiguiente_codigos">&rsaquo;</button>
           <button id="btnUltimo_codigos">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Contador de Impresoras (lecturas para pedir cartuchos/tóner/tambor a tiempo) -->
+      <section id="vista-contadoresImpresoras" class="vista">
+        <p class="acta-estado">Registra aquí las lecturas del contador de páginas de cada impresora (B/N y Color por separado), para pedir cartuchos/tóner/tambor a tiempo antes de que se agoten.</p>
+        <section class="toolbar">
+          <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por serial de impresora, insumo, observaciones...">
+          <button type="button" id="btnNuevoContadorImpresora" class="btn btn-primary">+ Nueva lectura de contador</button>
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Impresora (Serial)</th>
+                <th>Fecha</th>
+                <th>Contador B/N</th>
+                <th>Contador Color</th>
+                <th>Insumo Solicitado</th>
+                <th>Cantidad</th>
+                <th>Observaciones</th>
+                <th>Registrado por</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_contadoresImpresoras"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_contadoresImpresoras">&laquo;</button>
+          <button id="btnAnterior_contadoresImpresoras">&lsaquo;</button>
+          <span id="infoPagina_contadoresImpresoras"></span>
+          <button id="btnSiguiente_contadoresImpresoras">&rsaquo;</button>
+          <button id="btnUltimo_contadoresImpresoras">&raquo;</button>
         </section>
       </section>
 
@@ -860,6 +894,10 @@
             <label for="impActivoFijo">Activo Fijo</label>
             <input type="text" id="impActivoFijo" placeholder="No Tiene">
           </div>
+          <div class="glpi-row">
+            <label>Contador / Insumos</label>
+            <button type="button" id="btnVerContadorDeImpresora" class="btn btn-secondary">🔢 Ver historial (<span id="contadorContadorImpresora">0</span>)</button>
+          </div>
         </div>
       </div>
 
@@ -871,6 +909,112 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de lectura de Contador de Impresora (nuevo / editar) -->
+<div id="modalContadorImpresoraOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalContadorImpresoraTitulo">Nueva lectura de contador</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalContadorImpresora" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <form id="formContadorImpresora" class="modal-body">
+      <input type="hidden" id="ciId">
+      <div class="glpi-grid">
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ciImpresora">Impresora (Serial)</label>
+            <input type="text" id="ciImpresora" list="dl-impresorasSerialCatalogo" required>
+          </div>
+          <div class="glpi-row">
+            <label for="ciFecha">Fecha de lectura</label>
+            <input type="date" id="ciFecha" required>
+          </div>
+          <div class="glpi-row">
+            <label for="ciContadorBN">Contador B/N (total de páginas)</label>
+            <input type="number" id="ciContadorBN" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="ciContadorColor">Contador Color (total de páginas)</label>
+            <input type="number" id="ciContadorColor" min="0">
+          </div>
+        </div>
+        <div class="glpi-col">
+          <div class="glpi-row">
+            <label for="ciInsumoSolicitado">Insumo Solicitado</label>
+            <select id="ciInsumoSolicitado">
+              <option value="">Ninguno — solo lectura de contador</option>
+              <option value="Tóner Negro">Tóner Negro</option>
+              <option value="Tóner Cyan">Tóner Cyan</option>
+              <option value="Tóner Magenta">Tóner Magenta</option>
+              <option value="Tóner Amarillo">Tóner Amarillo</option>
+              <option value="Tambor/Drum">Tambor/Drum</option>
+              <option value="Unidad de Fusor">Unidad de Fusor</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="glpi-row">
+            <label for="ciCantidad">Cantidad</label>
+            <input type="number" id="ciCantidad" min="0">
+          </div>
+          <div class="glpi-row">
+            <label for="ciRegistradoPor">Registrado por</label>
+            <input type="text" id="ciRegistradoPor" readonly>
+          </div>
+          <div class="glpi-row">
+            <label for="ciObservaciones">Observaciones</label>
+            <textarea id="ciObservaciones" style="min-height: 50px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btnEliminarModalContadorImpresora" class="btn btn-danger">Eliminar</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCancelarContadorImpresora" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Historial de Contador de una impresora -->
+<div id="modalHistorialContadorImpresoraOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalHistorialContadorImpresoraTitulo">Historial de Contador</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarHistorialContadorImpresora" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <section class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Contador B/N</th>
+              <th>Contador Color</th>
+              <th>Insumo Solicitado</th>
+              <th>Cantidad</th>
+              <th>Observaciones</th>
+              <th>Registrado por</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyHistorialContadorImpresora"></tbody>
+        </table>
+      </section>
+      <div class="modal-actions">
+        <button type="button" id="btnNuevaLecturaContadorImpresora" class="btn btn-primary">+ Nueva lectura</button>
+        <div class="modal-actions-right">
+          <button type="button" id="btnCerrarHistorialContadorImpresora2" class="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1382,13 +1526,14 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260829d"></script>
+<script src="app.js?v=20260908a"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
 <script type="module" src="codigos-impresion-sync.js?v=20260820c"></script>
 <script type="module" src="tickets-garantia-sync.js"></script>
 <script type="module" src="mantenimiento-equipos-sync.js"></script>
+<script type="module" src="contadores-impresoras-sync.js"></script>
 <script type="module" src="equipos-ti-v2-sync.js"></script>
 </body>
 </html>

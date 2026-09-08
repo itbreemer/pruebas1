@@ -4,6 +4,7 @@ const IMPRESORAS_STORAGE_KEY = "impresorasTI_v1";
 const CODIGOS_STORAGE_KEY = "codigosImpresionTI_v1";
 const TICKETS_GARANTIA_STORAGE_KEY = "ticketsGarantiaTI_v1";
 const MANTENIMIENTO_EQUIPOS_STORAGE_KEY = "mantenimientoEquiposTI_v1";
+const CONTADORES_IMPRESORAS_STORAGE_KEY = "contadoresImpresorasTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -53,10 +54,22 @@ const MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID = {
   meObservaciones: "observaciones",
 };
 
+const CONTADOR_IMPRESORA_FIELD_IDS = [
+  "ciId", "ciImpresora", "ciFecha", "ciContadorBN", "ciContadorColor",
+  "ciInsumoSolicitado", "ciCantidad", "ciObservaciones", "ciRegistradoPor",
+];
+const CONTADOR_IMPRESORA_CAMPO_POR_ID = {
+  ciId: "id", ciImpresora: "impresoraRef", ciFecha: "fecha",
+  ciContadorBN: "contadorBN", ciContadorColor: "contadorColor",
+  ciInsumoSolicitado: "insumoSolicitado", ciCantidad: "cantidad",
+  ciObservaciones: "observaciones", ciRegistradoPor: "registradoPor",
+};
+
 let impresorasData = [];
 let codigosData = [];
 let ticketsGarantiaData = [];
 let mantenimientoEquiposData = [];
+let contadoresImpresorasData = [];
 let equiposTIv2Data = [];
 
 let TECNICO_ACTUAL = "";
@@ -506,6 +519,213 @@ function sincronizarEliminacionImpresora(id) {
     window.FirestoreSyncImpresoras.eliminarImpresora(id);
   }
 }
+
+/* ---------- Contador de Impresoras (lecturas para pedir cartuchos/insumos, ver contadores-impresoras-sync.js) ---------- */
+
+function cargarContadoresImpresoras() {
+  try {
+    contadoresImpresorasData = JSON.parse(localStorage.getItem(CONTADORES_IMPRESORAS_STORAGE_KEY)) || [];
+  } catch (err) {
+    contadoresImpresorasData = [];
+  }
+}
+
+function guardarContadoresImpresoras() {
+  localStorage.setItem(CONTADORES_IMPRESORAS_STORAGE_KEY, JSON.stringify(contadoresImpresorasData));
+}
+
+function obtenerContadoresImpresorasActuales() {
+  return contadoresImpresorasData;
+}
+
+function establecerContadoresImpresorasDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((r) => [r.id, r]));
+  const combinados = [];
+  const idsVistos = new Set();
+
+  contadoresImpresorasData.forEach((local) => {
+    idsVistos.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto || (local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarContadorImpresora(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsVistos.has(remoto.id)) combinados.push(remoto);
+  });
+
+  contadoresImpresorasData = combinados.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  guardarContadoresImpresoras();
+  refrescarVistasSecundarias();
+}
+
+function sincronizarContadorImpresora(registro) {
+  if (window.FirestoreSyncContadoresImpresoras && typeof window.FirestoreSyncContadoresImpresoras.guardarContadorImpresora === "function") {
+    window.FirestoreSyncContadoresImpresoras.guardarContadorImpresora(registro);
+  }
+}
+
+function sincronizarEliminacionContadorImpresora(id) {
+  if (window.FirestoreSyncContadoresImpresoras && typeof window.FirestoreSyncContadoresImpresoras.eliminarContadorImpresora === "function") {
+    window.FirestoreSyncContadoresImpresoras.eliminarContadorImpresora(id);
+  }
+}
+
+let contadorImpresoraActualId = null;
+
+function abrirModalContadorImpresora(registro, impresoraPrefill) {
+  contadorImpresoraActualId = registro ? registro.id : null;
+  CONTADOR_IMPRESORA_FIELD_IDS.forEach((fieldId) => {
+    const campo = CONTADOR_IMPRESORA_CAMPO_POR_ID[fieldId];
+    $(fieldId).value = (registro && registro[campo]) || "";
+  });
+
+  $("btnEliminarModalContadorImpresora").style.display = registro ? "" : "none";
+
+  if (!registro) {
+    $("ciFecha").value = new Date().toISOString().slice(0, 10);
+    $("ciRegistradoPor").value = TECNICO_ACTUAL || "";
+    if (impresoraPrefill) $("ciImpresora").value = impresoraPrefill;
+  }
+
+  $("modalContadorImpresoraOverlay").style.display = "flex";
+}
+
+function cerrarModalContadorImpresora() {
+  contadorImpresoraActualId = null;
+  $("modalContadorImpresoraOverlay").style.display = "none";
+}
+
+function onSubmitContadorImpresora(e) {
+  e.preventDefault();
+  const nuevoRegistro = {};
+  CONTADOR_IMPRESORA_FIELD_IDS.forEach((fieldId) => {
+    const campo = CONTADOR_IMPRESORA_CAMPO_POR_ID[fieldId];
+    nuevoRegistro[campo] = $(fieldId).value.trim();
+  });
+
+  if (!nuevoRegistro.impresoraRef) {
+    alert("Selecciona una impresora (por serial)");
+    return;
+  }
+  if (!nuevoRegistro.fecha) {
+    alert("Indica la fecha de la lectura");
+    return;
+  }
+
+  nuevoRegistro.ultimaModificacion = new Date().toISOString().slice(0, 16);
+
+  let guardado;
+  if (!contadorImpresoraActualId) {
+    nuevoRegistro.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    contadoresImpresorasData.unshift(nuevoRegistro);
+    guardado = nuevoRegistro;
+  } else {
+    const idx = contadoresImpresorasData.findIndex((r) => r.id === contadorImpresoraActualId);
+    if (idx !== -1) contadoresImpresorasData[idx] = { ...contadoresImpresorasData[idx], ...nuevoRegistro };
+    guardado = contadoresImpresorasData[idx];
+  }
+  guardarContadoresImpresoras();
+  sincronizarContadorImpresora(guardado);
+  refrescarVistasSecundarias();
+  actualizarContadorContadorImpresora();
+  cerrarModalContadorImpresora();
+}
+
+function eliminarRegistroContadorImpresoraActual() {
+  if (!contadorImpresoraActualId) return;
+  if (!confirm("¿Eliminar este registro de contador?")) return;
+  const idx = contadoresImpresorasData.findIndex((r) => r.id === contadorImpresoraActualId);
+  if (idx !== -1) {
+    const id = contadoresImpresorasData[idx].id;
+    contadoresImpresorasData.splice(idx, 1);
+    guardarContadoresImpresoras();
+    sincronizarEliminacionContadorImpresora(id);
+    refrescarVistasSecundarias();
+    actualizarContadorContadorImpresora();
+    cerrarModalContadorImpresora();
+  }
+}
+
+// Igual que registrosMantenimientoDeEquipo/registrosGarantiaDeEquipo, pero
+// matcheando por el Serial de la impresora (identificador estable que ya se
+// usa en el datalist "dl-impresorasSerialCatalogo" para los tickets de
+// garantía Canella).
+function registrosContadorDeImpresora(serial) {
+  const s = (serial || "").trim();
+  if (!s) return [];
+  return contadoresImpresorasData
+    .filter((c) => (c.impresoraRef || "").trim() === s)
+    .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+}
+
+function actualizarContadorContadorImpresora() {
+  $("contadorContadorImpresora").textContent = registrosContadorDeImpresora($("impSerial").value).length;
+}
+
+function abrirHistorialContadorImpresora() {
+  const serial = $("impSerial").value.trim();
+  const registros = registrosContadorDeImpresora(serial);
+  $("modalHistorialContadorImpresoraTitulo").textContent = `Historial de Contador — ${serial || "N/A"} (${registros.length})`;
+
+  const tbody = $("tbodyHistorialContadorImpresora");
+  tbody.innerHTML = registros.length
+    ? registros
+        .map(
+          (c) => `
+            <tr>
+              <td>${esc(formatearFechaSimple(c.fecha))}</td>
+              <td>${esc(c.contadorBN)}</td>
+              <td>${esc(c.contadorColor)}</td>
+              <td>${esc(c.insumoSolicitado)}</td>
+              <td>${esc(c.cantidad)}</td>
+              <td>${esc(c.observaciones)}</td>
+              <td>${esc(c.registradoPor)}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="7" class="empty-state">Esta impresora no tiene lecturas de contador registradas.</td></tr>`;
+
+  $("modalHistorialContadorImpresoraOverlay").style.display = "flex";
+}
+
+function cerrarHistorialContadorImpresora() {
+  $("modalHistorialContadorImpresoraOverlay").style.display = "none";
+}
+
+function obtenerContadoresImpresoras() {
+  return contadoresImpresorasData.map((c) => ({
+    registro: c,
+    celdas: `
+      <td>${esc(c.impresoraRef)}</td>
+      <td>${esc(formatearFechaSimple(c.fecha))}</td>
+      <td>${esc(c.contadorBN)}</td>
+      <td>${esc(c.contadorColor)}</td>
+      <td>${esc(c.insumoSolicitado)}</td>
+      <td>${esc(c.cantidad)}</td>
+      <td>${esc(c.observaciones)}</td>
+      <td>${esc(c.registradoPor)}</td>
+    `,
+  }));
+}
+
+const vistaContadoresImpresoras = crearVistaLista({
+  prefix: "contadoresImpresoras",
+  columnas: 8,
+  obtenerFilas: obtenerContadoresImpresoras,
+  filtrar: (r, t) => {
+    const texto = [r.registro.impresoraRef, r.registro.insumoSolicitado, r.registro.observaciones, r.registro.registradoPor]
+      .join(" ")
+      .toLowerCase();
+    return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
+  },
+  alClicFila: (r) => abrirModalContadorImpresora(r.registro),
+});
 
 /* ---------- Códigos de usuario para impresión/escaneo/copia (ver codigos-impresion-sync.js) ---------- */
 /* El ID de usuario y la clave NO son únicos por diseño (el mismo nombre puede
@@ -1370,6 +1590,7 @@ function abrirModalImpresora(impresora) {
     $("impTipo").value = "B/N";
     $("btnEliminarModalImpresora").style.display = "none";
   }
+  actualizarContadorContadorImpresora();
   $("modalImpresoraOverlay").classList.add("open");
 }
 
@@ -1975,6 +2196,7 @@ function refrescarVistasSecundarias() {
   vistaContratos.render();
   vistaTicketsGarantia.render();
   vistaMantenimientoEquipos.render();
+  vistaContadoresImpresoras.render();
   vistaEquiposTIv2.render();
 }
 
@@ -2002,6 +2224,7 @@ function cambiarVista(nombre) {
   else if (nombre === "contratos") vistaContratos.render();
   else if (nombre === "ticketsGarantia") vistaTicketsGarantia.render();
   else if (nombre === "mantenimientoEquipos") vistaMantenimientoEquipos.render();
+  else if (nombre === "contadoresImpresoras") vistaContadoresImpresoras.render();
   else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
 }
 
@@ -3523,6 +3746,20 @@ $("formMantenimientoEquipos").addEventListener("submit", onSubmitMantenimientoEq
 $("btnVerMantenimientoDeEquipo").addEventListener("click", abrirHistorialMantenimientoEquipo);
 $("btnCerrarHistorialMantenimientoEquipo").addEventListener("click", cerrarHistorialMantenimientoEquipo);
 $("btnCerrarHistorialMantenimientoEquipo2").addEventListener("click", cerrarHistorialMantenimientoEquipo);
+
+$("btnNuevoContadorImpresora").addEventListener("click", () => abrirModalContadorImpresora(null));
+$("btnCerrarModalContadorImpresora").addEventListener("click", cerrarModalContadorImpresora);
+$("btnCancelarContadorImpresora").addEventListener("click", cerrarModalContadorImpresora);
+$("btnEliminarModalContadorImpresora").addEventListener("click", eliminarRegistroContadorImpresoraActual);
+$("formContadorImpresora").addEventListener("submit", onSubmitContadorImpresora);
+$("btnVerContadorDeImpresora").addEventListener("click", abrirHistorialContadorImpresora);
+$("btnNuevaLecturaContadorImpresora").addEventListener("click", () => {
+  cerrarHistorialContadorImpresora();
+  abrirModalContadorImpresora(null, $("impSerial").value.trim());
+});
+$("btnCerrarHistorialContadorImpresora").addEventListener("click", cerrarHistorialContadorImpresora);
+$("btnCerrarHistorialContadorImpresora2").addEventListener("click", cerrarHistorialContadorImpresora);
+
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo2").addEventListener("click", cerrarHistorialGarantiaEquipo);
@@ -3577,6 +3814,7 @@ cargarImpresoras();
 cargarCodigos();
 cargarTicketsGarantia();
 cargarMantenimientoEquipos();
+cargarContadoresImpresoras();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
