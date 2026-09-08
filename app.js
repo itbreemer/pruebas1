@@ -649,16 +649,34 @@ function eliminarRegistroContadorImpresoraActual() {
   }
 }
 
+// Una impresora se excluye si su Tipo (o Tipo de equipo) contiene "plotter",
+// o si su Ubicación CONTIENE (no exige igualdad exacta) alguna de las
+// ubicaciones que el usuario pidió excluir — la comparación exacta se
+// quedaba corta cuando la Ubicación real trae texto extra (ej. "Riolsa -
+// Planta 1" en vez de "Riolsa" a secas), dejando pasar impresoras que sí
+// debían excluirse.
+function impresoraDebeExcluirseDeStockToner(p) {
+  const tipo = normalizarTextoComparar(p.tipo);
+  const tipoEquipo = normalizarTextoComparar(p.tipoEquipoImp);
+  if (tipo.includes("plotter") || tipoEquipo.includes("plotter")) return true;
+  const ubicacion = normalizarTextoComparar(p.ubicacion);
+  return UBICACIONES_EXCLUIDAS_STOCK_TONER.some((u) => ubicacion.includes(u));
+}
+
 // Migra el catálogo de Impresoras (una fila por impresora, con su Toner y
 // Serial ya capturados) a Stock Tóner Bodega 2 — a pedido del usuario,
 // excluyendo Plotters y las ubicaciones que indicó (Riolsa, San Fernando,
 // Flor del Campo, Km 98). Correrla más de una vez es seguro: actualiza
 // Toner/Modelo/Color de lo que ya existía (matcheado por Serial) sin tocar
-// el Stock Actual ya capturado a mano, y solo crea lo que falte.
+// el Stock Actual ya capturado a mano, solo crea lo que falte, y además
+// LIMPIA cualquier registro que ya se hubiera migrado por error y que ahora
+// (con el criterio de exclusión mejorado) sí debería excluirse.
 function migrarStockTonerDesdeImpresoras() {
   if (!confirm("¿Migrar el catálogo de Impresoras a Stock Tóner Bodega 2?\n\nSe excluyen: Plotters, Riolsa, San Fernando, Flor del Campo y Km 98.")) return;
 
-  const excluidas = new Set(UBICACIONES_EXCLUIDAS_STOCK_TONER);
+  const porSerialImpresora = new Map(
+    impresorasData.map((p) => [normalizarTextoComparar(p.serial), p]).filter(([clave]) => clave)
+  );
   const existentesPorSerial = new Map(
     contadoresImpresorasData.map((r) => [normalizarTextoComparar(r.serial), r])
   );
@@ -666,14 +684,12 @@ function migrarStockTonerDesdeImpresoras() {
   let creados = 0;
   let actualizados = 0;
   let omitidos = 0;
+  let eliminados = 0;
   const tocados = [];
+  const idsAEliminar = [];
 
   impresorasData.forEach((p) => {
-    if (normalizarTextoComparar(p.tipo) === "plotter") {
-      omitidos++;
-      return;
-    }
-    if (excluidas.has(normalizarTextoComparar(p.ubicacion))) {
+    if (impresoraDebeExcluirseDeStockToner(p)) {
       omitidos++;
       return;
     }
@@ -710,10 +726,21 @@ function migrarStockTonerDesdeImpresoras() {
     }
   });
 
+  contadoresImpresorasData = contadoresImpresorasData.filter((r) => {
+    const impresora = porSerialImpresora.get(normalizarTextoComparar(r.serial));
+    if (impresora && impresoraDebeExcluirseDeStockToner(impresora)) {
+      idsAEliminar.push(r.id);
+      eliminados++;
+      return false;
+    }
+    return true;
+  });
+
   guardarContadoresImpresoras();
   tocados.forEach((r) => sincronizarContadorImpresora(r));
+  idsAEliminar.forEach((id) => sincronizarEliminacionContadorImpresora(id));
   refrescarVistasSecundarias();
-  alert(`Migración completa: ${creados} nueva(s), ${actualizados} actualizada(s), ${omitidos} omitida(s) (Plotter/ubicación excluida o sin Toner/Serial).`);
+  alert(`Migración completa: ${creados} nueva(s), ${actualizados} actualizada(s), ${eliminados} eliminada(s) por exclusión, ${omitidos} omitida(s) (Plotter/ubicación excluida o sin Toner/Serial).`);
 }
 
 // "Cantidad Impresoras" no se captura a mano — se cuenta cuántas filas
