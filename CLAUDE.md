@@ -258,3 +258,35 @@ alClicFila})` (ver `app.js`). Los historiales "por equipo" (mantenimiento, garan
 son modales simples con tabla estática (no usan `crearVistaLista`, no necesitan paginación) que
 se repueblan cada vez que se abren, matcheando por `nombreRed` (y a veces `numeroSerial`) del
 equipo activo en el formulario.
+
+### Contador de Impresoras (lecturas para pedir cartuchos/insumos a tiempo)
+Nueva sección "Contador de Impresoras" (nav-item propio, `vistaContadoresImpresoras` con
+`crearVistaLista`) — el usuario pidió llevar el contador de páginas de cada impresora (B/N y
+Color por separado, porque facturan/consumen distinto) para saber cuándo pedir tóner/tambor/
+fusor antes de que se agoten. Colección Firestore `contadoresImpresoras`
+(`contadores-impresoras-sync.js`, mismo patrón que `impresoras-sync.js` — **no** el de
+`mantenimiento-equipos-sync.js`, que tiene un bug real de nombres (ver abajo)).
+
+Campos: `impresoraRef` (Serial de la impresora — mismo identificador que ya usa el datalist
+`dl-impresorasSerialCatalogo` para los tickets de garantía Canella), `fecha`, `contadorBN`,
+`contadorColor`, `insumoSolicitado` (select: Tóner Negro/Cyan/Magenta/Amarillo, Tambor/Drum,
+Unidad de Fusor, Otro, o vacío si es solo lectura), `cantidad`, `observaciones`,
+`registradoPor`.
+
+Dentro del modal de editar impresora (`abrirModalImpresora`) se agregó un botón "Contador /
+Insumos" con contador en vivo (`actualizarContadorContadorImpresora`, igual que
+`contadorMantenimientoEquipo`/`contadorGarantiaEquipo` en el equipo) que abre el historial de
+**esa** impresora (matcheado por Serial, mismo patrón que `registrosMantenimientoDeEquipo`) con
+un botón "+ Nueva lectura" que preselecciona la impresora actual. También existe la sección
+principal (`vista-contadoresImpresoras`) para ver/crear/editar todas las lecturas sin pasar por
+una impresora en particular.
+
+**Bug real encontrado (no corregido, no era parte de esta tarea) en `mantenimiento-equipos-sync.js`**:
+la función en `app.js` que aplica los cambios remotos se llama `establecerMantenimientoEquiposDesdeSync`,
+pero el sync file llama a `window.establecerRegistrosMantenimientoDesdeSync` (nombre distinto) —
+esa función global nunca existe, así que el `onSnapshot` de Mantenimiento de Equipos nunca aplica
+los cambios remotos al estado local (los guarda bien en Firestore, pero no se refrescan solos en
+otras computadoras; hay que recargar la página). El patrón correcto (el que si usa `contadores-impresoras-sync.js`
+y `impresoras-sync.js`) es que los nombres de función en `app.js` coincidan exactamente con los
+que el `-sync.js` busca en `window`. Si se retoma este bug, comparar contra
+`obtenerImpresorasActuales`/`establecerImpresorasDesdeSync` como referencia de lo correcto.
