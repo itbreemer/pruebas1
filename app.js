@@ -808,34 +808,79 @@ const vistaContadoresImpresoras = crearVistaLista({
 
 // Resumen por Tóner: un Tóner por fila (sin repetir), con la Cantidad de
 // Impresoras que ya se calcula igual que en la tabla principal. Al hacer
-// clic se abre el detalle de qué impresoras (Serial/Modelo/Color/Stock)
-// usan exactamente ese Tóner — así 61 impresoras siempre cuadran con la
-// suma de "Cantidad Impresoras" de este resumen.
+// clic (fuera del campo de Stock) se abre el detalle de qué impresoras
+// (Serial/Modelo/Color/Stock) usan exactamente ese Tóner — así 61 impresoras
+// siempre cuadran con la suma de "Cantidad Impresoras" de este resumen.
+//
+// El Stock Actual se captura UNA vez por Tóner aquí mismo (no por impresora
+// — el bodeguero no tiene que repetir el mismo número en las 16 filas que
+// comparten un tóner): al guardar, se le pega a TODAS las filas de ese
+// Tóner (`actualizarStockDeToner`), así la tabla principal y el detalle por
+// impresora también quedan al día.
 function renderResumenToner() {
   const conteo = {};
   const nombreOriginal = {};
+  const stockPorToner = {};
   contadoresImpresorasData.forEach((c) => {
     const clave = normalizarTextoComparar(c.toner);
     if (!clave) return;
     conteo[clave] = (conteo[clave] || 0) + 1;
     if (!nombreOriginal[clave]) nombreOriginal[clave] = (c.toner || "").trim();
+    if (stockPorToner[clave] === undefined && c.stockActual !== undefined && c.stockActual !== "") {
+      stockPorToner[clave] = c.stockActual;
+    }
   });
 
   const filas = Object.keys(conteo)
-    .map((clave) => ({ clave, toner: nombreOriginal[clave], cantidad: conteo[clave] }))
+    .map((clave) => ({ clave, toner: nombreOriginal[clave], cantidad: conteo[clave], stock: stockPorToner[clave] ?? "" }))
     .sort((a, b) => a.toner.localeCompare(b.toner));
 
   const tbody = $("tbodyResumenToner");
   if (!tbody) return;
   tbody.innerHTML = filas.length
     ? filas
-        .map((f) => `<tr data-toner-clave="${esc(f.clave)}"><td>${esc(f.toner)}</td><td>${esc(f.cantidad)}</td></tr>`)
+        .map(
+          (f) => `
+            <tr data-toner-clave="${esc(f.clave)}">
+              <td>${esc(f.toner)}</td>
+              <td>${esc(f.cantidad)}</td>
+              <td><input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stock)}" data-stock-toner="${esc(f.clave)}"></td>
+            </tr>
+          `
+        )
         .join("")
-    : `<tr><td colspan="2" class="empty-state">Sin datos todavía.</td></tr>`;
+    : `<tr><td colspan="3" class="empty-state">Sin datos todavía.</td></tr>`;
 
   tbody.querySelectorAll("tr[data-toner-clave]").forEach((tr) => {
-    tr.addEventListener("click", () => abrirModalImpresorasPorToner(tr.dataset.tonerClave));
+    tr.addEventListener("click", (e) => {
+      if (e.target.closest("input")) return;
+      abrirModalImpresorasPorToner(tr.dataset.tonerClave);
+    });
   });
+
+  tbody.querySelectorAll("input[data-stock-toner]").forEach((input) => {
+    input.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("change", () => {
+      actualizarStockDeToner(input.dataset.stockToner, input.value.trim());
+    });
+  });
+}
+
+// Aplica el mismo Stock Actual a TODAS las filas que compartan ese Tóner
+// (matcheado por el mismo valor normalizado que usa el resumen/la Cantidad
+// de Impresoras), y sincroniza cada una a Firestore.
+function actualizarStockDeToner(tonerClave, stockActual) {
+  const ahora = new Date().toISOString().slice(0, 16);
+  const tocados = [];
+  contadoresImpresorasData.forEach((c) => {
+    if (normalizarTextoComparar(c.toner) !== tonerClave) return;
+    c.stockActual = stockActual;
+    c.ultimaModificacion = ahora;
+    tocados.push(c);
+  });
+  guardarContadoresImpresoras();
+  tocados.forEach((r) => sincronizarContadorImpresora(r));
+  refrescarVistasSecundarias();
 }
 
 function abrirModalImpresorasPorToner(tonerClave) {
