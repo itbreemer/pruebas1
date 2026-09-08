@@ -650,17 +650,18 @@ function eliminarRegistroContadorImpresoraActual() {
 }
 
 // Una impresora se excluye si su Tipo (o Tipo de equipo) contiene "plotter",
-// o si su Ubicación CONTIENE (no exige igualdad exacta) alguna de las
-// ubicaciones que el usuario pidió excluir — la comparación exacta se
-// quedaba corta cuando la Ubicación real trae texto extra (ej. "Riolsa -
-// Planta 1" en vez de "Riolsa" a secas), dejando pasar impresoras que sí
-// debían excluirse.
+// o si su Ubicación **o su Departamento** contienen (no exige igualdad
+// exacta) alguna de las ubicaciones que el usuario pidió excluir — son dos
+// campos separados en el catálogo y el lugar (ej. "San Fernando") puede
+// haberse capturado en cualquiera de los dos según el caso, así que hay que
+// revisar ambos para no dejar pasar impresoras que sí deben excluirse.
 function impresoraDebeExcluirseDeStockToner(p) {
   const tipo = normalizarTextoComparar(p.tipo);
   const tipoEquipo = normalizarTextoComparar(p.tipoEquipoImp);
   if (tipo.includes("plotter") || tipoEquipo.includes("plotter")) return true;
   const ubicacion = normalizarTextoComparar(p.ubicacion);
-  return UBICACIONES_EXCLUIDAS_STOCK_TONER.some((u) => ubicacion.includes(u));
+  const departamento = normalizarTextoComparar(p.departamento);
+  return UBICACIONES_EXCLUIDAS_STOCK_TONER.some((u) => ubicacion.includes(u) || departamento.includes(u));
 }
 
 // Migra el catálogo de Impresoras (una fila por impresora, con su Toner y
