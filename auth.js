@@ -41,12 +41,18 @@ onAuthStateChanged(auth, (user) => {
     if (typeof window.establecerTecnicoActual === "function") {
       window.establecerTecnicoActual(nombre);
     }
+    if (typeof window.aplicarRestriccionesPorRol === "function") {
+      window.aplicarRestriccionesPorRol(user.email);
+    }
     $("usuarioSesion").textContent = `👤 ${nombre}`;
     $("loginOverlay").style.display = "none";
     $("appShell").style.display = "";
   } else {
     if (typeof window.establecerTecnicoActual === "function") {
       window.establecerTecnicoActual("");
+    }
+    if (typeof window.aplicarRestriccionesPorRol === "function") {
+      window.aplicarRestriccionesPorRol("");
     }
     $("formLogin").reset();
     $("loginOverlay").style.display = "flex";

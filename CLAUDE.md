@@ -342,6 +342,27 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   las Salidas filtradas por un rango de fechas (`repTonerDesde`/`repTonerHasta`, ambos opcionales),
   y lo descarga con `html2pdf()` — mismo patrón que `descargarReporteMantenimientoPDF`.
 
+### Rol "Bodeguero" (solo interfaz, no seguridad de base de datos)
+
+Se agregó una restricción de menú para el usuario de Bodega 2 (`bodega2@liztex.com`, hay que
+crearlo en Firebase → Authentication → Users como cualquier otro técnico): `EMAILS_BODEGA` en
+`app.js` + `window.aplicarRestriccionesPorRol(correo)`, llamada desde `auth.js` en
+`onAuthStateChanged` (con el correo al iniciar sesión, con `""` al cerrar sesión para restaurar
+el menú completo para el siguiente login). Si el correo está en esa lista: oculta todos los
+`.nav-item` salvo `data-vista="contadoresImpresoras"` y fuerza `cambiarVista("contadoresImpresoras")`
+para que entre directo a Stock Tóner Bodega 2.
+
+**Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
+(`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para
+cualquier usuario autenticado). El usuario de bodega técnicamente sigue teniendo acceso de
+lectura/escritura a `equipos`, `impresoras`, etc. a nivel de base de datos — solo la interfaz no
+se lo muestra. Se decidió así a propósito (el usuario ya conoce personalmente a la persona de
+bodega, el objetivo era simplificar lo que ve, no blindar contra alguien con conocimientos
+técnicos). Si en el futuro se necesita un bloqueo real, hay que crear un sistema de roles
+(ej. colección `usuarios/{uid}` con un campo `rol`) y condicionar las reglas de Firestore de cada
+colección por ese rol — más trabajo y más riesgo de bloquear sin querer al equipo de IT si algo
+queda mal, por eso no se hizo en esta tarea.
+
 **Bug real encontrado (no corregido, no era parte de esta tarea) en `mantenimiento-equipos-sync.js`**:
 la función en `app.js` que aplica los cambios remotos se llama `establecerMantenimientoEquiposDesdeSync`,
 pero el sync file llama a `window.establecerRegistrosMantenimientoDesdeSync` (nombre distinto) —

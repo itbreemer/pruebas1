@@ -93,6 +93,26 @@ window.establecerTecnicoActual = (nombre) => {
   TECNICO_ACTUAL = nombre || "";
 };
 
+// Restricción de solo interfaz para el bodeguero de Bodega 2: no toca las
+// reglas de Firestore (sigue teniendo acceso de lectura/escritura a nivel
+// de base de datos como cualquier usuario autenticado), solo oculta el menú
+// para que no se pierda entre pantallas que no usa y entra directo a
+// "Stock Tóner Bodega 2". Si más adelante se necesita bloquear también la
+// base de datos, hay que agregar reglas de Firestore por rol (ver CLAUDE.md).
+const EMAILS_BODEGA = ["bodega2@liztex.com"];
+
+function esCorreoBodega(correo) {
+  return EMAILS_BODEGA.includes((correo || "").trim().toLowerCase());
+}
+
+window.aplicarRestriccionesPorRol = (correo) => {
+  const esBodega = esCorreoBodega(correo);
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.style.display = esBodega && btn.dataset.vista !== "contadoresImpresoras" ? "none" : "";
+  });
+  if (esBodega) cambiarVista("contadoresImpresoras");
+};
+
 const FIELD_IDS = [
   "id", "nombreRed", "ubicaciones", "entidad", "empresa", "nombreEmpleado",
   "usuarioDominio", "departamento", "unidadNegocio", "codigoEmpleado",
