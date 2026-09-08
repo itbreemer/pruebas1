@@ -259,27 +259,43 @@ son modales simples con tabla estática (no usan `crearVistaLista`, no necesitan
 se repueblan cada vez que se abren, matcheando por `nombreRed` (y a veces `numeroSerial`) del
 equipo activo en el formulario.
 
-### Contador de Impresoras (lecturas para pedir cartuchos/insumos a tiempo)
-Nueva sección "Contador de Impresoras" (nav-item propio, `vistaContadoresImpresoras` con
-`crearVistaLista`) — el usuario pidió llevar el contador de páginas de cada impresora (B/N y
-Color por separado, porque facturan/consumen distinto) para saber cuándo pedir tóner/tambor/
-fusor antes de que se agoten. Colección Firestore `contadoresImpresoras`
-(`contadores-impresoras-sync.js`, mismo patrón que `impresoras-sync.js` — **no** el de
-`mantenimiento-equipos-sync.js`, que tiene un bug real de nombres (ver abajo)).
+### Stock Tóner Bodega 2 (antes "Contador de Impresoras" — pivote de diseño)
+La sección nació como "Contador de Impresoras" (lecturas de contador de páginas con historial
+por impresora), pero el usuario la reorientó completamente: ya no son lecturas en el tiempo,
+sino un **inventario plano de stock de tóner** para poder atender al bodeguero de Bodega 2
+cuando alguien pide un tóner (a veces solo sabe el nombre del Toner, a veces solo el Serial o
+Modelo de su impresora). Nav-item: "🔢 Stock Tóner Bodega 2" (`vistaContadoresImpresoras`,
+`crearVistaLista`, misma colección Firestore `contadoresImpresoras` / `contadores-impresoras-sync.js`
+de antes, mismo patrón que `impresoras-sync.js` — **no** el de `mantenimiento-equipos-sync.js`,
+que tiene un bug real de nombres, ver abajo).
 
-Campos: `impresoraRef` (Serial de la impresora — mismo identificador que ya usa el datalist
-`dl-impresorasSerialCatalogo` para los tickets de garantía Canella), `fecha`, `contadorBN`,
-`contadorColor`, `insumoSolicitado` (select: Tóner Negro/Cyan/Magenta/Amarillo, Tambor/Drum,
-Unidad de Fusor, Otro, o vacío si es solo lectura), `cantidad`, `observaciones`,
-`registradoPor`.
+**Encabezado final** (validado con el usuario contra su Excel real de bodega): `Toner | Serial |
+Modelo | Color | Cantidad Impresoras | Stock Actual`. Una fila = una impresora (no una fila por
+Tóner+Color como se consideró al inicio, ni una fila por lectura como en el diseño original).
+Campos guardados: `toner`, `serial`, `modelo`, `color` (texto libre — hoy se llena con el `tipo`
+de la impresora migrada: "B/N"/"Colores"; se puede refinar a mano a Negro/Cyan/Magenta/Amarillo
+por fila si se necesita ese detalle), `stockActual` (el único dato que se captura/actualiza a
+mano). **"Cantidad Impresoras" NO se guarda** — se calcula al vuelo en `obtenerContadoresImpresoras()`
+contando cuántas filas comparten el mismo `toner` (normalizado sin mayúsculas/espacios), para que
+nunca se desactualice.
 
-Dentro del modal de editar impresora (`abrirModalImpresora`) se agregó un botón "Contador /
-Insumos" con contador en vivo (`actualizarContadorContadorImpresora`, igual que
-`contadorMantenimientoEquipo`/`contadorGarantiaEquipo` en el equipo) que abre el historial de
-**esa** impresora (matcheado por Serial, mismo patrón que `registrosMantenimientoDeEquipo`) con
-un botón "+ Nueva lectura" que preselecciona la impresora actual. También existe la sección
-principal (`vista-contadoresImpresoras`) para ver/crear/editar todas las lecturas sin pasar por
-una impresora en particular.
+Se **quitó** el botón "Contador / Insumos" + el modal de historial dentro de editar impresora
+(`abrirModalImpresora`) — ya no aplican con el nuevo modelo (no hay "historial" que ver, es una
+foto del stock actual).
+
+**Botón "🔄 Migrar desde Impresoras"** (`migrarStockTonerDesdeImpresoras`): puebla/actualiza el
+stock a partir de `impresorasData` (Toner=`gpr`, Serial=`serial`, Modelo=`modelo`, Color=`tipo`),
+matcheando por Serial normalizado para no duplicar en corridas repetidas — al re-ejecutar solo
+actualiza Toner/Modelo/Color de lo que ya existía, **nunca pisa el Stock Actual** ya capturado a
+mano. Excluye (a pedido explícito del usuario, por decisión de negocio, no por error de datos):
+impresoras con `tipo === "Plotter"`, y las que tengan `ubicacion` (normalizada) igual a "Riolsa",
+"San Fernando", "Flor del Campo" o "Km 98" — constante `UBICACIONES_EXCLUIDAS_STOCK_TONER`.
+
+**Pendiente/sin resolver, señalado al usuario pero no implementado**: el buscador del catálogo de
+"Impresoras" (`vistaCatalogoImpresoras`) no busca por el campo Tóner (`gpr`) — si el bodeguero
+escribe el nombre del tóner ahí, no encuentra nada; solo busca IP/serial/modelo/departamento/
+ubicación/empresa/tipo. Sin este fix, resolver "el usuario solo me dio el nombre del Tóner" sigue
+necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en vez de por Impresoras.
 
 **Bug real encontrado (no corregido, no era parte de esta tarea) en `mantenimiento-equipos-sync.js`**:
 la función en `app.js` que aplica los cambios remotos se llama `establecerMantenimientoEquiposDesdeSync`,

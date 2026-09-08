@@ -54,16 +54,24 @@ const MANTENIMIENTO_EQUIPOS_CAMPO_POR_ID = {
   meObservaciones: "observaciones",
 };
 
-const CONTADOR_IMPRESORA_FIELD_IDS = [
-  "ciId", "ciImpresora", "ciFecha", "ciContadorBN", "ciContadorColor",
-  "ciInsumoSolicitado", "ciCantidad", "ciObservaciones", "ciRegistradoPor",
-];
+// Stock Tóner Bodega 2 — antes era "Contador de Impresoras" (lecturas de
+// contador con historial); el usuario pidió reorientarlo a un inventario de
+// stock de tóner por impresora (una fila por impresora, con el tóner que usa
+// y cuánto hay en bodega), así que se conserva la colección Firestore
+// "contadoresImpresoras" pero con campos nuevos.
+const CONTADOR_IMPRESORA_FIELD_IDS = ["ciId", "ciToner", "ciSerial", "ciModelo", "ciColor", "ciStockActual"];
 const CONTADOR_IMPRESORA_CAMPO_POR_ID = {
-  ciId: "id", ciImpresora: "impresoraRef", ciFecha: "fecha",
-  ciContadorBN: "contadorBN", ciContadorColor: "contadorColor",
-  ciInsumoSolicitado: "insumoSolicitado", ciCantidad: "cantidad",
-  ciObservaciones: "observaciones", ciRegistradoPor: "registradoPor",
+  ciId: "id", ciToner: "toner", ciSerial: "serial", ciModelo: "modelo",
+  ciColor: "color", ciStockActual: "stockActual",
 };
+
+// Ubicaciones que el usuario pidió NO migrar desde el catálogo de Impresoras
+// (comparación sin distinguir mayúsculas/minúsculas ni espacios extra).
+const UBICACIONES_EXCLUIDAS_STOCK_TONER = ["riolsa", "san fernando", "flor del campo", "km 98"];
+
+function normalizarTextoComparar(v) {
+  return (v || "").toString().trim().toLowerCase();
+}
 
 let impresorasData = [];
 let codigosData = [];
@@ -577,21 +585,13 @@ function sincronizarEliminacionContadorImpresora(id) {
 
 let contadorImpresoraActualId = null;
 
-function abrirModalContadorImpresora(registro, impresoraPrefill) {
+function abrirModalContadorImpresora(registro) {
   contadorImpresoraActualId = registro ? registro.id : null;
   CONTADOR_IMPRESORA_FIELD_IDS.forEach((fieldId) => {
     const campo = CONTADOR_IMPRESORA_CAMPO_POR_ID[fieldId];
     $(fieldId).value = (registro && registro[campo]) || "";
   });
-
   $("btnEliminarModalContadorImpresora").style.display = registro ? "" : "none";
-
-  if (!registro) {
-    $("ciFecha").value = new Date().toISOString().slice(0, 10);
-    $("ciRegistradoPor").value = TECNICO_ACTUAL || "";
-    if (impresoraPrefill) $("ciImpresora").value = impresoraPrefill;
-  }
-
   $("modalContadorImpresoraOverlay").style.display = "flex";
 }
 
@@ -608,12 +608,12 @@ function onSubmitContadorImpresora(e) {
     nuevoRegistro[campo] = $(fieldId).value.trim();
   });
 
-  if (!nuevoRegistro.impresoraRef) {
-    alert("Selecciona una impresora (por serial)");
+  if (!nuevoRegistro.toner) {
+    alert("Indica el Toner");
     return;
   }
-  if (!nuevoRegistro.fecha) {
-    alert("Indica la fecha de la lectura");
+  if (!nuevoRegistro.serial) {
+    alert("Indica el Serial de la impresora");
     return;
   }
 
@@ -632,13 +632,12 @@ function onSubmitContadorImpresora(e) {
   guardarContadoresImpresoras();
   sincronizarContadorImpresora(guardado);
   refrescarVistasSecundarias();
-  actualizarContadorContadorImpresora();
   cerrarModalContadorImpresora();
 }
 
 function eliminarRegistroContadorImpresoraActual() {
   if (!contadorImpresoraActualId) return;
-  if (!confirm("¿Eliminar este registro de contador?")) return;
+  if (!confirm("¿Eliminar este registro de stock de tóner?")) return;
   const idx = contadoresImpresorasData.findIndex((r) => r.id === contadorImpresoraActualId);
   if (idx !== -1) {
     const id = contadoresImpresorasData[idx].id;
@@ -646,82 +645,105 @@ function eliminarRegistroContadorImpresoraActual() {
     guardarContadoresImpresoras();
     sincronizarEliminacionContadorImpresora(id);
     refrescarVistasSecundarias();
-    actualizarContadorContadorImpresora();
     cerrarModalContadorImpresora();
   }
 }
 
-// Igual que registrosMantenimientoDeEquipo/registrosGarantiaDeEquipo, pero
-// matcheando por el Serial de la impresora (identificador estable que ya se
-// usa en el datalist "dl-impresorasSerialCatalogo" para los tickets de
-// garantía Canella).
-function registrosContadorDeImpresora(serial) {
-  const s = (serial || "").trim();
-  if (!s) return [];
-  return contadoresImpresorasData
-    .filter((c) => (c.impresoraRef || "").trim() === s)
-    .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+// Migra el catálogo de Impresoras (una fila por impresora, con su Toner y
+// Serial ya capturados) a Stock Tóner Bodega 2 — a pedido del usuario,
+// excluyendo Plotters y las ubicaciones que indicó (Riolsa, San Fernando,
+// Flor del Campo, Km 98). Correrla más de una vez es seguro: actualiza
+// Toner/Modelo/Color de lo que ya existía (matcheado por Serial) sin tocar
+// el Stock Actual ya capturado a mano, y solo crea lo que falte.
+function migrarStockTonerDesdeImpresoras() {
+  if (!confirm("¿Migrar el catálogo de Impresoras a Stock Tóner Bodega 2?\n\nSe excluyen: Plotters, Riolsa, San Fernando, Flor del Campo y Km 98.")) return;
+
+  const excluidas = new Set(UBICACIONES_EXCLUIDAS_STOCK_TONER);
+  const existentesPorSerial = new Map(
+    contadoresImpresorasData.map((r) => [normalizarTextoComparar(r.serial), r])
+  );
+  const ahora = new Date().toISOString().slice(0, 16);
+  let creados = 0;
+  let actualizados = 0;
+  let omitidos = 0;
+  const tocados = [];
+
+  impresorasData.forEach((p) => {
+    if (normalizarTextoComparar(p.tipo) === "plotter") {
+      omitidos++;
+      return;
+    }
+    if (excluidas.has(normalizarTextoComparar(p.ubicacion))) {
+      omitidos++;
+      return;
+    }
+    const toner = (p.gpr || "").trim();
+    const serial = (p.serial || "").trim();
+    if (!toner || !serial) {
+      omitidos++;
+      return;
+    }
+
+    const clave = normalizarTextoComparar(serial);
+    const existente = existentesPorSerial.get(clave);
+    if (existente) {
+      existente.toner = toner;
+      existente.modelo = (p.modelo || "").trim();
+      existente.color = (p.tipo || "").trim();
+      existente.ultimaModificacion = ahora;
+      tocados.push(existente);
+      actualizados++;
+    } else {
+      const nuevo = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        toner,
+        serial,
+        modelo: (p.modelo || "").trim(),
+        color: (p.tipo || "").trim(),
+        stockActual: "",
+        ultimaModificacion: ahora,
+      };
+      contadoresImpresorasData.push(nuevo);
+      existentesPorSerial.set(clave, nuevo);
+      tocados.push(nuevo);
+      creados++;
+    }
+  });
+
+  guardarContadoresImpresoras();
+  tocados.forEach((r) => sincronizarContadorImpresora(r));
+  refrescarVistasSecundarias();
+  alert(`Migración completa: ${creados} nueva(s), ${actualizados} actualizada(s), ${omitidos} omitida(s) (Plotter/ubicación excluida o sin Toner/Serial).`);
 }
 
-function actualizarContadorContadorImpresora() {
-  $("contadorContadorImpresora").textContent = registrosContadorDeImpresora($("impSerial").value).length;
-}
-
-function abrirHistorialContadorImpresora() {
-  const serial = $("impSerial").value.trim();
-  const registros = registrosContadorDeImpresora(serial);
-  $("modalHistorialContadorImpresoraTitulo").textContent = `Historial de Contador — ${serial || "N/A"} (${registros.length})`;
-
-  const tbody = $("tbodyHistorialContadorImpresora");
-  tbody.innerHTML = registros.length
-    ? registros
-        .map(
-          (c) => `
-            <tr>
-              <td>${esc(formatearFechaSimple(c.fecha))}</td>
-              <td>${esc(c.contadorBN)}</td>
-              <td>${esc(c.contadorColor)}</td>
-              <td>${esc(c.insumoSolicitado)}</td>
-              <td>${esc(c.cantidad)}</td>
-              <td>${esc(c.observaciones)}</td>
-              <td>${esc(c.registradoPor)}</td>
-            </tr>
-          `
-        )
-        .join("")
-    : `<tr><td colspan="7" class="empty-state">Esta impresora no tiene lecturas de contador registradas.</td></tr>`;
-
-  $("modalHistorialContadorImpresoraOverlay").style.display = "flex";
-}
-
-function cerrarHistorialContadorImpresora() {
-  $("modalHistorialContadorImpresoraOverlay").style.display = "none";
-}
-
+// "Cantidad Impresoras" no se captura a mano — se cuenta cuántas filas
+// comparten el mismo Toner (normalizado), para que nunca se desactualice.
 function obtenerContadoresImpresoras() {
+  const conteoPorToner = {};
+  contadoresImpresorasData.forEach((c) => {
+    const clave = normalizarTextoComparar(c.toner);
+    if (!clave) return;
+    conteoPorToner[clave] = (conteoPorToner[clave] || 0) + 1;
+  });
   return contadoresImpresorasData.map((c) => ({
     registro: c,
     celdas: `
-      <td>${esc(c.impresoraRef)}</td>
-      <td>${esc(formatearFechaSimple(c.fecha))}</td>
-      <td>${esc(c.contadorBN)}</td>
-      <td>${esc(c.contadorColor)}</td>
-      <td>${esc(c.insumoSolicitado)}</td>
-      <td>${esc(c.cantidad)}</td>
-      <td>${esc(c.observaciones)}</td>
-      <td>${esc(c.registradoPor)}</td>
+      <td>${esc(c.toner)}</td>
+      <td>${esc(c.serial)}</td>
+      <td>${esc(c.modelo)}</td>
+      <td>${esc(c.color)}</td>
+      <td>${esc(conteoPorToner[normalizarTextoComparar(c.toner)] || 1)}</td>
+      <td>${esc(c.stockActual)}</td>
     `,
   }));
 }
 
 const vistaContadoresImpresoras = crearVistaLista({
   prefix: "contadoresImpresoras",
-  columnas: 8,
+  columnas: 6,
   obtenerFilas: obtenerContadoresImpresoras,
   filtrar: (r, t) => {
-    const texto = [r.registro.impresoraRef, r.registro.insumoSolicitado, r.registro.observaciones, r.registro.registradoPor]
-      .join(" ")
-      .toLowerCase();
+    const texto = [r.registro.toner, r.registro.serial, r.registro.modelo, r.registro.color].join(" ").toLowerCase();
     return t.split(/\s+/).filter(Boolean).every((palabra) => texto.includes(palabra));
   },
   alClicFila: (r) => abrirModalContadorImpresora(r.registro),
@@ -1590,7 +1612,6 @@ function abrirModalImpresora(impresora) {
     $("impTipo").value = "B/N";
     $("btnEliminarModalImpresora").style.display = "none";
   }
-  actualizarContadorContadorImpresora();
   $("modalImpresoraOverlay").classList.add("open");
 }
 
@@ -3752,13 +3773,7 @@ $("btnCerrarModalContadorImpresora").addEventListener("click", cerrarModalContad
 $("btnCancelarContadorImpresora").addEventListener("click", cerrarModalContadorImpresora);
 $("btnEliminarModalContadorImpresora").addEventListener("click", eliminarRegistroContadorImpresoraActual);
 $("formContadorImpresora").addEventListener("submit", onSubmitContadorImpresora);
-$("btnVerContadorDeImpresora").addEventListener("click", abrirHistorialContadorImpresora);
-$("btnNuevaLecturaContadorImpresora").addEventListener("click", () => {
-  cerrarHistorialContadorImpresora();
-  abrirModalContadorImpresora(null, $("impSerial").value.trim());
-});
-$("btnCerrarHistorialContadorImpresora").addEventListener("click", cerrarHistorialContadorImpresora);
-$("btnCerrarHistorialContadorImpresora2").addEventListener("click", cerrarHistorialContadorImpresora);
+$("btnMigrarStockToner").addEventListener("click", migrarStockTonerDesdeImpresoras);
 
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);

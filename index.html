@@ -383,10 +383,11 @@
 
       <!-- Contador de Impresoras (lecturas para pedir cartuchos/tóner/tambor a tiempo) -->
       <section id="vista-contadoresImpresoras" class="vista">
-        <p class="acta-estado">Registra aquí las lecturas del contador de páginas de cada impresora (B/N y Color por separado), para pedir cartuchos/tóner/tambor a tiempo antes de que se agoten.</p>
+        <p class="acta-estado">Stock de tóner en Bodega 2 por impresora — "Cantidad Impresoras" cuenta solo cuántas comparten el mismo Toner; "Stock Actual" se captura y actualiza a mano.</p>
         <section class="toolbar">
-          <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por serial de impresora, insumo, observaciones...">
-          <button type="button" id="btnNuevoContadorImpresora" class="btn btn-primary">+ Nueva lectura de contador</button>
+          <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por Toner, Serial, Modelo o Color...">
+          <button type="button" id="btnMigrarStockToner" class="btn btn-secondary">🔄 Migrar desde Impresoras</button>
+          <button type="button" id="btnNuevoContadorImpresora" class="btn btn-primary">+ Nuevo registro</button>
         </section>
         <section class="tabla-wrap">
           <table class="tabla">
@@ -892,10 +893,6 @@
             <label for="impActivoFijo">Activo Fijo</label>
             <input type="text" id="impActivoFijo" placeholder="No Tiene">
           </div>
-          <div class="glpi-row">
-            <label>Contador / Insumos</label>
-            <button type="button" id="btnVerContadorDeImpresora" class="btn btn-secondary">🔢 Ver historial (<span id="contadorContadorImpresora">0</span>)</button>
-          </div>
         </div>
       </div>
 
@@ -910,11 +907,11 @@
   </div>
 </div>
 
-<!-- Modal de lectura de Contador de Impresora (nuevo / editar) -->
+<!-- Modal Stock Tóner Bodega 2 (nuevo / editar) -->
 <div id="modalContadorImpresoraOverlay" class="modal-overlay no-print">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="modalContadorImpresoraTitulo">Nueva lectura de contador</h2>
+      <h2 id="modalContadorImpresoraTitulo">Nuevo registro de Stock Tóner</h2>
       <div class="modal-header-actions">
         <button id="btnCerrarModalContadorImpresora" class="btn-close">&times;</button>
       </div>
@@ -924,47 +921,26 @@
       <div class="glpi-grid">
         <div class="glpi-col">
           <div class="glpi-row">
-            <label for="ciImpresora">Impresora (Serial)</label>
-            <input type="text" id="ciImpresora" list="dl-impresorasSerialCatalogo" required>
+            <label for="ciToner">Toner</label>
+            <input type="text" id="ciToner" required>
           </div>
           <div class="glpi-row">
-            <label for="ciFecha">Fecha de lectura</label>
-            <input type="date" id="ciFecha" required>
+            <label for="ciSerial">Serial (de la impresora)</label>
+            <input type="text" id="ciSerial" list="dl-impresorasSerialCatalogo" required>
           </div>
           <div class="glpi-row">
-            <label for="ciContadorBN">Contador B/N (total de páginas)</label>
-            <input type="number" id="ciContadorBN" min="0">
-          </div>
-          <div class="glpi-row">
-            <label for="ciContadorColor">Contador Color (total de páginas)</label>
-            <input type="number" id="ciContadorColor" min="0">
+            <label for="ciModelo">Modelo</label>
+            <input type="text" id="ciModelo">
           </div>
         </div>
         <div class="glpi-col">
           <div class="glpi-row">
-            <label for="ciInsumoSolicitado">Insumo Solicitado</label>
-            <select id="ciInsumoSolicitado">
-              <option value="">Ninguno — solo lectura de contador</option>
-              <option value="Tóner Negro">Tóner Negro</option>
-              <option value="Tóner Cyan">Tóner Cyan</option>
-              <option value="Tóner Magenta">Tóner Magenta</option>
-              <option value="Tóner Amarillo">Tóner Amarillo</option>
-              <option value="Tambor/Drum">Tambor/Drum</option>
-              <option value="Unidad de Fusor">Unidad de Fusor</option>
-              <option value="Otro">Otro</option>
-            </select>
+            <label for="ciColor">Color</label>
+            <input type="text" id="ciColor" placeholder="B/N, Colores, Negro, Cyan, Magenta, Amarillo...">
           </div>
           <div class="glpi-row">
-            <label for="ciCantidad">Cantidad</label>
-            <input type="number" id="ciCantidad" min="0">
-          </div>
-          <div class="glpi-row">
-            <label for="ciRegistradoPor">Registrado por</label>
-            <input type="text" id="ciRegistradoPor" readonly>
-          </div>
-          <div class="glpi-row">
-            <label for="ciObservaciones">Observaciones</label>
-            <textarea id="ciObservaciones" style="min-height: 50px;"></textarea>
+            <label for="ciStockActual">Stock Actual</label>
+            <input type="number" id="ciStockActual" min="0">
           </div>
         </div>
       </div>
@@ -977,42 +953,6 @@
         </div>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- Modal Historial de Contador de una impresora -->
-<div id="modalHistorialContadorImpresoraOverlay" class="modal-overlay no-print">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="modalHistorialContadorImpresoraTitulo">Historial de Contador</h2>
-      <div class="modal-header-actions">
-        <button id="btnCerrarHistorialContadorImpresora" class="btn-close">&times;</button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <section class="tabla-wrap">
-        <table class="tabla">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Contador B/N</th>
-              <th>Contador Color</th>
-              <th>Insumo Solicitado</th>
-              <th>Cantidad</th>
-              <th>Observaciones</th>
-              <th>Registrado por</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyHistorialContadorImpresora"></tbody>
-        </table>
-      </section>
-      <div class="modal-actions">
-        <button type="button" id="btnNuevaLecturaContadorImpresora" class="btn btn-primary">+ Nueva lectura</button>
-        <div class="modal-actions-right">
-          <button type="button" id="btnCerrarHistorialContadorImpresora2" class="btn btn-secondary">Cerrar</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
