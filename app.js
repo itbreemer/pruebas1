@@ -806,6 +806,66 @@ const vistaContadoresImpresoras = crearVistaLista({
   alClicFila: (r) => abrirModalContadorImpresora(r.registro),
 });
 
+// Resumen por Tóner: un Tóner por fila (sin repetir), con la Cantidad de
+// Impresoras que ya se calcula igual que en la tabla principal. Al hacer
+// clic se abre el detalle de qué impresoras (Serial/Modelo/Color/Stock)
+// usan exactamente ese Tóner — así 61 impresoras siempre cuadran con la
+// suma de "Cantidad Impresoras" de este resumen.
+function renderResumenToner() {
+  const conteo = {};
+  const nombreOriginal = {};
+  contadoresImpresorasData.forEach((c) => {
+    const clave = normalizarTextoComparar(c.toner);
+    if (!clave) return;
+    conteo[clave] = (conteo[clave] || 0) + 1;
+    if (!nombreOriginal[clave]) nombreOriginal[clave] = (c.toner || "").trim();
+  });
+
+  const filas = Object.keys(conteo)
+    .map((clave) => ({ clave, toner: nombreOriginal[clave], cantidad: conteo[clave] }))
+    .sort((a, b) => a.toner.localeCompare(b.toner));
+
+  const tbody = $("tbodyResumenToner");
+  if (!tbody) return;
+  tbody.innerHTML = filas.length
+    ? filas
+        .map((f) => `<tr data-toner-clave="${esc(f.clave)}"><td>${esc(f.toner)}</td><td>${esc(f.cantidad)}</td></tr>`)
+        .join("")
+    : `<tr><td colspan="2" class="empty-state">Sin datos todavía.</td></tr>`;
+
+  tbody.querySelectorAll("tr[data-toner-clave]").forEach((tr) => {
+    tr.addEventListener("click", () => abrirModalImpresorasPorToner(tr.dataset.tonerClave));
+  });
+}
+
+function abrirModalImpresorasPorToner(tonerClave) {
+  const filas = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.toner) === tonerClave);
+  const nombreToner = filas[0]?.toner || tonerClave;
+  $("modalImpresorasPorTonerTitulo").textContent = `Impresoras con Tóner "${nombreToner}" (${filas.length})`;
+
+  const tbody = $("tbodyImpresorasPorToner");
+  tbody.innerHTML = filas.length
+    ? filas
+        .map(
+          (f) => `
+            <tr>
+              <td>${esc(f.serial)}</td>
+              <td>${esc(f.modelo)}</td>
+              <td>${esc(f.color)}</td>
+              <td>${esc(f.stockActual)}</td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="4" class="empty-state">Sin impresoras para este Tóner.</td></tr>`;
+
+  $("modalImpresorasPorTonerOverlay").style.display = "flex";
+}
+
+function cerrarModalImpresorasPorToner() {
+  $("modalImpresorasPorTonerOverlay").style.display = "none";
+}
+
 /* ---------- Códigos de usuario para impresión/escaneo/copia (ver codigos-impresion-sync.js) ---------- */
 /* El ID de usuario y la clave NO son únicos por diseño (el mismo nombre puede
    tener varios registros con distinto ID/clave en el Excel de origen), así
@@ -2275,6 +2335,7 @@ function refrescarVistasSecundarias() {
   vistaTicketsGarantia.render();
   vistaMantenimientoEquipos.render();
   vistaContadoresImpresoras.render();
+  renderResumenToner();
   vistaEquiposTIv2.render();
 }
 
@@ -2302,7 +2363,10 @@ function cambiarVista(nombre) {
   else if (nombre === "contratos") vistaContratos.render();
   else if (nombre === "ticketsGarantia") vistaTicketsGarantia.render();
   else if (nombre === "mantenimientoEquipos") vistaMantenimientoEquipos.render();
-  else if (nombre === "contadoresImpresoras") vistaContadoresImpresoras.render();
+  else if (nombre === "contadoresImpresoras") {
+    vistaContadoresImpresoras.render();
+    renderResumenToner();
+  }
   else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
 }
 
@@ -3831,6 +3895,8 @@ $("btnCancelarContadorImpresora").addEventListener("click", cerrarModalContadorI
 $("btnEliminarModalContadorImpresora").addEventListener("click", eliminarRegistroContadorImpresoraActual);
 $("formContadorImpresora").addEventListener("submit", onSubmitContadorImpresora);
 $("btnMigrarStockToner").addEventListener("click", migrarStockTonerDesdeImpresoras);
+$("btnCerrarImpresorasPorToner").addEventListener("click", cerrarModalImpresorasPorToner);
+$("btnCerrarImpresorasPorToner2").addEventListener("click", cerrarModalImpresorasPorToner);
 
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);

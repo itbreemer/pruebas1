@@ -384,6 +384,21 @@
       <!-- Contador de Impresoras (lecturas para pedir cartuchos/tóner/tambor a tiempo) -->
       <section id="vista-contadoresImpresoras" class="vista">
         <p class="acta-estado">Stock de tóner en Bodega 2 por impresora — "Cantidad Impresoras" cuenta solo cuántas comparten el mismo Toner; "Stock Actual" se captura y actualiza a mano.</p>
+
+        <h3 class="subseccion-titulo">📋 Resumen por Tóner</h3>
+        <p class="subseccion-nota">Un Tóner por fila (sin repetir) — haz clic en uno para ver qué impresoras específicas lo usan.</p>
+        <section class="tabla-wrap" style="margin-bottom: 24px;">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Toner</th>
+                <th>Cantidad Impresoras</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyResumenToner"></tbody>
+          </table>
+        </section>
+
         <section class="toolbar">
           <input type="text" id="buscador_contadoresImpresoras" placeholder="Buscar por Toner, Serial, Modelo o Color...">
           <button type="button" id="btnMigrarStockToner" class="btn btn-secondary">🔄 Migrar desde Impresoras</button>
@@ -956,6 +971,38 @@
   </div>
 </div>
 
+<!-- Modal Impresoras que usan un Tóner (desde el Resumen por Tóner) -->
+<div id="modalImpresorasPorTonerOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalImpresorasPorTonerTitulo">Impresoras con este Tóner</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarImpresorasPorToner" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <section class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Serial</th>
+              <th>Modelo</th>
+              <th>Color</th>
+              <th>Stock Actual</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyImpresorasPorToner"></tbody>
+        </table>
+      </section>
+      <div class="modal-actions">
+        <div class="modal-actions-right">
+          <button type="button" id="btnCerrarImpresorasPorToner2" class="btn btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de nuevo código de usuario / edición -->
 <div id="modalCodigoOverlay" class="modal-overlay no-print">
   <div class="modal">
@@ -1464,7 +1511,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260908g"></script>
+<script src="app.js?v=20260908h"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
