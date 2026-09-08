@@ -737,7 +737,17 @@ function migrarStockTonerDesdeImpresoras() {
   });
 
   contadoresImpresorasData = contadoresImpresorasData.filter((r) => {
-    const impresora = porSerialImpresora.get(normalizarTextoComparar(r.serial));
+    const serialFila = normalizarTextoComparar(r.serial);
+    // Exclusión por Serial directo sobre la fila — no depende de encontrar la
+    // impresora en el catálogo actual (antes, si esa búsqueda fallaba, la
+    // fila nunca se revisaba y una exclusión explícita por Serial no surtía
+    // efecto).
+    if (SERIALES_EXCLUIDOS_STOCK_TONER_NORMALIZADOS.includes(serialFila)) {
+      idsAEliminar.push(r.id);
+      eliminados++;
+      return false;
+    }
+    const impresora = porSerialImpresora.get(serialFila);
     if (impresora && impresoraDebeExcluirseDeStockToner(impresora)) {
       idsAEliminar.push(r.id);
       eliminados++;
