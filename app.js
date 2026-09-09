@@ -1298,7 +1298,7 @@ function renderResumenToner() {
             ? `<span class="stock-mini-toner">${COLORES_CMYK.map(
                 (color) => `<span class="punto punto-${COLOR_LETRA_TONER[color]}">${esc(f.stockPorColor[color] ?? "-")}</span>`
               ).join("")}</span>`
-            : `<input type="number" min="0" class="input" style="width: 100px;" value="${esc(f.stockPlano)}" data-stock-toner="${esc(f.clave)}">`;
+            : esc(f.stockPlano || "0");
           return `
             <tr data-toner-clave="${esc(f.clave)}">
               <td>${esc(f.base)}</td>
@@ -1311,17 +1311,7 @@ function renderResumenToner() {
     : `<tr><td colspan="3" class="empty-state">Sin datos todavía.</td></tr>`;
 
   tbody.querySelectorAll("tr[data-toner-clave]").forEach((tr) => {
-    tr.addEventListener("click", (e) => {
-      if (e.target.closest("input")) return;
-      abrirModalImpresorasPorToner(tr.dataset.tonerClave);
-    });
-  });
-
-  tbody.querySelectorAll("input[data-stock-toner]").forEach((input) => {
-    input.addEventListener("click", (e) => e.stopPropagation());
-    input.addEventListener("change", () => {
-      actualizarStockDeToner(input.dataset.stockToner, input.value.trim());
-    });
+    tr.addEventListener("click", () => abrirModalImpresorasPorToner(tr.dataset.tonerClave));
   });
 }
 
