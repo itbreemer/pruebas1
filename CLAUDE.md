@@ -385,7 +385,13 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   cantidad de una línea ya guardada.
 - Se agregó al reporte PDF de auditoría (`descargarReporteStockToner`) una tabla "Ingresos
   (Canella)" entre Stock Actual y Salidas, filtrada por el mismo rango de fechas.
-- Ubicado dentro de "Stock Tóner Bodega 2" entre "📤 Salidas de Tóner" y "🔎 Detalle completo".
+- **Pantalla propia, separada de "Stock Tóner Bodega 2"**: al principio se puso como
+  sub-sección dentro de "Stock Tóner Bodega 2" (junto a Salidas), pero el usuario pidió
+  sacarla a su propia vista/nav-item — `data-vista="ingresoToner"`, sección
+  `#vista-ingresoToner` — **para no confundir al bodeguero** mezclando ingresos con
+  stock/salidas en una sola pantalla. Nav-item: "📥 Ingreso Tóner Bodega 2", justo debajo de
+  "🔢 Stock Tóner Bodega 2". El Rol "Bodeguero" (ver abajo) se actualizó para mostrar ambas
+  vistas (`VISTAS_PERMITIDAS_BODEGA = ["contadoresImpresoras", "ingresoToner"]`), no solo una.
 
 ### Rol "Bodeguero" (solo interfaz, no seguridad de base de datos)
 
@@ -394,8 +400,9 @@ crearlo en Firebase → Authentication → Users como cualquier otro técnico): 
 `app.js` + `window.aplicarRestriccionesPorRol(correo)`, llamada desde `auth.js` en
 `onAuthStateChanged` (con el correo al iniciar sesión, con `""` al cerrar sesión para restaurar
 el menú completo para el siguiente login). Si el correo está en esa lista: oculta todos los
-`.nav-item` salvo `data-vista="contadoresImpresoras"` y fuerza `cambiarVista("contadoresImpresoras")`
-para que entre directo a Stock Tóner Bodega 2.
+`.nav-item` salvo los de `VISTAS_PERMITIDAS_BODEGA` (`contadoresImpresoras` e `ingresoToner`) y
+fuerza `cambiarVista("contadoresImpresoras")` para que entre directo a Stock Tóner Bodega 2 (con
+Ingreso Tóner Bodega 2 también visible en el menú, como pantalla aparte).
 
 **Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
 (`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para

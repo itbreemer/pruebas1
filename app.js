@@ -114,10 +114,12 @@ function esCorreoBodega(correo) {
 // para el bodeguero, solo "Salir" se queda.
 const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "contadorTotal"];
 
+const VISTAS_PERMITIDAS_BODEGA = ["contadoresImpresoras", "ingresoToner"];
+
 window.aplicarRestriccionesPorRol = (correo) => {
   const esBodega = esCorreoBodega(correo);
   document.querySelectorAll(".nav-item").forEach((btn) => {
-    btn.style.display = esBodega && btn.dataset.vista !== "contadoresImpresoras" ? "none" : "";
+    btn.style.display = esBodega && !VISTAS_PERMITIDAS_BODEGA.includes(btn.dataset.vista) ? "none" : "";
   });
   IDS_BOTONES_HEADER_SOLO_IT.forEach((id) => {
     const el = $(id);
@@ -3169,8 +3171,8 @@ function cambiarVista(nombre) {
   else if (nombre === "contadoresImpresoras") {
     vistaContadoresImpresoras.render();
     renderResumenToner();
-    renderFormularioIngresoToner();
   }
+  else if (nombre === "ingresoToner") renderFormularioIngresoToner();
   else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
 }
 

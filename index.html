@@ -33,6 +33,7 @@
       <button type="button" class="nav-item" data-vista="monitores" data-titulo="Monitores">🖥️ Monitores</button>
       <button type="button" class="nav-item" data-vista="impresoras" data-titulo="Impresoras">🖨️ Impresoras</button>
       <button type="button" class="nav-item" data-vista="contadoresImpresoras" data-titulo="Stock Tóner Bodega 2">🔢 Stock Tóner Bodega 2</button>
+      <button type="button" class="nav-item" data-vista="ingresoToner" data-titulo="Ingreso Tóner Bodega 2">📥 Ingreso Tóner Bodega 2</button>
       <button type="button" class="nav-item" data-vista="ticketsGarantia" data-titulo="Tickets de Garantía">🎫 Tickets de Garantía</button>
       <button type="button" class="nav-item" data-vista="mantenimientoEquipos" data-titulo="Mantenimiento de Equipos">🔧 Mantenimiento de Equipos</button>
       <button type="button" class="nav-item" data-vista="equiposTIv2" data-titulo="Inventario Automático">🤖 Inventario Automático</button>
@@ -446,39 +447,6 @@
           <button type="button" id="btnDescargarReporteToner" class="btn btn-secondary">📄 Descargar reporte PDF (Stock + Ingresos + Salidas)</button>
         </section>
 
-        <h3 class="subseccion-titulo" style="margin-top: 28px;">📥 Ingreso de Tóner</h3>
-        <p class="subseccion-nota">Registra la entrega de Canella (Fecha + No. de Documento que trae la caja). Escribe la Cantidad Recibida solo en los Toners que llegaron; al guardar se suma automático a su Stock Actual. Solo se puede editar un Ingreso ya guardado, no eliminar.</p>
-        <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
-          <form id="formIngresoToner">
-            <div class="form-salida-toner">
-              <label>Fecha de Ingreso<input type="date" id="itFecha" required></label>
-              <label>No. de Documento (guía Canella)<input type="text" id="itDocumento" required></label>
-              <label>Proveedor<input type="text" value="Canella" disabled></label>
-            </div>
-            <section class="tabla-wrap" style="margin: 14px 0;">
-              <table class="tabla">
-                <thead>
-                  <tr><th>Toner</th><th>Stock Actual</th><th>Cantidad Recibida</th></tr>
-                </thead>
-                <tbody id="tbodyFormIngresoToner"></tbody>
-              </table>
-            </section>
-            <section class="toolbar" style="justify-content: space-between;">
-              <span id="resumenIngresoToner" class="subseccion-nota" style="margin: 0;">Sin cantidades capturadas todavía.</span>
-              <button type="submit" class="btn btn-primary">Guardar Ingreso</button>
-            </section>
-          </form>
-        </section>
-
-        <section class="tabla-wrap">
-          <table class="tabla">
-            <thead>
-              <tr><th>Documento</th><th>Fecha</th><th>Toners</th><th>Total Unidades</th></tr>
-            </thead>
-            <tbody id="tbodyIngresosToner"></tbody>
-          </table>
-        </section>
-
         <h3 class="subseccion-titulo" style="margin-top: 28px;">🔎 Detalle completo</h3>
         <p class="subseccion-nota">Una fila por impresora, con su Toner/color y stock — úsalo para editar un registro puntual o migrar desde el catálogo de Impresoras.</p>
         <section class="toolbar">
@@ -507,6 +475,44 @@
           <span id="infoPagina_contadoresImpresoras"></span>
           <button id="btnSiguiente_contadoresImpresoras">&rsaquo;</button>
           <button id="btnUltimo_contadoresImpresoras">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Ingreso de Tóner (entregas de Canella) — pantalla separada de Stock Tóner Bodega 2
+           a propósito, para no confundir al bodeguero mezclando ingresos y salidas/stock en
+           una sola vista. -->
+      <section id="vista-ingresoToner" class="vista">
+        <p class="acta-estado">Registra la entrega de Canella (Fecha + No. de Documento que trae la caja). Escribe la Cantidad Recibida solo en los Toners que llegaron; al guardar se suma automático a su Stock Actual. Solo se puede editar un Ingreso ya guardado, no eliminar.</p>
+        <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
+          <form id="formIngresoToner">
+            <div class="form-salida-toner">
+              <label>Fecha de Ingreso<input type="date" id="itFecha" required></label>
+              <label>No. de Documento (guía Canella)<input type="text" id="itDocumento" required></label>
+              <label>Proveedor<input type="text" value="Canella" disabled></label>
+            </div>
+            <section class="tabla-wrap" style="margin: 14px 0;">
+              <table class="tabla">
+                <thead>
+                  <tr><th>Toner</th><th>Stock Actual</th><th>Cantidad Recibida</th></tr>
+                </thead>
+                <tbody id="tbodyFormIngresoToner"></tbody>
+              </table>
+            </section>
+            <section class="toolbar" style="justify-content: space-between;">
+              <span id="resumenIngresoToner" class="subseccion-nota" style="margin: 0;">Sin cantidades capturadas todavía.</span>
+              <button type="submit" class="btn btn-primary">Guardar Ingreso</button>
+            </section>
+          </form>
+        </section>
+
+        <h3 class="subseccion-titulo">Ingresos registrados</h3>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr><th>Documento</th><th>Fecha</th><th>Toners</th><th>Total Unidades</th></tr>
+            </thead>
+            <tbody id="tbodyIngresosToner"></tbody>
+          </table>
         </section>
       </section>
 
@@ -1666,7 +1672,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260909d"></script>
+<script src="app.js?v=20260909e"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
