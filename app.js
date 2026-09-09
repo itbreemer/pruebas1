@@ -1251,19 +1251,18 @@ const vistaContadoresImpresoras = crearVistaLista({
   alClicFila: (r) => abrirModalContadorImpresora(r.registro),
 });
 
-// Resumen por Tóner: un Tóner BASE por fila (sin repetir por color), con la
-// Cantidad de Impresoras contada por Serial único — así, aunque una
-// impresora a color tenga 4 filas internas (una por color), solo cuenta una
-// vez, y la suma de "Cantidad Impresoras" de este resumen siempre cuadra
-// con las 61 impresoras reales. Al hacer clic (fuera del campo de Stock) se
-// abre el detalle de qué impresoras usan exactamente ese Tóner.
-//
-// El Stock Actual se captura UNA vez por Tóner (no por impresora): para un
-// Tóner de impresoras a color se ve como un resumen de sus 4 colores
-// (N/C/M/Y, solo lectura aquí — se edita en el modal de detalle); para un
-// Tóner B/N sigue siendo un solo campo editable aquí mismo, igual que
-// antes. `actualizarStockDeToner` sigue aplicando el cambio a TODAS las
-// filas que comparten el mismo texto exacto de Tóner (incluye su color).
+// Stock por Tóner (antes "Resumen por Tóner"): un Tóner BASE por fila (sin
+// repetir por color), con la Cantidad de Impresoras contada por Serial
+// único — así, aunque una impresora a color tenga 4 filas internas (una por
+// color), solo cuenta una vez, y la suma de "Cantidad Impresoras" siempre
+// cuadra con las impresoras reales. Es de SOLO LECTURA a propósito (para el
+// bodeguero): ni la tabla ni el modal de detalle (al hacer clic en la fila)
+// permiten cambiar el Stock — solo ver cuánto hay y qué impresoras
+// corresponden a cada Tóner. El Stock Actual se sigue pudiendo editar desde
+// "Detalle completo" (por impresora); `actualizarStockDeToner` sigue
+// existiendo porque lo usa `ajustarStockToner` (Salidas de Tóner) para
+// rebajar automático, solo que ya no hay ningún input en esta vista que lo
+// dispare directamente.
 function renderResumenToner() {
   const grupos = {};
   contadoresImpresorasData.forEach((c) => {
@@ -1362,23 +1361,16 @@ function abrirModalImpresorasPorToner(tonerBaseClave) {
     contenedorColores.innerHTML = COLORES_CMYK.map((color) => {
       const letra = COLOR_LETRA_TONER[color];
       const filaColor = filas.find((f) => tonerBaseYColor(f.toner).color === color);
-      const tonerTextoColor = filaColor ? filaColor.toner : `${nombreBase} - ${color.toUpperCase()}`;
       const stock = filaColor ? filaColor.stockActual : "";
       return `
         <div class="color-casilla-toner">
           <span class="letra letra-${letra}">${letra}</span>
           <span class="nombre">${color}</span>
           <span class="etiqueta-stock">Stock</span>
-          <input type="number" min="0" class="input" value="${esc(stock)}" data-stock-toner-color="${esc(normalizarTextoComparar(tonerTextoColor))}">
+          <span class="valor-stock-toner">${esc(stock || "0")}</span>
         </div>
       `;
     }).join("");
-    contenedorColores.querySelectorAll("input[data-stock-toner-color]").forEach((input) => {
-      input.addEventListener("change", () => {
-        actualizarStockDeToner(input.dataset.stockTonerColor, input.value.trim());
-        renderResumenToner();
-      });
-    });
 
     thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th></tr>`;
     tbody.innerHTML = impresorasUnicas.length
@@ -1392,21 +1384,14 @@ function abrirModalImpresorasPorToner(tonerBaseClave) {
     // tiene su propio stock separado.
     contenedorColores.style.display = "grid";
     contenedorColores.style.gridTemplateColumns = "max-content";
-    const tonerTexto = filas.length ? filas[0].toner : nombreBase;
     const stock = filas.length ? filas[0].stockActual : "";
     contenedorColores.innerHTML = `
       <div class="color-casilla-toner">
         <span class="nombre">${esc(nombreBase)}</span>
         <span class="etiqueta-stock">Stock</span>
-        <input type="number" min="0" class="input" value="${esc(stock)}" data-stock-toner-color="${esc(normalizarTextoComparar(tonerTexto))}">
+        <span class="valor-stock-toner">${esc(stock || "0")}</span>
       </div>
     `;
-    contenedorColores.querySelectorAll("input[data-stock-toner-color]").forEach((input) => {
-      input.addEventListener("change", () => {
-        actualizarStockDeToner(input.dataset.stockTonerColor, input.value.trim());
-        renderResumenToner();
-      });
-    });
 
     thead.innerHTML = `<tr><th>Serial</th><th>Modelo</th></tr>`;
     tbody.innerHTML = impresorasUnicas.length

@@ -457,7 +457,7 @@ main .btn-primary:hover { background: #163158; }
 .color-casilla-toner .letra-Y { background: #ca8a04; }
 .color-casilla-toner .nombre { font-size: 0.72rem; color: var(--azul); font-weight: 600; }
 .color-casilla-toner .etiqueta-stock { font-size: 0.66rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.03em; }
-.color-casilla-toner input { width: 70px; text-align: center; }
+.color-casilla-toner .valor-stock-toner { font-size: 1.1rem; font-weight: 700; color: var(--azul); font-variant-numeric: tabular-nums; }
 
 /* Salidas de Tóner: formulario de registro/edición (Serial autocompleta
    Modelo/Ubicación de solo lectura; Toner lista solo lo compatible con esa
