@@ -6,6 +6,7 @@ const TICKETS_GARANTIA_STORAGE_KEY = "ticketsGarantiaTI_v1";
 const MANTENIMIENTO_EQUIPOS_STORAGE_KEY = "mantenimientoEquiposTI_v1";
 const CONTADORES_IMPRESORAS_STORAGE_KEY = "contadoresImpresorasTI_v1";
 const SALIDAS_TONER_STORAGE_KEY = "salidasTonerTI_v1";
+const INGRESOS_TONER_STORAGE_KEY = "ingresosTonerTI_v1";
 const PAGE_SIZE = 50;
 
 const $ = (id) => document.getElementById(id);
@@ -88,6 +89,7 @@ let ticketsGarantiaData = [];
 let mantenimientoEquiposData = [];
 let contadoresImpresorasData = [];
 let salidasTonerData = [];
+let ingresosTonerData = [];
 let equiposTIv2Data = [];
 
 let TECNICO_ACTUAL = "";
@@ -977,6 +979,260 @@ function eliminarSalidaTonerActual() {
   cerrarModalSalidaToner();
 }
 
+/* ---------- Ingreso de Tóner (entregas de Canella, ver ingresos-toner-sync.js) ---------- */
+// Un Ingreso = un documento de Canella con Fecha + No. de Documento, que
+// puede traer varios Toners distintos a la vez (ej. tintas y tóners
+// variados) — por eso cada registro guarda un arreglo `lineas` en vez de un
+// solo Toner/Cantidad como Salidas. Cada línea SUMA automáticamente al
+// Stock Actual de ese Toner exacto (mismo `ajustarStockToner` de Salidas,
+// con delta positivo). Solo se puede editar (nunca eliminar) un Ingreso ya
+// guardado, a pedido explícito del usuario.
+
+function cargarIngresosToner() {
+  try {
+    ingresosTonerData = JSON.parse(localStorage.getItem(INGRESOS_TONER_STORAGE_KEY)) || [];
+  } catch (err) {
+    ingresosTonerData = [];
+  }
+}
+
+function guardarIngresosToner() {
+  localStorage.setItem(INGRESOS_TONER_STORAGE_KEY, JSON.stringify(ingresosTonerData));
+}
+
+function obtenerIngresosTonerActuales() {
+  return ingresosTonerData;
+}
+
+function establecerIngresosTonerDesdeSync(remotos) {
+  const remotosPorId = new Map(remotos.map((r) => [r.id, r]));
+  const combinados = [];
+  const idsLocales = new Set();
+
+  ingresosTonerData.forEach((local) => {
+    idsLocales.add(local.id);
+    const remoto = remotosPorId.get(local.id);
+    if (!remoto) return;
+    if ((local.ultimaModificacion || "") > (remoto.ultimaModificacion || "")) {
+      combinados.push(local);
+      sincronizarIngresoToner(local);
+    } else {
+      combinados.push(remoto);
+    }
+  });
+
+  remotos.forEach((remoto) => {
+    if (!idsLocales.has(remoto.id)) combinados.push(remoto);
+  });
+
+  ingresosTonerData = combinados.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  guardarIngresosToner();
+  renderIngresosToner();
+}
+
+function sincronizarIngresoToner(registro) {
+  if (window.FirestoreSyncIngresosToner && typeof window.FirestoreSyncIngresosToner.guardarIngresoToner === "function") {
+    window.FirestoreSyncIngresosToner.guardarIngresoToner(registro);
+  }
+}
+
+// Arma la lista de Toners exactos (incluye color) que existen hoy en el
+// catálogo, uno por cada texto distinto (no por base, a diferencia del
+// Resumen) — porque Canella entrega cartuchos de color específicos, no un
+// total genérico por # de Toner.
+function listaTonersUnicosParaIngreso() {
+  const vistos = new Set();
+  const lista = [];
+  contadoresImpresorasData.forEach((c) => {
+    const clave = normalizarTextoComparar(c.toner);
+    if (!clave || vistos.has(clave)) return;
+    vistos.add(clave);
+    lista.push({ toner: c.toner, stockActual: c.stockActual || 0 });
+  });
+  return lista.sort((a, b) => a.toner.localeCompare(b.toner));
+}
+
+function renderFormularioIngresoToner() {
+  const tbody = $("tbodyFormIngresoToner");
+  if (!tbody) return;
+  const lista = listaTonersUnicosParaIngreso();
+  tbody.innerHTML = lista.length
+    ? lista
+        .map(
+          (t) => `
+            <tr>
+              <td>${esc(t.toner)}</td>
+              <td class="stock-actual">${esc(t.stockActual || 0)}</td>
+              <td><input type="number" class="cant-recibida-toner" min="0" data-toner="${esc(t.toner)}" placeholder="0"></td>
+            </tr>
+          `
+        )
+        .join("")
+    : `<tr><td colspan="3" class="empty-state">Sin Toners registrados todavía.</td></tr>`;
+  tbody.querySelectorAll(".cant-recibida-toner").forEach((input) => {
+    input.addEventListener("input", actualizarResumenIngresoToner);
+  });
+  actualizarResumenIngresoToner();
+}
+
+function lineasIngresoTonerCapturadas(tbodyId) {
+  return [...document.querySelectorAll(`#${tbodyId} .cant-recibida-toner`)]
+    .map((input) => ({ toner: input.dataset.toner, cantidad: Number(input.value) || 0 }))
+    .filter((l) => l.cantidad > 0);
+}
+
+function actualizarResumenIngresoToner() {
+  const span = $("resumenIngresoToner");
+  if (!span) return;
+  const lineas = lineasIngresoTonerCapturadas("tbodyFormIngresoToner");
+  if (!lineas.length) {
+    span.textContent = "Sin cantidades capturadas todavía.";
+    return;
+  }
+  const total = lineas.reduce((sum, l) => sum + l.cantidad, 0);
+  span.textContent = `${lineas.length} Toner${lineas.length === 1 ? "" : "s"} con cantidad capturada · ${total} unidades a ingresar`;
+}
+
+function renderIngresosToner() {
+  const tbody = $("tbodyIngresosToner");
+  if (!tbody) return;
+  tbody.innerHTML = ingresosTonerData.length
+    ? ingresosTonerData
+        .map((registro) => {
+          const lineas = registro.lineas || [];
+          const total = lineas.reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
+          return `
+            <tr data-ingreso-id="${esc(registro.id)}">
+              <td>${esc(registro.documento)}</td>
+              <td>${esc(registro.fecha)}</td>
+              <td>${esc(lineas.map((l) => l.toner).join(", "))}</td>
+              <td>${esc(total)}</td>
+              <td>${registro.archivoUrl ? `<a href="${esc(registro.archivoUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="Ver documento escaneado">📎</a>` : ""}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `<tr><td colspan="5" class="empty-state">Sin ingresos registrados todavía.</td></tr>`;
+
+  tbody.querySelectorAll("tr[data-ingreso-id]").forEach((tr) => {
+    tr.addEventListener("click", () => abrirModalIngresoToner(tr.dataset.ingresoId));
+  });
+}
+
+function onSubmitIngresoToner(e) {
+  e.preventDefault();
+  const fecha = $("itFecha").value;
+  const documento = $("itDocumento").value.trim();
+  if (!fecha || !documento) {
+    alert("Indica la Fecha de Ingreso y el No. de Documento");
+    return;
+  }
+  const lineas = lineasIngresoTonerCapturadas("tbodyFormIngresoToner");
+  if (!lineas.length) {
+    alert("Indica la Cantidad Recibida de al menos un Toner");
+    return;
+  }
+
+  const registro = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    fecha,
+    documento,
+    lineas,
+    ultimaModificacion: new Date().toISOString().slice(0, 16),
+  };
+  lineas.forEach((l) => ajustarStockToner(l.toner, l.cantidad));
+
+  ingresosTonerData.unshift(registro);
+  guardarIngresosToner();
+  sincronizarIngresoToner(registro);
+  renderIngresosToner();
+
+  const archivo = $("itArchivo").files[0];
+  if (archivo && window.FirestoreSyncIngresosToner && typeof window.FirestoreSyncIngresosToner.subirDocumentoIngreso === "function") {
+    window.FirestoreSyncIngresosToner.subirDocumentoIngreso(registro.id, archivo)
+      .then((url) => {
+        registro.archivoNombre = archivo.name;
+        registro.archivoUrl = url;
+        registro.ultimaModificacion = new Date().toISOString().slice(0, 16);
+        guardarIngresosToner();
+        sincronizarIngresoToner(registro);
+        renderIngresosToner();
+      })
+      .catch((err) => console.warn("No se pudo adjuntar el documento escaneado (el Ingreso ya quedó guardado):", err));
+  }
+
+  e.target.reset();
+  $("itFecha").value = fecha;
+  renderFormularioIngresoToner();
+}
+
+let ingresoTonerActualId = null;
+
+function abrirModalIngresoToner(id) {
+  const registro = ingresosTonerData.find((r) => r.id === id);
+  if (!registro) return;
+  ingresoTonerActualId = id;
+  $("eitId").value = registro.id;
+  $("eitFecha").value = registro.fecha || "";
+  $("eitDocumento").value = registro.documento || "";
+  const tbody = $("tbodyEditarIngresoToner");
+  tbody.innerHTML = (registro.lineas || [])
+    .map(
+      (l) => `
+        <tr>
+          <td>${esc(l.toner)}</td>
+          <td><input type="number" class="cant-recibida-toner" min="0" data-toner="${esc(l.toner)}" value="${esc(l.cantidad)}"></td>
+        </tr>
+      `
+    )
+    .join("");
+  $("modalIngresoTonerOverlay").style.display = "flex";
+}
+
+function cerrarModalIngresoToner() {
+  ingresoTonerActualId = null;
+  $("modalIngresoTonerOverlay").style.display = "none";
+}
+
+function onSubmitEditarIngresoToner(e) {
+  e.preventDefault();
+  const idx = ingresosTonerData.findIndex((r) => r.id === ingresoTonerActualId);
+  if (idx === -1) return;
+  const anterior = ingresosTonerData[idx];
+
+  const fecha = $("eitFecha").value;
+  const documento = $("eitDocumento").value.trim();
+  if (!fecha || !documento) {
+    alert("Indica la Fecha de Ingreso y el No. de Documento");
+    return;
+  }
+  const lineas = lineasIngresoTonerCapturadas("tbodyEditarIngresoToner");
+  if (!lineas.length) {
+    alert("Indica la Cantidad Recibida de al menos un Toner");
+    return;
+  }
+
+  // Revierte lo que este Ingreso había sumado antes de aplicar los datos
+  // corregidos, igual que Salidas al editar, para que el Stock nunca quede
+  // descuadrado.
+  (anterior.lineas || []).forEach((l) => ajustarStockToner(l.toner, -(Number(l.cantidad) || 0)));
+  lineas.forEach((l) => ajustarStockToner(l.toner, l.cantidad));
+
+  const registro = {
+    ...anterior,
+    fecha,
+    documento,
+    lineas,
+    ultimaModificacion: new Date().toISOString().slice(0, 16),
+  };
+  ingresosTonerData[idx] = registro;
+  guardarIngresosToner();
+  sincronizarIngresoToner(registro);
+  renderIngresosToner();
+  renderFormularioIngresoToner();
+  cerrarModalIngresoToner();
+}
+
 // Reporte de auditoría: Stock Actual (todos los Tóner) + Salidas del rango
 // de fechas elegido, en un PDF descargable listo para enviar/imprimir.
 function datosStockTonerParaReporte() {
@@ -1002,6 +1258,9 @@ function descargarReporteStockToner() {
   const hasta = $("repTonerHasta").value;
   const salidasFiltradas = salidasTonerData
     .filter((s) => (!desde || (s.fecha || "") >= desde) && (!hasta || (s.fecha || "") <= hasta))
+    .sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+  const ingresosFiltrados = ingresosTonerData
+    .filter((r) => (!desde || (r.fecha || "") >= desde) && (!hasta || (r.fecha || "") <= hasta))
     .sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
 
   const filasStock = datosStockTonerParaReporte()
@@ -1031,7 +1290,20 @@ function descargarReporteStockToner() {
     )
     .join("");
 
-  const rangoTexto = desde || hasta ? `Salidas del ${desde || "inicio"} al ${hasta || "hoy"}` : "Todas las Salidas";
+  const filasIngresos = ingresosFiltrados
+    .map(
+      (r) => `
+        <tr>
+          <td>${esc(r.documento)}</td>
+          <td>${esc((r.lineas || []).map((l) => `${l.toner} (${l.cantidad})`).join(", "))}</td>
+          <td>${esc((r.lineas || []).reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0))}</td>
+          <td>${esc(r.fecha)}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  const rangoTexto = desde || hasta ? `del ${desde || "inicio"} al ${hasta || "hoy"}` : "Todo el historial";
 
   const contenedor = document.createElement("div");
   contenedor.style.cssText = "position: fixed; left: -9999px; top: 0; width: 1100px; padding: 20px; background: #fff; font-family: Arial, sans-serif;";
@@ -1042,6 +1314,11 @@ function descargarReporteStockToner() {
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px;" border="1" cellpadding="6">
       <thead><tr style="background: #eaf0fb;"><th>Toner</th><th>Stock</th></tr></thead>
       <tbody>${filasStock || `<tr><td colspan="2">Sin datos</td></tr>`}</tbody>
+    </table>
+    <h3 style="margin: 0 0 8px; color: #1c3d6e;">Ingresos (Canella)</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px;" border="1" cellpadding="6">
+      <thead><tr style="background: #eaf0fb;"><th>Documento</th><th>Toners recibidos</th><th>Total</th><th>Fecha</th></tr></thead>
+      <tbody>${filasIngresos || `<tr><td colspan="4">Sin ingresos en este rango</td></tr>`}</tbody>
     </table>
     <h3 style="margin: 0 0 8px; color: #1c3d6e;">Salidas</h3>
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;" border="1" cellpadding="6">
@@ -2907,6 +3184,7 @@ function cambiarVista(nombre) {
   else if (nombre === "contadoresImpresoras") {
     vistaContadoresImpresoras.render();
     renderResumenToner();
+    renderFormularioIngresoToner();
   }
   else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
 }
@@ -4448,6 +4726,11 @@ $("btnCerrarModalSalidaToner").addEventListener("click", cerrarModalSalidaToner)
 $("btnEliminarSalidaToner").addEventListener("click", eliminarSalidaTonerActual);
 $("btnDescargarReporteToner").addEventListener("click", descargarReporteStockToner);
 
+$("formIngresoToner").addEventListener("submit", onSubmitIngresoToner);
+$("formEditarIngresoToner").addEventListener("submit", onSubmitEditarIngresoToner);
+$("btnCancelarIngresoToner").addEventListener("click", cerrarModalIngresoToner);
+$("btnCerrarModalIngresoToner").addEventListener("click", cerrarModalIngresoToner);
+
 $("btnVerGarantiaDeEquipo").addEventListener("click", abrirHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo").addEventListener("click", cerrarHistorialGarantiaEquipo);
 $("btnCerrarHistorialGarantiaEquipo2").addEventListener("click", cerrarHistorialGarantiaEquipo);
@@ -4504,7 +4787,10 @@ cargarTicketsGarantia();
 cargarMantenimientoEquipos();
 cargarContadoresImpresoras();
 cargarSalidasToner();
+cargarIngresosToner();
 poblarFiltrosYDatalists();
 render();
 renderTablero();
 renderSalidasToner();
+renderIngresosToner();
+renderFormularioIngresoToner();

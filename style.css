@@ -470,6 +470,12 @@ main .btn-primary:hover { background: #163158; }
 .form-salida-toner input:disabled { background: var(--fondo); color: #6b7280; }
 @media (max-width: 900px) { .form-salida-toner { grid-template-columns: repeat(2, 1fr); } }
 
+/* Ingreso de Tóner: tabla con todos los Toners existentes + una columna
+   habilitada para capturar la cantidad recibida en esa entrega. */
+td.stock-actual { color: #6b7280; font-variant-numeric: tabular-nums; }
+input.cant-recibida-toner { width: 80px; padding: 6px 8px; border: 1px solid var(--borde); border-radius: 6px; text-align: center; font-size: 0.85rem; font-family: inherit; }
+input.cant-recibida-toner:focus { outline: 2px solid var(--azul-claro); border-color: var(--azul); }
+
 /* Formulario estilo GLPI: dos columnas, filas etiqueta/valor */
 .glpi-grid {
   display: grid;

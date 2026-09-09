@@ -345,8 +345,48 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   `match /salidasToner/{salidaId} { allow read, write: if request.auth != null; }`.
 - **Reporte de auditoría** (`descargarReporteStockToner`, botón "📄 Descargar reporte PDF"): arma
   un `<div>` fuera de pantalla con la tabla de Stock Actual (agrupado igual que el Resumen) +
-  las Salidas filtradas por un rango de fechas (`repTonerDesde`/`repTonerHasta`, ambos opcionales),
-  y lo descarga con `html2pdf()` — mismo patrón que `descargarReporteMantenimientoPDF`.
+  Ingresos y Salidas filtrados por un rango de fechas (`repTonerDesde`/`repTonerHasta`, ambos
+  opcionales), y lo descarga con `html2pdf()` — mismo patrón que `descargarReporteMantenimientoPDF`.
+- **"Stock por Tóner" es de solo lectura de punta a punta** (tabla resumen y el modal de detalle
+  al hacer clic en una fila): no hay ningún `<input>` de Stock ahí, solo `<span>` de consulta —
+  a pedido explícito del usuario para reducir el margen de error de los bodegueros. Editar el
+  Stock Actual a mano solo es posible desde "🔎 Detalle completo". El ajuste real de Stock pasa
+  siempre por Salidas/Ingreso de Tóner (automático) o por "Detalle completo" (manual).
+
+### Ingreso de Tóner (entregas de Canella, complementa a Salidas de Tóner)
+
+- **Un Ingreso = un documento con varias líneas**, a diferencia de una Salida (que es 1 vale = 1
+  Toner = 1 impresora). El proveedor (Canella, fijo, campo deshabilitado en el formulario) suele
+  entregar variado en una misma caja (tintas y tóners distintos), así que cada registro de
+  Ingreso guarda `{ fecha, documento, lineas: [{ toner, cantidad }], archivoNombre?, archivoUrl? }`
+  en la colección Firestore `ingresosToner` (`ingresos-toner-sync.js`, mismo patrón
+  anti-resurrección que `salidas-toner-sync.js`). El No. de Documento es el que trae la propia
+  caja de Canella (**no** hay factura ni costo — son insumos de impresoras en renta corporativa,
+  sin valor monetario para el sistema).
+- **El formulario muestra TODOS los Toners exactos que existen hoy** (uno por texto completo,
+  incluyendo color — ej. "16 - NEGRO" y "16 - AMARILLO" por separado, igual que hace el
+  desplegable de Salidas — **no** agrupado por base como el Resumen), cada uno con su Stock
+  Actual de referencia y un input de "Cantidad Recibida" vacío. El bodeguero solo llena los que
+  de verdad llegaron; al guardar, cada línea con cantidad > 0 SUMA (vía `ajustarStockToner(toner,
+  +cantidad)`, la misma función que usa Salidas con delta negativo) a su Stock Actual — nunca lo
+  reemplaza.
+- **Documento escaneado opcional, no bloqueante**: campo de archivo (`itArchivo`) para adjuntar
+  la foto/escaneo del documento de Canella (ej. reenviado a su correo) directamente en el
+  registro, subido a Firebase Storage (`ingresosToner/{ingresoId}/{archivo}` —
+  `subirDocumentoIngreso` en `ingresos-toner-sync.js`) para no depender de que el papel físico no
+  se pierda. El guardado del Ingreso **nunca se bloquea** esperando el archivo — si la subida
+  falla o tarda, el registro ya quedó guardado igual y el 📎 en el historial simplemente no
+  aparece. Requiere agregar en Firebase Console → Storage → Rules la regla:
+  `match /ingresosToner/{ingresoId}/{archivo} { allow read, write: if request.auth != null; }`
+  (además de la regla estándar de Firestore para la colección `ingresosToner`, igual a las demás).
+- **Solo se puede editar un Ingreso, nunca eliminar** (decisión explícita del usuario, distinto a
+  Salidas que sí permite eliminar). Al editar se revierte el efecto de las líneas anteriores
+  (`ajustarStockToner(toner, -cantidadAnterior)`) antes de aplicar las corregidas, igual que hace
+  Salidas al editar — así el Stock nunca queda descuadrado aunque se cambie el Toner o la
+  cantidad de una línea ya guardada.
+- Se agregó al reporte PDF de auditoría (`descargarReporteStockToner`) una tabla "Ingresos
+  (Canella)" entre Stock Actual y Salidas, filtrada por el mismo rango de fechas.
+- Ubicado dentro de "Stock Tóner Bodega 2" entre "📤 Salidas de Tóner" y "🔎 Detalle completo".
 
 ### Rol "Bodeguero" (solo interfaz, no seguridad de base de datos)
 

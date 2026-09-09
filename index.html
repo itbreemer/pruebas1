@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260829d">
+<link rel="stylesheet" href="style.css?v=20260909a">
 </head>
 <body>
 
@@ -443,7 +443,41 @@
           <label style="display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--azul);">Hasta
             <input type="date" id="repTonerHasta">
           </label>
-          <button type="button" id="btnDescargarReporteToner" class="btn btn-secondary">📄 Descargar reporte PDF (Stock + Salidas)</button>
+          <button type="button" id="btnDescargarReporteToner" class="btn btn-secondary">📄 Descargar reporte PDF (Stock + Ingresos + Salidas)</button>
+        </section>
+
+        <h3 class="subseccion-titulo" style="margin-top: 28px;">📥 Ingreso de Tóner</h3>
+        <p class="subseccion-nota">Registra la entrega de Canella (Fecha + No. de Documento que trae la caja). Escribe la Cantidad Recibida solo en los Toners que llegaron; al guardar se suma automático a su Stock Actual. Solo se puede editar un Ingreso ya guardado, no eliminar.</p>
+        <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
+          <form id="formIngresoToner">
+            <div class="form-salida-toner">
+              <label>Fecha de Ingreso<input type="date" id="itFecha" required></label>
+              <label>No. de Documento (guía Canella)<input type="text" id="itDocumento" required></label>
+              <label>Proveedor<input type="text" value="Canella" disabled></label>
+              <label>Documento escaneado (opcional)<input type="file" id="itArchivo" accept="image/*,.pdf"></label>
+            </div>
+            <section class="tabla-wrap" style="margin: 14px 0;">
+              <table class="tabla">
+                <thead>
+                  <tr><th>Toner</th><th>Stock Actual</th><th>Cantidad Recibida</th></tr>
+                </thead>
+                <tbody id="tbodyFormIngresoToner"></tbody>
+              </table>
+            </section>
+            <section class="toolbar" style="justify-content: space-between;">
+              <span id="resumenIngresoToner" class="subseccion-nota" style="margin: 0;">Sin cantidades capturadas todavía.</span>
+              <button type="submit" class="btn btn-primary">Guardar Ingreso</button>
+            </section>
+          </form>
+        </section>
+
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr><th>Documento</th><th>Fecha</th><th>Toners</th><th>Total Unidades</th><th>📎</th></tr>
+            </thead>
+            <tbody id="tbodyIngresosToner"></tbody>
+          </table>
         </section>
 
         <h3 class="subseccion-titulo" style="margin-top: 28px;">🔎 Detalle completo</h3>
@@ -1091,6 +1125,40 @@
   </div>
 </div>
 
+<!-- Modal Editar Ingreso de Tóner (sin opción de eliminar, a propósito) -->
+<div id="modalIngresoTonerOverlay" class="modal-overlay no-print">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Editar Ingreso de Tóner</h2>
+      <div class="modal-header-actions">
+        <button id="btnCerrarModalIngresoToner" class="btn-close">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="formEditarIngresoToner">
+        <input type="hidden" id="eitId">
+        <div class="form-salida-toner">
+          <label>Fecha de Ingreso<input type="date" id="eitFecha" required></label>
+          <label>No. de Documento<input type="text" id="eitDocumento" required></label>
+          <label>Proveedor<input type="text" value="Canella" disabled></label>
+        </div>
+        <section class="tabla-wrap" style="margin: 14px 0;">
+          <table class="tabla">
+            <thead><tr><th>Toner</th><th>Cantidad Recibida</th></tr></thead>
+            <tbody id="tbodyEditarIngresoToner"></tbody>
+          </table>
+        </section>
+        <div class="modal-actions" style="justify-content: flex-end;">
+          <div class="modal-actions-right">
+            <button type="button" id="btnCancelarIngresoToner" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de nuevo código de usuario / edición -->
 <div id="modalCodigoOverlay" class="modal-overlay no-print">
   <div class="modal">
@@ -1599,7 +1667,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260909b"></script>
+<script src="app.js?v=20260909c"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>
@@ -1608,6 +1676,7 @@
 <script type="module" src="mantenimiento-equipos-sync.js"></script>
 <script type="module" src="contadores-impresoras-sync.js"></script>
 <script type="module" src="salidas-toner-sync.js"></script>
+<script type="module" src="ingresos-toner-sync.js"></script>
 <script type="module" src="equipos-ti-v2-sync.js"></script>
 </body>
 </html>
