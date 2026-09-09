@@ -370,15 +370,14 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   de verdad llegaron; al guardar, cada línea con cantidad > 0 SUMA (vía `ajustarStockToner(toner,
   +cantidad)`, la misma función que usa Salidas con delta negativo) a su Stock Actual — nunca lo
   reemplaza.
-- **Documento escaneado opcional, no bloqueante**: campo de archivo (`itArchivo`) para adjuntar
-  la foto/escaneo del documento de Canella (ej. reenviado a su correo) directamente en el
-  registro, subido a Firebase Storage (`ingresosToner/{ingresoId}/{archivo}` —
-  `subirDocumentoIngreso` en `ingresos-toner-sync.js`) para no depender de que el papel físico no
-  se pierda. El guardado del Ingreso **nunca se bloquea** esperando el archivo — si la subida
-  falla o tarda, el registro ya quedó guardado igual y el 📎 en el historial simplemente no
-  aparece. Requiere agregar en Firebase Console → Storage → Rules la regla:
-  `match /ingresosToner/{ingresoId}/{archivo} { allow read, write: if request.auth != null; }`
-  (además de la regla estándar de Firestore para la colección `ingresosToner`, igual a las demás).
+- **Sin adjuntar documento escaneado**: se consideró subir la foto/escaneo del documento de
+  Canella a Firebase Storage, pero **el proyecto está en plan Spark (gratis) y Storage requiere
+  plan Blaze** (pago por uso, aunque con capa gratuita) — Firebase ni siquiera deja entrar a
+  Storage → Rules en Spark. El usuario decidió no actualizar a Blaze por ahora, así que se quitó
+  el campo de archivo del formulario (`ingresos-toner-sync.js` no importa `firebase-storage.js`
+  ni expone `subirDocumentoIngreso`). Si en el futuro se actualiza a Blaze, este es el punto para
+  retomarlo, agregando de nuevo el campo de archivo + la regla de Storage:
+  `match /ingresosToner/{ingresoId}/{archivo} { allow read, write: if request.auth != null; }`.
 - **Solo se puede editar un Ingreso, nunca eliminar** (decisión explícita del usuario, distinto a
   Salidas que sí permite eliminar). Al editar se revierte el efecto de las líneas anteriores
   (`ajustarStockToner(toner, -cantidadAnterior)`) antes de aplicar las corregidas, igual que hace

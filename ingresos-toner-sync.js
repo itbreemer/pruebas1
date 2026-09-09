@@ -9,7 +9,6 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // Sincroniza el historial de Ingresos de Tóner (entregas de Canella) entre
 // computadoras, mismo patrón que salidas-toner-sync.js. A diferencia de
@@ -22,19 +21,10 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 //   match /ingresosToner/{ingresoId} {
 //     allow read, write: if request.auth != null;
 //   }
-//
-// El documento escaneado (opcional) se guarda en Firebase Storage, en
-// ingresosToner/{ingresoId}/{nombreArchivo}. Requiere esta regla en
-// Storage (Firebase Console → Storage → Rules):
-//
-//   match /ingresosToner/{ingresoId}/{archivo} {
-//     allow read, write: if request.auth != null;
-//   }
 
 const app = getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 const INGRESOS_TONER_COL = "ingresosToner";
 
 async function migrarSiHaceFalta(ingresosLocales) {
@@ -80,12 +70,7 @@ function guardarIngresoToner(registro) {
   });
 }
 
-function subirDocumentoIngreso(ingresoId, archivo) {
-  const referencia = ref(storage, `${INGRESOS_TONER_COL}/${ingresoId}/${archivo.name}`);
-  return uploadBytes(referencia, archivo).then((snap) => getDownloadURL(snap.ref));
-}
-
-window.FirestoreSyncIngresosToner = { guardarIngresoToner, subirDocumentoIngreso };
+window.FirestoreSyncIngresosToner = { guardarIngresoToner };
 
 iniciar(
   () => (typeof window.obtenerIngresosTonerActuales === "function" ? window.obtenerIngresosTonerActuales() : []),

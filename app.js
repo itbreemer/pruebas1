@@ -1107,12 +1107,11 @@ function renderIngresosToner() {
               <td>${esc(registro.fecha)}</td>
               <td>${esc(lineas.map((l) => l.toner).join(", "))}</td>
               <td>${esc(total)}</td>
-              <td>${registro.archivoUrl ? `<a href="${esc(registro.archivoUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="Ver documento escaneado">📎</a>` : ""}</td>
             </tr>
           `;
         })
         .join("")
-    : `<tr><td colspan="5" class="empty-state">Sin ingresos registrados todavía.</td></tr>`;
+    : `<tr><td colspan="4" class="empty-state">Sin ingresos registrados todavía.</td></tr>`;
 
   tbody.querySelectorAll("tr[data-ingreso-id]").forEach((tr) => {
     tr.addEventListener("click", () => abrirModalIngresoToner(tr.dataset.ingresoId));
@@ -1146,20 +1145,6 @@ function onSubmitIngresoToner(e) {
   guardarIngresosToner();
   sincronizarIngresoToner(registro);
   renderIngresosToner();
-
-  const archivo = $("itArchivo").files[0];
-  if (archivo && window.FirestoreSyncIngresosToner && typeof window.FirestoreSyncIngresosToner.subirDocumentoIngreso === "function") {
-    window.FirestoreSyncIngresosToner.subirDocumentoIngreso(registro.id, archivo)
-      .then((url) => {
-        registro.archivoNombre = archivo.name;
-        registro.archivoUrl = url;
-        registro.ultimaModificacion = new Date().toISOString().slice(0, 16);
-        guardarIngresosToner();
-        sincronizarIngresoToner(registro);
-        renderIngresosToner();
-      })
-      .catch((err) => console.warn("No se pudo adjuntar el documento escaneado (el Ingreso ya quedó guardado):", err));
-  }
 
   e.target.reset();
   $("itFecha").value = fecha;
