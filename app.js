@@ -203,6 +203,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirEmpresasMalCapturadas()) cambio = true;
   if (corregirTipoEquipoMalClasificado()) cambio = true;
   if (corregirComentariosUsoRiolsa()) cambio = true;
+  if (corregirEmpleadoLAPLNV315()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -422,6 +423,27 @@ function corregirFechaContrato8030028059() {
     }
   });
   return cambio;
+}
+
+// LAPLNV315 (alta del contrato Lenovo 8030028191) se publicó una vez con
+// "Ofelia Bedoya" como empleado — no aparecía en el padrón de empleados, y el
+// usuario confirmó que en realidad corresponde a Edwin Roberto Ayala Manrique
+// (Director legal, CORP-Legal, Breemer). Como ese registro ya se sincronizó a
+// Firestore con el dato viejo, no basta con corregir SEED_DATA: hay que
+// forzar la corrección aquí y volver a sincronizarlo. Se aplica una sola vez
+// (si ya se corrigió, o si alguien lo editó a mano después, no vuelve a tocarlo).
+function corregirEmpleadoLAPLNV315() {
+  const equipo = equipos.find((e) => e.id === "alta-8030028191-LAPLNV315");
+  if (!equipo || equipo.nombreEmpleado !== "Ofelia Bedoya") return false;
+  equipo.nombreEmpleado = "Edwin Roberto Ayala Manrique";
+  equipo.puesto = "Director legal";
+  equipo.departamento = "CORP-Legal";
+  equipo.empresa = "Breemer";
+  equipo.dpi = "2523738710101";
+  equipo.comentarios = 'Corregido: el Excel de Lenovo traia "Ofelia Bedoya" (no encontrada en el padron); el usuario confirmo que corresponde a Edwin Roberto Ayala Manrique.';
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  sincronizarEquipo(equipo);
+  return true;
 }
 
 function sincronizarComentariosCronograma() {

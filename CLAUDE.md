@@ -221,6 +221,18 @@ próxima entrega de equipos**:
   Excel — no se adivinó), y Rolman Ivan Urizar / Mario Walter Leiva / Ofelia Bedoya (no
   aparecen en absoluto en el padrón — probablemente contrataciones posteriores al corte del
   13/08/2026). Hay que completar esto antes de generar su Acta.
+  - **Ofelia Bedoya (LAPLNV315) ya resuelto**: el usuario confirmó que en realidad es
+    **Edwin Roberto Ayala Manrique** (Director legal, CORP-Legal, Breemer, DPI encontrado en
+    el padrón). Como ese registro **ya se había sincronizado a Firestore** con el dato viejo
+    antes de esta corrección, no bastaba con editar `SEED_DATA` — se agregó
+    `corregirEmpleadoLAPLNV315()` (mismo patrón que `corregirFechaContrato8030028059` y
+    similares en `fusionarContratosDesdeSeed`): busca el equipo por `id`, y si su
+    `nombreEmpleado` todavía dice "Ofelia Bedoya" lo corrige y **sí** lo vuelve a sincronizar
+    con `sincronizarEquipo()` (a diferencia de otras correcciones de esa función que son
+    solo-en-memoria a propósito). Se aplica una sola vez; si el usuario ya lo editó a mano
+    desde la app, la función no vuelve a tocarlo. **Si aparece otra corrección así de un
+    registro que ya se publicó y sincronizó**, replicar este mismo patrón en vez de solo
+    editar `data.js`.
 - **Renovación de equipo detectada a tiempo**: 3 de los 18 Desktops (`PCLNV230/231/232`) iban a
   usar cuentas de dominio `atencion.clienteXX` que **ya existían** en el inventario — se validó
   contra la vista Usuarios antes de aplicar y se descubrió que `atencion.cliente01` es de
