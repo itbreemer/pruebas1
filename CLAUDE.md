@@ -187,6 +187,60 @@ se te olvida, el navegador puede seguir sirviendo una copia en caché sin los ú
 aunque el archivo en el repo ya esté actualizado. Antes de dar un cambio de `app.js`/`style.css`
 por publicado, confirmar que el `?v=` en `index.html` se subió también.
 
+## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
+
+Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código
+(no capturado a mano uno por uno en la UI). Mecanismo usado — **es el patrón a seguir para la
+próxima entrega de equipos**:
+
+- **48 equipos** (30 laptops ThinkPad T14 Gen 6 modelo `21QC00BDFJ` + 18 desktops ThinkCentre
+  M70q Gen5 modelo `12TD0038FJ`) agregados directo a `SEED_DATA` en `data.js`, con
+  `id: "alta-8030028191-<nombreRed>"`, `fabricante: "LENOVO"`,
+  `contratos: "8030028191 (vence 11/09/2031)"`.
+- **18 monitores** ThinkVision S24-4E (`64B5KAR1LA`) agregados a `CATALOGO_MONITORES` en
+  `monitores.js`, y vinculados 1 a 1 al campo `monitor` de su Desktop correspondiente (mismo
+  Serial).
+- **Por qué no basta con solo agregar a `SEED_DATA`**: `fusionarContratosDesdeSeed()` en `app.js`
+  sí agrega automáticamente cualquier `id` nuevo de `SEED_DATA` al estado local de CADA navegador
+  que cargue la app, pero **eso no los sube a Firestore por sí solo** — antes solo dos ids
+  hardcodeados (`IDS_ALTAS_NUEVAS_SEED`) se sincronizaban de verdad. Se agregó
+  `esAltaContrato8030028191(id)` (revisa el prefijo `"alta-8030028191-"`) para que los 48 sí se
+  suban a Firestore automáticamente la primera vez que cualquier usuario autenticado cargue la
+  app actualizada — **si se hace otra alta así en el futuro, hay que repetir este mismo patrón**
+  (prefijo de id nuevo + agregarlo también a la condición en `fusionarContratosDesdeSeed`), o
+  los equipos quedarán solo en el navegador de quien cargó primero y nunca en Firestore.
+- **Datos de empleado cruzados contra el padrón real** (`Empleados_activo_sal_13-08-2026.xlsx`,
+  hojas `textil`/`Resto de empresas`/`RIOL`, columnas Nombre/Posición/Número ID (DPI)/Sociedad):
+  36 de 39 nombres reales del contrato se identificaron con DPI confirmado (algunos por nombre
+  exacto, otros solo se pudieron desambiguar comparando el Puesto del Excel de Lenovo contra la
+  Posición del padrón cuando había varias personas con el mismo nombre). Empresa se normalizó a
+  la convención ya usada en la app (ej. `"Terter, S.A."` → `"Terter"`, `"PLANISALARIS, S.A."` →
+  `"Planisalaris"`) en vez de copiar el texto legal completo del padrón.
+- **4 personas quedaron pendientes** (sin DPI, `comentarios` marca "pendiente confirmar
+  identidad/DPI"): Jose Jimenez (3 candidatos en el padrón, ninguno con el Puesto exacto del
+  Excel — no se adivinó), y Rolman Ivan Urizar / Mario Walter Leiva / Ofelia Bedoya (no
+  aparecen en absoluto en el padrón — probablemente contrataciones posteriores al corte del
+  13/08/2026). Hay que completar esto antes de generar su Acta.
+- **Renovación de equipo detectada a tiempo**: 3 de los 18 Desktops (`PCLNV230/231/232`) iban a
+  usar cuentas de dominio `atencion.clienteXX` que **ya existían** en el inventario — se validó
+  contra la vista Usuarios antes de aplicar y se descubrió que `atencion.cliente01` es de
+  **Julio Ramiro Fuentes Castro** (Tennat, equipo `PCLNV189`, con contrato activo → NO se toca)
+  y `atencion.cliente03`/`04` son de **Francisco Javier Figueroa Solares** (Breemer) pero con
+  otro equipo (`LAPDELL002`/`LAPDELL003`, sin contrato → SON los que se reemplazan). Resultado:
+  `PCLNV230` hereda usuario/departamento de `LAPDELL002` (atencion.cliente03), `PCLNV231` de
+  `LAPDELL003` (atencion.cliente04), y `PCLNV232` usa el único número libre (atencion.cliente02,
+  sin equipo previo, departamento pendiente de definir). **`LAPDELL002` y `LAPDELL003` NO se
+  modificaron** (siguen "Asignada" tal cual) — el usuario decidió no marcarlos como devueltos
+  todavía, pendiente de la entrega física real.
+- **`PCLNV229`** (el 4to "Usuario SLA" original) se dejó **sin tocar**, fuera de esta renovación,
+  a pedido explícito del usuario.
+- **2 laptops sin destino** (`LAPLNV317`, `LAPLNV318`): `status: "Nuevo > Sin Asignar"`,
+  `ubicaciones: "Bodega"`, disponibilidad de bodega — no llevan Acta hasta que se asignen.
+- **Próximo paso pendiente (fuera de esta tarea)**: cuando se entregue cada equipo físicamente,
+  usar "📦 Nuevo Ingreso" con el Nombre en Red — como el equipo ya existe, autocompleta todo
+  (empleado, puesto, departamento, modelo, serial, contrato) y solo falta el DPI (si no estaba
+  ya cargado) para generar el Acta + Tarjeta de Responsabilidad.
+
 ## Mejoras recientes a la app web principal (index.html / app.js)
 
 ### Monitor vinculado al Catálogo de Monitores

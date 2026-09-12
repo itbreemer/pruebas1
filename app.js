@@ -181,11 +181,15 @@ function fusionarContratosDesdeSeed() {
   });
 
   const IDS_ALTAS_NUEVAS_SEED = ["pendiente-pcriolsa005", "pendiente-bascula1"];
+  // Alta masiva del contrato Lenovo 8030028191 (30 laptops + 18 desktops,
+  // Tecnoelec) — cada id nuevo se sincroniza a Firestore igual que los de
+  // IDS_ALTAS_NUEVAS_SEED, sin tener que listar los 48 uno por uno.
+  const esAltaContrato8030028191 = (id) => (id || "").startsWith("alta-8030028191-");
   SEED_DATA.forEach((seed) => {
     if (!idsActuales.has(seed.id)) {
       equipos.push({ ...seed });
       cambio = true;
-      if (IDS_ALTAS_NUEVAS_SEED.includes(seed.id)) sincronizarEquipo(seed);
+      if (IDS_ALTAS_NUEVAS_SEED.includes(seed.id) || esAltaContrato8030028191(seed.id)) sincronizarEquipo(seed);
     }
   });
 
