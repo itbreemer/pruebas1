@@ -205,6 +205,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirComentariosUsoRiolsa()) cambio = true;
   if (corregirEmpleadoLAPLNV315()) cambio = true;
   if (corregirDpiLAPLNV304()) cambio = true;
+  if (corregirEmpleadoLAPLNV292()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -457,6 +458,27 @@ function corregirDpiLAPLNV304() {
   if (!equipo || equipo.dpi) return false;
   equipo.dpi = "3269522331015";
   equipo.comentarios = "DPI confirmado por el usuario (Mario Walter Leiva no aparecia en el padron de empleados al momento del alta).";
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  sincronizarEquipo(equipo);
+  return true;
+}
+
+// LAPLNV292 (alta del contrato Lenovo 8030028191) quedó con "Jose Jimenez"
+// sin DPI porque había 3 candidatos con ese nombre en el padrón y ninguno
+// tenía el Puesto exacto del Excel de Lenovo ("Supervisor de Cuadrillas
+// Guatemala"). El usuario confirmó con el código SAP (Nº pers. 10000551)
+// que es Jose Adonias Jimenez Mejia. Mismo patrón: ya se había publicado y
+// sincronizado sin DPI, así que se fuerza y se vuelve a sincronizar.
+function corregirEmpleadoLAPLNV292() {
+  const equipo = equipos.find((e) => e.id === "alta-8030028191-LAPLNV292");
+  if (!equipo || equipo.dpi) return false;
+  equipo.nombreEmpleado = "Jose Adonias Jimenez Mejia";
+  equipo.puesto = "Supervisor de Lineas de Transmisión";
+  equipo.departamento = "EN-Lineas de transmisión";
+  equipo.empresa = "Terter";
+  equipo.dpi = "2523779660101";
+  equipo.codigoEmpleado = "10000551";
+  equipo.comentarios = "Identificado por el usuario via codigo SAP (Nº pers. 10000551) contra el padron de empleados.";
   equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
   sincronizarEquipo(equipo);
   return true;

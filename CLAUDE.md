@@ -227,6 +227,11 @@ próxima entrega de equipos**:
     `fusionarContratosDesdeSeed` (busca por `id`, si `dpi` sigue vacío lo llena y
     **sí** sincroniza con `sincronizarEquipo()`), porque el registro ya se había publicado y
     sincronizado sin DPI. Empresa/departamento de esta persona siguen sin confirmar.
+  - **Jose Jimenez (LAPLNV292) ya resuelto**: el usuario dio el código SAP (Nº pers. 10000551),
+    que en el padrón corresponde a **Jose Adonias Jimenez Mejia** (Supervisor de Lineas de
+    Transmisión, EN-Lineas de transmisión, Terter, DPI 2523779660101) — el mismo candidato de
+    los 3 que ya se había detectado, ahora confirmado con el código en vez de por el Puesto
+    (que no calzaba exacto). Mismo patrón de corrección forzada: `corregirEmpleadoLAPLNV292()`.
   - **Ofelia Bedoya (LAPLNV315) ya resuelto**: el usuario confirmó que en realidad es
     **Edwin Roberto Ayala Manrique** (Director legal, CORP-Legal, Breemer, DPI encontrado en
     el padrón). Como ese registro **ya se había sincronizado a Firestore** con el dato viejo
