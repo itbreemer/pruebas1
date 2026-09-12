@@ -204,6 +204,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirTipoEquipoMalClasificado()) cambio = true;
   if (corregirComentariosUsoRiolsa()) cambio = true;
   if (corregirEmpleadoLAPLNV315()) cambio = true;
+  if (corregirDpiLAPLNV304()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -441,6 +442,21 @@ function corregirEmpleadoLAPLNV315() {
   equipo.empresa = "Breemer";
   equipo.dpi = "2523738710101";
   equipo.comentarios = 'Corregido: el Excel de Lenovo traia "Ofelia Bedoya" (no encontrada en el padron); el usuario confirmo que corresponde a Edwin Roberto Ayala Manrique.';
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  sincronizarEquipo(equipo);
+  return true;
+}
+
+// LAPLNV304 (Mario Walter Leiva, alta del contrato Lenovo 8030028191) no
+// aparecía en el padrón de empleados al momento del alta — el usuario dio su
+// DPI directamente. Igual que con LAPLNV315, ese registro ya se había
+// sincronizado a Firestore sin DPI, así que hay que forzar la corrección y
+// volver a sincronizarlo. Se aplica una sola vez.
+function corregirDpiLAPLNV304() {
+  const equipo = equipos.find((e) => e.id === "alta-8030028191-LAPLNV304");
+  if (!equipo || equipo.dpi) return false;
+  equipo.dpi = "3269522331015";
+  equipo.comentarios = "DPI confirmado por el usuario (Mario Walter Leiva no aparecia en el padron de empleados al momento del alta).";
   equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
   sincronizarEquipo(equipo);
   return true;

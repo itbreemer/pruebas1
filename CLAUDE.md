@@ -221,6 +221,12 @@ próxima entrega de equipos**:
   Excel — no se adivinó), y Rolman Ivan Urizar / Mario Walter Leiva / Ofelia Bedoya (no
   aparecen en absoluto en el padrón — probablemente contrataciones posteriores al corte del
   13/08/2026). Hay que completar esto antes de generar su Acta.
+  - **Mario Walter Leiva (LAPLNV304) ya resuelto**: el usuario dio su DPI directo
+    (`3269522331015`, no está en el padrón de empleados — se usó tal cual, sin cruzarlo).
+    Mismo patrón que Ofelia Bedoya: se agregó `corregirDpiLAPLNV304()` en
+    `fusionarContratosDesdeSeed` (busca por `id`, si `dpi` sigue vacío lo llena y
+    **sí** sincroniza con `sincronizarEquipo()`), porque el registro ya se había publicado y
+    sincronizado sin DPI. Empresa/departamento de esta persona siguen sin confirmar.
   - **Ofelia Bedoya (LAPLNV315) ya resuelto**: el usuario confirmó que en realidad es
     **Edwin Roberto Ayala Manrique** (Director legal, CORP-Legal, Breemer, DPI encontrado en
     el padrón). Como ese registro **ya se había sincronizado a Firestore** con el dato viejo
