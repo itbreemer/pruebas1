@@ -3255,7 +3255,7 @@ function tarjetaHTML(equipo, transaccion) {
             <td>${nonEmpty(equipo.memoriaDescripcion) ? "1" : ""}</td>
             <td class="tvalue">${nonEmpty(equipo.memoriaDescripcion) ? esc(equipo.memoriaDescripcion) : ""}</td>
             <td></td>
-            <td class="tvalue">${esDesktop ? "" : esc(valorAccesorio)}</td>
+            <td class="tvalue">${esDesktop ? esc(equipo.codigoRam) : esc(valorAccesorio)}</td>
           </tr>
           <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
           <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>

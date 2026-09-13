@@ -425,6 +425,16 @@ próxima entrega de equipos**:
   Campo `codigoRam` (Código RAM adicional) se dejó intacto a propósito — se usa en la Tarjeta de
   Responsabilidad para laptops (columna "CODIGO RAM", vs "S/N MONITOR" en desktops).
 
+**Bug real corregido en `tarjetaHTML` (Tarjeta de Responsabilidad de Desktops)**: en la fila de
+RAM, la columna "S/N MONITOR" quedaba siempre en blanco para Desktops (`esDesktop ? "" :
+esc(valorAccesorio)`) — el Código RAM (`equipo.codigoRam`) nunca se imprimía en la tarjeta de un
+Desktop, aunque sí se imprime para laptops en esa misma fila (columna "CODIGO RAM"). Detectado
+por el usuario al revisar la tarjeta impresa de `PCLNV229` (fila de "KINGSTON 8GB DOR5 SORAM
+MEMORY MODULE" con S/N Desktop y S/N Monitor vacíos). **Fix**: esa celda ahora imprime
+`equipo.codigoRam` también para Desktops — reutiliza la misma columna de la fila del equipo
+(que ahí sí muestra el serial del monitor), ya que la tabla no tiene una columna dedicada solo
+para el código de RAM en Desktops. Verificado con Playwright.
+
 ### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
 - **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de
   mantenimientos de ESE equipo (`registrosMantenimientoDeEquipo`, `abrirHistorialMantenimientoEquipo`),
