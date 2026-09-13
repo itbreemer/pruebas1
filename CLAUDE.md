@@ -437,15 +437,17 @@ para el código de RAM en Desktops. Verificado con Playwright.
 
 **Fila adicional del Monitor en la Tarjeta de Responsabilidad de Desktops**: el usuario pidió
 una tercera fila (después de la fila de RAM) con los datos propios del monitor, formato
-`1 | (MODELO) DESCRIPCION | (vacío) | SERIAL`, ej. "1 | (64B5KAR1LA) LENOVO THINKVISION S24-4E |
-| V5XFC0MX" — el mismo serial ya mostrado en la fila del equipo (columna "S/N MONITOR"), pero
-ahora con su descripción completa del catálogo. Nueva función `descripcionMonitorParaTarjeta(serial)`
-(busca en `CATALOGO_MONITORES` vía `buscarMonitorCatalogo`, arma "(modelo) descripcion"; si el
-serial no calza con el catálogo, muestra el texto tal cual). Esta fila **reemplaza** una de las
-2 filas en blanco fijas de la tarjeta (para no alargarla) y solo aparece si `esDesktop &&
-nonEmpty(equipo.monitor)` — en laptops no se agrega (no tienen columna "S/N MONITOR" en su
-encabezado). Verificado con Playwright: aparece correcto en un Desktop con monitor, no aparece
-en una laptop.
+`1 | (MODELO) DESCRIPCION`, ej. "1 | (64B5KAR1LA) LENOVO THINKVISION S24-4E". Nueva función
+`descripcionMonitorParaTarjeta(serial)` (busca en `CATALOGO_MONITORES` vía
+`buscarMonitorCatalogo`, arma "(modelo) descripcion"; si el serial no calza con el catálogo,
+muestra el texto tal cual). Esta fila **reemplaza** una de las 2 filas en blanco fijas de la
+tarjeta (para no alargarla) y solo aparece si `esDesktop && nonEmpty(equipo.monitor)` — en
+laptops no se agrega (no tienen columna "S/N MONITOR" en su encabezado). **Las columnas
+"S/N DESKTOP" y "S/N MONITOR" de esta fila quedan vacías a propósito** — el serial del monitor
+ya se muestra una sola vez en la fila del equipo (fila 1, columna "S/N MONITOR"); la primera
+versión de este fix lo repetía también aquí y el usuario lo marcó como una duplicación
+innecesaria. Verificado con Playwright: aparece correcto en un Desktop con monitor (serial sin
+duplicar), no aparece en una laptop.
 
 ### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
 - **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de

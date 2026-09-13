@@ -3270,7 +3270,7 @@ function tarjetaHTML(equipo, transaccion) {
             <td>${esDesktop && nonEmpty(equipo.monitor) ? "1" : "&nbsp;"}</td>
             <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(descripcionMonitorParaTarjeta(equipo.monitor)) : ""}</td>
             <td></td>
-            <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(equipo.monitor) : ""}</td>
+            <td></td>
           </tr>
           <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
         </tbody>
