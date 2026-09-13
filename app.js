@@ -217,6 +217,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirInfoTecnicaDesktopsAlta8030028191()) cambio = true;
   if (corregirMemoriaRamDesktopsAlta8030028191()) cambio = true;
   if (corregirTamanoDiscoDesktopsAlta8030028191()) cambio = true;
+  if (corregirNumeroInventarioDesktopsAlta8030028191()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -558,6 +559,25 @@ function corregirMemoriaRamLaptopsAlta8030028191() {
 // lo cambió a mano por el activo fijo real, no se toca. Ya estaban
 // publicadas con ese dato, se fuerza y se vuelve a sincronizar.
 const PLACAS_ORIGINALES_LAPTOPS_ALTA_8030028191 = { LAPLNV289: "0018770", LAPLNV290: "0018771", LAPLNV291: "0018772", LAPLNV292: "0018773", LAPLNV293: "0018774", LAPLNV294: "0018775", LAPLNV295: "0018776", LAPLNV296: "0018777", LAPLNV297: "0018778", LAPLNV298: "0018779", LAPLNV299: "0018780", LAPLNV300: "0018781", LAPLNV301: "0018782", LAPLNV302: "0018783", LAPLNV303: "0018784", LAPLNV304: "0018785", LAPLNV305: "0018786", LAPLNV306: "0018787", LAPLNV307: "0018788", LAPLNV308: "0018789", LAPLNV309: "0018790", LAPLNV310: "0018791", LAPLNV311: "0018792", LAPLNV312: "0018793", LAPLNV313: "0018794", LAPLNV314: "0018795", LAPLNV315: "0018796", LAPLNV316: "0018797", LAPLNV317: "0018798", LAPLNV318: "0018799" };
+
+// Mismo pedido para los 18 Desktops del alta del contrato Lenovo 8030028191:
+// dejar "Número de inventario" en blanco (tenía el # de Placa del Excel de
+// Lenovo, que no es el activo fijo real). Mismo patrón de guardia: solo se
+// limpia si sigue siendo exactamente esa Placa original.
+const PLACAS_ORIGINALES_DESKTOPS_ALTA_8030028191 = { PCLNV229: "0018807", PCLNV230: "0018808", PCLNV231: "0018809", PCLNV232: "0018810", PCLNV233: "0018811", PCLNV234: "0018812", PCLNV235: "0018813", PCLNV236: "0018814", PCLNV237: "0018815", PCLNV238: "0018816", PCLNV239: "0018817", PCLNV240: "0018818", PCLNV241: "0018819", PCLNV242: "0018820", PCLNV243: "0018821", PCLNV244: "0018822", PCLNV245: "0018823", PCLNV246: "0018824" };
+
+function corregirNumeroInventarioDesktopsAlta8030028191() {
+  let cambio = false;
+  Object.entries(PLACAS_ORIGINALES_DESKTOPS_ALTA_8030028191).forEach(([nombreRed, placaOriginal]) => {
+    const equipo = equipos.find((e) => e.id === `alta-8030028191-${nombreRed}`);
+    if (!equipo || equipo.numeroInventario !== placaOriginal) return;
+    equipo.numeroInventario = "";
+    equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(equipo);
+    cambio = true;
+  });
+  return cambio;
+}
 
 function corregirNumeroInventarioLaptopsAlta8030028191() {
   let cambio = false;

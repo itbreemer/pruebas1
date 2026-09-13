@@ -367,11 +367,17 @@ próxima entrega de equipos**:
     `corregirTamanoDiscoDesktopsAlta8030028191()` (tamanoDisco). El Monitor de cada desktop
     **no** se toca aquí — ya estaba asignado 1 a 1 desde el alta original y sigue siendo
     distinto por equipo (cada uno con su propio serial de `CATALOGO_MONITORES`). A diferencia
-    de las laptops, aquí **no** se tocó `numeroInventario`, `ubicaciones` ni el formato de
-    `empresa` — el usuario solo pidió replicar la sección "Información técnica adicional" +
-    Código RAM + Tamaño Disco, no las otras correcciones que fueron específicas de las
-    laptops. Verificado con Playwright: un desktop vacío se llena con los 6 valores, uno con
-    datos ya editados a mano queda intacto.
+    de las laptops, aquí no se tocó `ubicaciones` ni el formato de `empresa` — el usuario solo
+    pidió replicar la sección "Información técnica adicional" + Código RAM + Tamaño Disco, no
+    esas otras correcciones que fueron específicas de las laptops. Verificado con Playwright:
+    un desktop vacío se llena con los 6 valores, uno con datos ya editados a mano queda
+    intacto.
+  - **"Número de inventario" vaciado también en los 18 Desktops**: mismo pedido y mismo patrón
+    que las 30 laptops — ahí se había puesto el # de Placa del Excel de Lenovo (ej.
+    "0018807"), no el activo fijo real. `corregirNumeroInventarioDesktopsAlta8030028191()` +
+    mapa `PLACAS_ORIGINALES_DESKTOPS_ALTA_8030028191` (`PCLNV229`→"0018807" ... `PCLNV246`→
+    "0018824"): solo limpia si el valor sigue siendo exactamente esa Placa original; si el
+    usuario ya lo editó a mano por el activo fijo real, no lo toca. Verificado con Playwright.
 - **Renovación de equipo detectada a tiempo**: 3 de los 18 Desktops (`PCLNV230/231/232`) iban a
   usar cuentas de dominio `atencion.clienteXX` que **ya existían** en el inventario — se validó
   contra la vista Usuarios antes de aplicar y se descubrió que `atencion.cliente01` es de
