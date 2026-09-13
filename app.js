@@ -3258,7 +3258,7 @@ function tarjetaHTML(equipo, transaccion) {
             <td>1</td>
             <td class="tvalue">${esc(equipo.modelo)}</td>
             <td class="tvalue">${esc(equipo.numeroSerial)}</td>
-            <td class="tvalue">${!esDesktop ? "" : esc(valorAccesorio)}</td>
+            <td class="tvalue"></td>
           </tr>
           <tr>
             <td>${nonEmpty(equipo.memoriaDescripcion) ? "1" : ""}</td>
@@ -3270,7 +3270,7 @@ function tarjetaHTML(equipo, transaccion) {
             <td>${esDesktop && nonEmpty(equipo.monitor) ? "1" : "&nbsp;"}</td>
             <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(descripcionMonitorParaTarjeta(equipo.monitor)) : ""}</td>
             <td></td>
-            <td></td>
+            <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(equipo.monitor) : ""}</td>
           </tr>
           <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
         </tbody>

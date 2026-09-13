@@ -442,12 +442,14 @@ una tercera fila (después de la fila de RAM) con los datos propios del monitor,
 `buscarMonitorCatalogo`, arma "(modelo) descripcion"; si el serial no calza con el catálogo,
 muestra el texto tal cual). Esta fila **reemplaza** una de las 2 filas en blanco fijas de la
 tarjeta (para no alargarla) y solo aparece si `esDesktop && nonEmpty(equipo.monitor)` — en
-laptops no se agrega (no tienen columna "S/N MONITOR" en su encabezado). **Las columnas
-"S/N DESKTOP" y "S/N MONITOR" de esta fila quedan vacías a propósito** — el serial del monitor
-ya se muestra una sola vez en la fila del equipo (fila 1, columna "S/N MONITOR"); la primera
-versión de este fix lo repetía también aquí y el usuario lo marcó como una duplicación
-innecesaria. Verificado con Playwright: aparece correcto en un Desktop con monitor (serial sin
-duplicar), no aparece en una laptop.
+laptops no se agrega (no tienen columna "S/N MONITOR" en su encabezado). **El serial del monitor se movió de la fila 1 a la fila 3**: la primera versión de este fix
+mostraba el serial en la fila del equipo (fila 1, columna "S/N MONITOR") y dejaba en blanco esa
+columna en la fila de descripción del monitor (fila 3); una segunda versión intermedia lo
+repitió en ambas filas (marcado por el usuario como duplicación innecesaria, ya corregido). La
+versión final, a pedido del usuario: **fila 1 columna "S/N MONITOR" en blanco**, y el serial
+(`equipo.monitor`) se muestra **únicamente en la fila 3** (la de descripción del monitor), junto
+a "(MODELO) DESCRIPCION". Verificado con Playwright: el serial aparece una sola vez, en la fila
+del monitor, no en la del equipo.
 
 ### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
 - **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de
