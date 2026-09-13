@@ -214,6 +214,9 @@ function fusionarContratosDesdeSeed() {
   if (corregirUbicacionLaptopsSinAsignarAlta8030028191()) cambio = true;
   if (corregirTamanoDiscoLaptopsAlta8030028191()) cambio = true;
   if (corregirFormatoEmpresaLaptopsAlta8030028191()) cambio = true;
+  if (corregirInfoTecnicaDesktopsAlta8030028191()) cambio = true;
+  if (corregirMemoriaRamDesktopsAlta8030028191()) cambio = true;
+  if (corregirTamanoDiscoDesktopsAlta8030028191()) cambio = true;
 
   if (cambio) guardarDatos();
 }
@@ -635,6 +638,52 @@ function corregirFormatoEmpresaLaptopsAlta8030028191() {
     const nuevo = EMPRESAS_MAYUSCULA_SA_ALTA_8030028191[e.empresa];
     if (!nuevo) return;
     e.empresa = nuevo;
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(e);
+    cambio = true;
+  });
+  return cambio;
+}
+
+// Procesador/Memoria/Descripción RAM/Código RAM/Tamaño Disco/Versión de SO
+// iguales en los 18 desktops del alta del contrato Lenovo 8030028191 (mismo
+// modelo ThinkCentre M70q Gen5 Core i5-14400T, misma configuración de
+// fábrica), confirmado por el usuario contra PCLNV229 (ya capturado a mano
+// en la app). Ya estaban publicados sin estos datos, se fuerza y se vuelve
+// a sincronizar. Mismo patrón que las laptops: solo llena si el campo
+// respectivo sigue vacío, para no pisar ninguna edición manual.
+function corregirInfoTecnicaDesktopsAlta8030028191() {
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!(e.id || "").startsWith("alta-8030028191-") || e.tipoEquipo !== "Desktop" || e.procesador) return;
+    e.procesador = "INTEL CORE I5-14400T @ 1.50GHZ";
+    e.memoria = "16 GB";
+    e.soVersion = "64 bits - 25H2";
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(e);
+    cambio = true;
+  });
+  return cambio;
+}
+
+function corregirMemoriaRamDesktopsAlta8030028191() {
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!(e.id || "").startsWith("alta-8030028191-") || e.tipoEquipo !== "Desktop" || e.memoriaDescripcion) return;
+    e.memoriaDescripcion = "KINGSTON 8GB DOR5 SORAM MEMORY MODULE";
+    e.codigoRam = "KCP556SS6-8";
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(e);
+    cambio = true;
+  });
+  return cambio;
+}
+
+function corregirTamanoDiscoDesktopsAlta8030028191() {
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!(e.id || "").startsWith("alta-8030028191-") || e.tipoEquipo !== "Desktop" || e.tamanoDisco) return;
+    e.tamanoDisco = "512";
     e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     sincronizarEquipo(e);
     cambio = true;

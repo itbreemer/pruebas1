@@ -352,6 +352,26 @@ próxima entrega de equipos**:
     de la app. `corregirFormatoEmpresaLaptopsAlta8030028191()` convierte los 7 valores
     exactos que ya se habían guardado (`EMPRESAS_MAYUSCULA_SA_ALTA_8030028191`); si el
     usuario ya lo editó a mano a otra cosa, no lo toca.
+  - **Procesador/Memoria/Descripción RAM/Código RAM/Tamaño Disco/Versión de SO iguales en
+    los 18 Desktops**: mismo patrón que las laptops, pero con los valores propios del
+    ThinkCentre M70q Gen5 Core i5-14400T, confirmados por el usuario contra `PCLNV229` (que ya
+    los tenía capturados a mano en la app): `procesador` = "INTEL CORE I5-14400T @ 1.50GHZ"
+    (el usuario pidió corregir el valor real, que en el campo se veía corrupto/mal pegado —
+    "COR 5.14400T_1.5G_1" — a este texto legible), `memoria` = "16 GB",
+    `memoriaDescripcion` = "KINGSTON 8GB DOR5 SORAM MEMORY MODULE" (**tal cual**, con esa
+    ortografía — el usuario confirmó que es el dato real tal como viene, no un typo a
+    corregir), `codigoRam` = "KCP556SS6-8", `tamanoDisco` = "512", `soVersion` =
+    "64 bits - 25H2". Tres funciones nuevas en `app.js` (mismo patrón "solo llena si sigue
+    vacío + sincroniza"): `corregirInfoTecnicaDesktopsAlta8030028191()` (procesador/memoria/
+    soVersion), `corregirMemoriaRamDesktopsAlta8030028191()` (memoriaDescripcion/codigoRam),
+    `corregirTamanoDiscoDesktopsAlta8030028191()` (tamanoDisco). El Monitor de cada desktop
+    **no** se toca aquí — ya estaba asignado 1 a 1 desde el alta original y sigue siendo
+    distinto por equipo (cada uno con su propio serial de `CATALOGO_MONITORES`). A diferencia
+    de las laptops, aquí **no** se tocó `numeroInventario`, `ubicaciones` ni el formato de
+    `empresa` — el usuario solo pidió replicar la sección "Información técnica adicional" +
+    Código RAM + Tamaño Disco, no las otras correcciones que fueron específicas de las
+    laptops. Verificado con Playwright: un desktop vacío se llena con los 6 valores, uno con
+    datos ya editados a mano queda intacto.
 - **Renovación de equipo detectada a tiempo**: 3 de los 18 Desktops (`PCLNV230/231/232`) iban a
   usar cuentas de dominio `atencion.clienteXX` que **ya existían** en el inventario — se validó
   contra la vista Usuarios antes de aplicar y se descubrió que `atencion.cliente01` es de
