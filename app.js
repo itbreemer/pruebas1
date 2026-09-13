@@ -2450,6 +2450,15 @@ function buscarMonitorCatalogo(serial) {
   return catalogo.find((m) => m.serial === s) || null;
 }
 
+// "(MODELO) DESCRIPCION" del monitor para la Tarjeta de Responsabilidad,
+// ej. "(64B5KAR1LA) LENOVO THINKVISION S24-4E". Si el serial no calza con el
+// catálogo (texto libre legado), se muestra tal cual.
+function descripcionMonitorParaTarjeta(serial) {
+  const m = buscarMonitorCatalogo(serial);
+  if (!m) return serial || "";
+  return `(${m.modelo}) ${m.descripcion}`;
+}
+
 function descripcionMonitorEquipo(equipo) {
   const valor = (equipo.monitor || "").trim();
   if (!valor) return "";
@@ -3257,7 +3266,12 @@ function tarjetaHTML(equipo, transaccion) {
             <td></td>
             <td class="tvalue">${esDesktop ? esc(equipo.codigoRam) : esc(valorAccesorio)}</td>
           </tr>
-          <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+          <tr>
+            <td>${esDesktop && nonEmpty(equipo.monitor) ? "1" : "&nbsp;"}</td>
+            <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(descripcionMonitorParaTarjeta(equipo.monitor)) : ""}</td>
+            <td></td>
+            <td class="tvalue">${esDesktop && nonEmpty(equipo.monitor) ? esc(equipo.monitor) : ""}</td>
+          </tr>
           <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
