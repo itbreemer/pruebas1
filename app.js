@@ -2076,21 +2076,32 @@ function equipoCoincideConAgente(equipo, agente) {
 function sincronizarSOdesdeAgente() {
   if (!equiposTIv2Data.length || !equipos.length) return;
   equipos.forEach((equipo) => {
-    if (nonEmpty(equipo.soVersion) && nonEmpty(equipo.soNucleo) && nonEmpty(equipo.soSerial)) return;
+    const yaCompleto =
+      nonEmpty(equipo.soVersion) && nonEmpty(equipo.soNucleo) && nonEmpty(equipo.soSerial) && nonEmpty(equipo.firmwareInventario);
+    if (yaCompleto) return;
     const agente = equiposTIv2Data.find((a) => equipoCoincideConAgente(equipo, a));
-    const so = agente && agente.hardware ? agente.hardware.sistemaOperativo : null;
-    if (!so) return;
+    const hw = agente ? agente.hardware : null;
+    const so = hw ? hw.sistemaOperativo : null;
     let cambio = false;
-    if (!nonEmpty(equipo.soVersion) && nonEmpty(so.arquitectura)) {
-      equipo.soVersion = nonEmpty(so.versionDisplay) && so.versionDisplay !== "N/A" ? `${so.arquitectura} - ${so.versionDisplay}` : so.arquitectura;
-      cambio = true;
+    if (so) {
+      if (!nonEmpty(equipo.soVersion) && nonEmpty(so.arquitectura)) {
+        equipo.soVersion = nonEmpty(so.versionDisplay) && so.versionDisplay !== "N/A" ? `${so.arquitectura} - ${so.versionDisplay}` : so.arquitectura;
+        cambio = true;
+      }
+      if (!nonEmpty(equipo.soNucleo) && nonEmpty(so.version)) {
+        equipo.soNucleo = so.version;
+        cambio = true;
+      }
+      if (!nonEmpty(equipo.soSerial) && nonEmpty(so.serial) && so.serial !== "N/A") {
+        equipo.soSerial = so.serial;
+        cambio = true;
+      }
     }
-    if (!nonEmpty(equipo.soNucleo) && nonEmpty(so.version)) {
-      equipo.soNucleo = so.version;
-      cambio = true;
-    }
-    if (!nonEmpty(equipo.soSerial) && nonEmpty(so.serial) && so.serial !== "N/A") {
-      equipo.soSerial = so.serial;
+    // Firmware/BIOS: mismo puente, con el mismo cuidado que ya se explicó al
+    // usuario (varía por unidad física, por eso solo se toma del agente de esa
+    // máquina puntual, nunca aplicado en bloque a mano).
+    if (hw && !nonEmpty(equipo.firmwareInventario) && nonEmpty(hw.biosVersion) && hw.biosVersion !== "N/A") {
+      equipo.firmwareInventario = hw.biosVersion;
       cambio = true;
     }
     if (cambio) {

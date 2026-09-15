@@ -40,15 +40,16 @@ el dominio) crea la Tarea Programada `AgentInventarioTI`, corriendo como SYSTEM,
 Cada disparo corre el script en segundo plano sin sesión de usuario, recolecta hardware/software/
 red y lo manda a Firestore (`equiposTI_v2`). Para diagnosticar una máquina puntual: `test-agent.ps1`.
 
-### Firmware/BIOS — YA se recolecta y YA se muestra (no falta implementar nada)
+### Firmware/BIOS — se recolecta, se muestra, y ya tiene puente al perfil manual
 El agente ya lee `Get-CimInstance Win32_BIOS` (`agent-inventario.ps1` ~línea 162-165) y guarda
 `hardware.biosVersion` / `hardware.biosFecha`; se envían bien a Firestore por la serialización
 recursiva (ver bugs #4-#6 abajo). En la web, vista **"Inventario Automático"** → clic en un
 equipo → pestaña **"Hardware"**, ya se muestran como "Versión BIOS" / "Fecha BIOS"
-(`app.js`, función `abrirDetalleEquipoTIv2`). Es decir: el campo "Firmware" de un equipo
-individual **NO** se llena a mano — se completa solo en cuanto el agente corre en esa laptop.
-Si alguna vez se necesita el dato manualmente en una máquina puntual (agente aún no corrido, o
-solo para verificar), comandos en esa laptop:
+(`app.js`, función `abrirDetalleEquipoTIv2`). **Además**, el campo "Firmware: No. inventario"
+del modal de editar equipo (colección `equipos`, perfil manual) también se llena solo vía el
+puente `sincronizarSOdesdeAgente` (ver sección de más abajo) — no hace falta escribirlo a mano
+si el agente ya corrió en esa máquina. Si alguna vez se necesita el dato manualmente en una
+máquina puntual (agente aún no corrido, o solo para verificar), comandos en esa laptop:
 - PowerShell: `Get-CimInstance Win32_BIOS | Select-Object Manufacturer, SMBIOSBIOSVersion, ReleaseDate, SerialNumber`
 - CMD: `wmic bios get manufacturer, smbiosbiosversion, releasedate, serialnumber`
 - Gráfico: `Win + R` → `msinfo32` → "Versión/Fecha de BIOS" en Resumen del sistema.
@@ -70,12 +71,13 @@ sugerencias sigue funcionando exactamente igual. Si aparece el mismo problema en
 formulario del sistema (impresoras, mantenimiento, etc.), aplicar el mismo patrón:
 `autocomplete="off"` en el `<form>` y en cada `<input>` de texto que no lo tenga ya.
 
-### Puente automático Agente → perfil manual del equipo (SO Versión / Núcleo / Serial)
-A diferencia del Firmware (que solo se ve en la vista del agente), para "SO - Versión" /
-"SO - Versión del núcleo" / "SO - Número de serial" del **modal de editar equipo**
-(`soVersion`/`soNucleo`/`soSerial`, colección `equipos`) sí se construyó un puente real hacia
-lo que recolecta el agente (colección `equiposTI_v2`), porque el usuario lo pidió explícitamente
-("si agregalo, ambas"):
+### Puente automático Agente → perfil manual del equipo (SO Versión / Núcleo / Serial / Firmware)
+Para "SO - Versión" / "SO - Versión del núcleo" / "SO - Número de serial" / "Firmware: No.
+inventario" del **modal de editar equipo** (`soVersion`/`soNucleo`/`soSerial`/
+`firmwareInventario`, colección `equipos`) se construyó un puente real hacia lo que recolecta
+el agente (colección `equiposTI_v2`), porque el usuario lo pidió explícitamente ("si agregalo,
+ambas" para SO; "realiza esto" para Firmware, cuando notó que ese campo seguía en blanco tras
+correr el agente en otro equipo):
 - **Agente** (`agent-inventario.ps1`, bloque de Sistema Operativo): ahora también recolecta
   `hardware.sistemaOperativo.serial` (`Win32_OperatingSystem.SerialNumber`, el serial de licencia
   de Windows — distinto del serial del BIOS/equipo físico que ya se recolectaba) y
@@ -93,13 +95,20 @@ lo que recolecta el agente (colección `equiposTI_v2`), porque el usuario lo pid
   "64 bits - 25H2", mismo formato que ya se usaba manualmente), `soNucleo` = `so.version` (ej.
   "10.0.26100.2894"), `soSerial` = `so.serial`. Cada campo llenado sincroniza el equipo a
   Firestore con `sincronizarEquipo()`.
+- **Firmware** (`hw.biosVersion`, el mismo que ya se recolectaba y se mostraba solo en
+  "Inventario Automático"): se agregó al final de la misma función `sincronizarSOdesdeAgente`
+  (no se creó una función aparte) — llena `equipo.firmwareInventario` solo si sigue vacío y el
+  agente ya tiene `biosVersion` (distinto de "N/A") para ese equipo. Sigue aplicando el mismo
+  cuidado ya explicado al usuario: el firmware varía por unidad física, por eso este puente solo
+  toma el dato de la máquina puntual que ya corrió el agente — nunca se aplica en bloque a mano.
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
-  `soSerial`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos (no un campo
-  relacionado como `procesador`) — de lo contrario puede ejecutarse después de este puente y
-  pisar lo que el agente ya había llenado, o viceversa. Verificado con Playwright: un equipo sin
-  estos 3 campos se llena solo cuando el agente ya tiene el dato de esa laptop; un equipo con
-  `soVersion` ya editado a mano queda intacto aunque el agente tenga datos distintos.
+  `soSerial`/`firmwareInventario`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
+  (no un campo relacionado como `procesador`) — de lo contrario puede ejecutarse después de este
+  puente y pisar lo que el agente ya había llenado, o viceversa. Verificado con Playwright: un
+  equipo sin estos 4 campos se llena solo cuando el agente ya tiene el dato de esa máquina; un
+  equipo con `soVersion`/`firmwareInventario` ya editado a mano queda intacto aunque el agente
+  tenga datos distintos.
 
 ### Credenciales Firebase (proyecto `inventario-ti-riol`)
 - projectId: `inventario-ti-riol`
