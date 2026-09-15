@@ -230,10 +230,21 @@ function Get-ComputerHardware {
         # Disco fisico principal (modelo + tamano real). Distinto de "discos" arriba,
         # que son las UNIDADES LOGICAS (C:, D:) — esto es el disco fisico en si, para
         # los campos "Tipo de disco duro" / "Tamano Disco (GB)" del perfil manual del
-        # equipo. Se toma el primero (disco 0), que en laptops/desktops de un solo
-        # disco es el disco del sistema.
+        # equipo.
+        #
+        # Muchas laptops tienen un lector de tarjetas SD/MMC integrado que Windows
+        # tambien reporta como un "disco" (InterfaceType USB, Model generico tipo
+        # "Generic STORAGE DEVICE USB Device"). Tomar simplemente el primer resultado
+        # de Win32_DiskDrive puede agarrar ese lector en vez del disco real, sobre
+        # todo si el lector aparece primero en el listado. Fix: se prioriza el disco
+        # NO-USB con mayor tamaño (el disco real de sistema); si ninguno califica
+        # (caso raro), se cae al de mayor tamaño general como respaldo.
         try {
-            $discoFisico = Get-CimInstance Win32_DiskDrive | Select-Object -First 1
+            $discosFisicos = @(Get-CimInstance Win32_DiskDrive)
+            $discoFisico = $discosFisicos | Where-Object { $_.InterfaceType -ne "USB" -and $_.Size -gt 0 } | Sort-Object -Property Size -Descending | Select-Object -First 1
+            if (-not $discoFisico) {
+                $discoFisico = $discosFisicos | Sort-Object -Property Size -Descending | Select-Object -First 1
+            }
             $hardware.discoFisicoModelo = $discoFisico.Model
             $hardware.discoFisicoTamanoGB = [math]::Round($discoFisico.Size / 1GB, 0)
         }

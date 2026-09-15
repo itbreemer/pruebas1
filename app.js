@@ -2123,11 +2123,11 @@ function sincronizarSOdesdeAgente() {
     }
     // Disco físico (modelo real, ej. "WD PC SN740 SDDQMQD-512G-1201") y su tamaño en
     // GB — el agente lo recolecta por separado de las unidades lógicas (C:, D:).
-    if (hw && !tipoDiscoEsUtil(equipo.tipoDisco) && nonEmpty(hw.discoFisicoModelo) && hw.discoFisicoModelo !== "N/A") {
+    if (hw && !tipoDiscoEsUtil(equipo.tipoDisco) && tipoDiscoEsUtil(hw.discoFisicoModelo) && hw.discoFisicoModelo !== "N/A") {
       equipo.tipoDisco = hw.discoFisicoModelo;
       cambio = true;
     }
-    if (hw && !nonEmpty(equipo.tamanoDisco) && hw.discoFisicoTamanoGB !== null && hw.discoFisicoTamanoGB !== undefined) {
+    if (hw && !nonEmpty(equipo.tamanoDisco) && Number(hw.discoFisicoTamanoGB) > 0) {
       equipo.tamanoDisco = String(hw.discoFisicoTamanoGB);
       cambio = true;
     }

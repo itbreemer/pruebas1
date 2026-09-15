@@ -124,6 +124,30 @@ real de disco que Windows sí mostraba):
   explícitamente "no quiero que aparezca la información Generic" / "solo necesito esta
   información del disco: WD PC SN740 SDDQMQD-512G-1201" — confirmado con Playwright que el caso
   compuesto real de `LAPLNV250` se limpia correctamente a un solo valor.
+- **Bug real encontrado y corregido — el agente tomaba el disco equivocado en laptops con
+  lector de tarjetas SD/MMC integrado**: `LAPLNV250` seguía mostrando "Generic STORAGE DEVICE
+  USB Device" en "Tipo de disco duro" incluso DESPUÉS de que el usuario re-corriera el agente ya
+  actualizado (con el fix de arriba ya publicado) — el fix del lado de la app estaba bien, pero
+  el AGENTE mismo estaba mandando el dato equivocado. Causa raíz: `Get-CimInstance
+  Win32_DiskDrive | Select-Object -First 1` tomaba a ciegas el primer disco que reportara
+  Windows, y en esta laptop (con lector de tarjetas SD/MMC integrado, común en muchos modelos)
+  ese lector aparece como un "disco" más (`InterfaceType = "USB"`, `Model` genérico tipo
+  "Generic STORAGE DEVICE USB Device", `Size = 0` sin tarjeta insertada) — y en esta máquina
+  aparecía ANTES que el disco real en el listado de WMI. **Fix**: el agente ahora prioriza el
+  disco NO-USB de mayor tamaño (`Where-Object { InterfaceType -ne "USB" -and Size -gt 0 } |
+  Sort-Object Size -Descending | Select-Object -First 1`); si ninguno califica (caso raro), cae
+  al de mayor tamaño general como respaldo. **Doble seguro también en el puente** (`app.js`):
+  aunque el agente llegara a mandar un valor "generic" por cualquier otra razón futura,
+  `tipoDiscoEsUtil(hw.discoFisicoModelo)` verifica que el valor que llega del agente TAMPOCO sea
+  genérico antes de escribirlo — nunca se pisa un campo con basura, aunque la fuente falle.
+  También se agregó guardia a `tamanoDisco`: solo se llena si `discoFisicoTamanoGB > 0` (un
+  disco reportado con tamaño 0, típico del lector de tarjetas vacío, ya no se escribe).
+  Verificado con Playwright: si el agente manda un valor genérico, el campo existente se
+  respeta sin tocar (no se pisa con basura); si manda el valor real, sí se aplica normalmente.
+  **Importante**: para que un equipo ya afectado por este bug muestre el dato correcto, hay que
+  volver a correr el agente actualizado en esa máquina (el envío anterior con el bug ya quedó
+  guardado en Firestore con el valor equivocado; el puente nunca lo reescribe solo porque ya
+  "tiene algo" a menos que ese algo sea reconocido como "generic").
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
   `soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
