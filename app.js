@@ -2073,6 +2073,18 @@ function equipoCoincideConAgente(equipo, agente) {
 // sincroniza el cambio a Firestore. Se llama cada vez que llegan datos nuevos
 // del agente o del propio equipo, para que el puente se aplique en cuanto
 // cualquiera de los dos lados esté disponible, sin importar el orden.
+// Windows a veces reporta el modelo del disco como un texto genérico sin
+// información real (ej. "Generic STORAGE DEVICE USB Device"). Algunos equipos
+// además tienen un formato viejo de este sistema que junta varios discos con
+// "<br>" (ej. "Generic STORAGE DEVICE USB Device<br>WD PC SN740..."). Ninguno
+// de los dos casos cuenta como un dato "ya capturado" para el puente — se
+// tratan igual que un campo vacío, así el puente reemplaza TODO el valor
+// viejo por el modelo real y único que reporta el agente, sin que nadie
+// tenga que limpiarlo a mano.
+function tipoDiscoEsUtil(valor) {
+  return nonEmpty(valor) && !/generic/i.test(valor);
+}
+
 function sincronizarSOdesdeAgente() {
   if (!equiposTIv2Data.length || !equipos.length) return;
   equipos.forEach((equipo) => {
@@ -2081,7 +2093,7 @@ function sincronizarSOdesdeAgente() {
       nonEmpty(equipo.soNucleo) &&
       nonEmpty(equipo.soSerial) &&
       nonEmpty(equipo.firmwareInventario) &&
-      nonEmpty(equipo.tipoDisco) &&
+      tipoDiscoEsUtil(equipo.tipoDisco) &&
       nonEmpty(equipo.tamanoDisco);
     if (yaCompleto) return;
     const agente = equiposTIv2Data.find((a) => equipoCoincideConAgente(equipo, a));
@@ -2111,7 +2123,7 @@ function sincronizarSOdesdeAgente() {
     }
     // Disco físico (modelo real, ej. "WD PC SN740 SDDQMQD-512G-1201") y su tamaño en
     // GB — el agente lo recolecta por separado de las unidades lógicas (C:, D:).
-    if (hw && !nonEmpty(equipo.tipoDisco) && nonEmpty(hw.discoFisicoModelo) && hw.discoFisicoModelo !== "N/A") {
+    if (hw && !tipoDiscoEsUtil(equipo.tipoDisco) && nonEmpty(hw.discoFisicoModelo) && hw.discoFisicoModelo !== "N/A") {
       equipo.tipoDisco = hw.discoFisicoModelo;
       cambio = true;
     }

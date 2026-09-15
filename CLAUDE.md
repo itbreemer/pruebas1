@@ -107,10 +107,23 @@ real de disco que Windows sí mostraba):
   campos NUEVOS en el agente — antes solo recolectaba las unidades lógicas C:/D:, no el disco
   físico en sí): `agent-inventario.ps1` ahora también lee `Get-CimInstance Win32_DiskDrive`
   (primer disco, disco 0 — asume un solo disco físico por equipo, el caso normal en laptops/
-  desktops de esta organización) y guarda `Model` y `Size` redondeado a GB. El puente llena
-  `equipo.tipoDisco` con el modelo real (ej. "WD PC SN740 SDDQMQD-512G-1201", reemplazando el
-  texto genérico que antes se veía ahí como "Generic STORAGE DEVICE USB Device...") y
-  `equipo.tamanoDisco` con el tamaño en GB (ej. "477"), cada uno solo si sigue vacío.
+  desktops de esta organización) y guarda `Model` y `Size` redondeado a GB.
+  `equipo.tamanoDisco` se llena solo si sigue vacío. `equipo.tipoDisco` es más especial: no basta
+  con "está vacío" — muchos equipos ya traían un texto **inservible** ahí de antes: un formato
+  viejo de este sistema junta varios discos/dispositivos con `<br>` (ej. `"ST3500413AS<br>Initio
+  3639S USB Device"`, o el caso real de `LAPLNV250`:
+  `"Generic STORAGE DEVICE USB Device<br>WD PC SN740 SDDQMQD-512G-1201"` — el disco real ya
+  estaba ahí, pero mezclado con basura). Función `tipoDiscoEsUtil(valor)` = **falso** si el valor
+  está vacío O si contiene la palabra "generic" en cualquier parte (`/generic/i`, sin anclar al
+  inicio — para agarrar tanto "Generic STORAGE..." solo como el `<br>`-compuesto con "Generic"
+  mezclado). El puente usa `!tipoDiscoEsUtil(equipo.tipoDisco)` como guardia: si es "inservible"
+  por cualquiera de esas dos razones, **reemplaza TODO el campo** por el modelo único y limpio
+  que reporta el agente (ej. queda solo `"WD PC SN740 SDDQMQD-512G-1201"`, sin el `<br>` ni el
+  texto "Generic"). Si el valor SÍ es un modelo real (sin la palabra "generic"), se respeta tal
+  cual, no se toca. El usuario detectó este caso en vivo con su propio equipo y pidió
+  explícitamente "no quiero que aparezca la información Generic" / "solo necesito esta
+  información del disco: WD PC SN740 SDDQMQD-512G-1201" — confirmado con Playwright que el caso
+  compuesto real de `LAPLNV250` se limpia correctamente a un solo valor.
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
   `soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
