@@ -71,13 +71,15 @@ sugerencias sigue funcionando exactamente igual. Si aparece el mismo problema en
 formulario del sistema (impresoras, mantenimiento, etc.), aplicar el mismo patrón:
 `autocomplete="off"` en el `<form>` y en cada `<input>` de texto que no lo tenga ya.
 
-### Puente automático Agente → perfil manual del equipo (SO Versión / Núcleo / Serial / Firmware)
+### Puente automático Agente → perfil manual del equipo (SO Versión / Núcleo / Serial / Firmware / Tipo y Tamaño de Disco)
 Para "SO - Versión" / "SO - Versión del núcleo" / "SO - Número de serial" / "Firmware: No.
-inventario" del **modal de editar equipo** (`soVersion`/`soNucleo`/`soSerial`/
-`firmwareInventario`, colección `equipos`) se construyó un puente real hacia lo que recolecta
-el agente (colección `equiposTI_v2`), porque el usuario lo pidió explícitamente ("si agregalo,
-ambas" para SO; "realiza esto" para Firmware, cuando notó que ese campo seguía en blanco tras
-correr el agente en otro equipo):
+inventario" / "Tipo de disco duro" / "Tamaño Disco (GB)" del **modal de editar equipo**
+(`soVersion`/`soNucleo`/`soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, colección
+`equipos`) se construyó un puente real hacia lo que recolecta el agente (colección
+`equiposTI_v2`), porque el usuario lo pidió explícitamente ("si agregalo, ambas" para SO;
+"realiza esto" para Firmware; y para disco, tras notar que "Tipo de disco duro" seguía
+mostrando un texto genérico viejo ("Generic STORAGE DEVICE USB Device...") en vez del modelo
+real de disco que Windows sí mostraba):
 - **Agente** (`agent-inventario.ps1`, bloque de Sistema Operativo): ahora también recolecta
   `hardware.sistemaOperativo.serial` (`Win32_OperatingSystem.SerialNumber`, el serial de licencia
   de Windows — distinto del serial del BIOS/equipo físico que ya se recolectaba) y
@@ -101,14 +103,22 @@ correr el agente en otro equipo):
   agente ya tiene `biosVersion` (distinto de "N/A") para ese equipo. Sigue aplicando el mismo
   cuidado ya explicado al usuario: el firmware varía por unidad física, por eso este puente solo
   toma el dato de la máquina puntual que ya corrió el agente — nunca se aplica en bloque a mano.
+- **Tipo de disco duro / Tamaño Disco (GB)** (`hw.discoFisicoModelo` / `hw.discoFisicoTamanoGB`,
+  campos NUEVOS en el agente — antes solo recolectaba las unidades lógicas C:/D:, no el disco
+  físico en sí): `agent-inventario.ps1` ahora también lee `Get-CimInstance Win32_DiskDrive`
+  (primer disco, disco 0 — asume un solo disco físico por equipo, el caso normal en laptops/
+  desktops de esta organización) y guarda `Model` y `Size` redondeado a GB. El puente llena
+  `equipo.tipoDisco` con el modelo real (ej. "WD PC SN740 SDDQMQD-512G-1201", reemplazando el
+  texto genérico que antes se veía ahí como "Generic STORAGE DEVICE USB Device...") y
+  `equipo.tamanoDisco` con el tamaño en GB (ej. "477"), cada uno solo si sigue vacío.
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
-  `soSerial`/`firmwareInventario`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
+  `soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
   (no un campo relacionado como `procesador`) — de lo contrario puede ejecutarse después de este
   puente y pisar lo que el agente ya había llenado, o viceversa. Verificado con Playwright: un
-  equipo sin estos 4 campos se llena solo cuando el agente ya tiene el dato de esa máquina; un
-  equipo con `soVersion`/`firmwareInventario` ya editado a mano queda intacto aunque el agente
-  tenga datos distintos.
+  equipo sin estos 6 campos se llena solo cuando el agente ya tiene el dato de esa máquina; un
+  equipo con `soVersion`/`firmwareInventario`/`tipoDisco`/`tamanoDisco` ya editado a mano queda
+  intacto aunque el agente tenga datos distintos.
 
 ### Credenciales Firebase (proyecto `inventario-ti-riol`)
 - projectId: `inventario-ti-riol`

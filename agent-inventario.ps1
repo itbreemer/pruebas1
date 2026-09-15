@@ -227,6 +227,22 @@ function Get-ComputerHardware {
             $hardware.discos = @()
         }
 
+        # Disco fisico principal (modelo + tamano real). Distinto de "discos" arriba,
+        # que son las UNIDADES LOGICAS (C:, D:) — esto es el disco fisico en si, para
+        # los campos "Tipo de disco duro" / "Tamano Disco (GB)" del perfil manual del
+        # equipo. Se toma el primero (disco 0), que en laptops/desktops de un solo
+        # disco es el disco del sistema.
+        try {
+            $discoFisico = Get-CimInstance Win32_DiskDrive | Select-Object -First 1
+            $hardware.discoFisicoModelo = $discoFisico.Model
+            $hardware.discoFisicoTamanoGB = [math]::Round($discoFisico.Size / 1GB, 0)
+        }
+        catch {
+            LogWarning "No se pudo obtener info del disco fisico: $_"
+            $hardware.discoFisicoModelo = "N/A"
+            $hardware.discoFisicoTamanoGB = $null
+        }
+
         # Sistema Operativo
         try {
             $os = Get-CimInstance Win32_OperatingSystem

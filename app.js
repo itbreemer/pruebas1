@@ -2077,7 +2077,12 @@ function sincronizarSOdesdeAgente() {
   if (!equiposTIv2Data.length || !equipos.length) return;
   equipos.forEach((equipo) => {
     const yaCompleto =
-      nonEmpty(equipo.soVersion) && nonEmpty(equipo.soNucleo) && nonEmpty(equipo.soSerial) && nonEmpty(equipo.firmwareInventario);
+      nonEmpty(equipo.soVersion) &&
+      nonEmpty(equipo.soNucleo) &&
+      nonEmpty(equipo.soSerial) &&
+      nonEmpty(equipo.firmwareInventario) &&
+      nonEmpty(equipo.tipoDisco) &&
+      nonEmpty(equipo.tamanoDisco);
     if (yaCompleto) return;
     const agente = equiposTIv2Data.find((a) => equipoCoincideConAgente(equipo, a));
     const hw = agente ? agente.hardware : null;
@@ -2102,6 +2107,16 @@ function sincronizarSOdesdeAgente() {
     // máquina puntual, nunca aplicado en bloque a mano).
     if (hw && !nonEmpty(equipo.firmwareInventario) && nonEmpty(hw.biosVersion) && hw.biosVersion !== "N/A") {
       equipo.firmwareInventario = hw.biosVersion;
+      cambio = true;
+    }
+    // Disco físico (modelo real, ej. "WD PC SN740 SDDQMQD-512G-1201") y su tamaño en
+    // GB — el agente lo recolecta por separado de las unidades lógicas (C:, D:).
+    if (hw && !nonEmpty(equipo.tipoDisco) && nonEmpty(hw.discoFisicoModelo) && hw.discoFisicoModelo !== "N/A") {
+      equipo.tipoDisco = hw.discoFisicoModelo;
+      cambio = true;
+    }
+    if (hw && !nonEmpty(equipo.tamanoDisco) && hw.discoFisicoTamanoGB !== null && hw.discoFisicoTamanoGB !== undefined) {
+      equipo.tamanoDisco = String(hw.discoFisicoTamanoGB);
       cambio = true;
     }
     if (cambio) {
