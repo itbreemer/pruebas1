@@ -182,6 +182,14 @@ trae un número de parte real de mercado (buscable) y una ranura tipo "SODIMM1"/
   Playwright: un módulo "Onboard Memory" (LPDDR5) y uno "SODIMM1" (DDR5, con fabricante y
   número de parte reales) se muestran correctamente diferenciados en la misma tabla.
 
+**Decisión confirmada explícitamente por el usuario — NO automatizar "Descripción RAM
+adicional"**: se le ofrecieron 2 caminos (automatizar con la heurística de arriba, con el
+riesgo de equivocarse en algún modelo puntual; o copiarlo a mano desde "Inventario Automático"
+cuando se necesite) y eligió el segundo ("dejemoslo mejor asi, no nos arriesguemos"). Si en el
+futuro se retoma esta idea, la heurística a usar sería: preferir el módulo cuyo `numeroParte`
+no sea "N/A" y cuya `ranura` no contenga "onboard" (case-insensitive) — pero no implementar sin
+que el usuario lo pida de nuevo explícitamente.
+
 ### Credenciales Firebase (proyecto `inventario-ti-riol`)
 - projectId: `inventario-ti-riol`
 - database/colección Firestore del agente: `equiposTI_v2`
