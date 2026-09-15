@@ -157,6 +157,31 @@ real de disco que Windows sí mostraba):
   equipo con `soVersion`/`firmwareInventario`/`tipoDisco`/`tamanoDisco` ya editado a mano queda
   intacto aunque el agente tenga datos distintos.
 
+### Tipo de RAM (DDR3/DDR4/DDR5/LPDDR) por módulo — solo en "Inventario Automático", sin puente
+El usuario preguntó cómo saber el tipo de DDR de la RAM, específicamente para equipos con
+**RAM soldada a la placa + una tarjeta SODIMM adicional agregada** (config. común en laptops
+modernas) — quería saber cómo distinguir cuál módulo es cuál antes de automatizar nada más.
+
+**Limitación real, explicada al usuario antes de implementar**: no existe una bandera universal
+en WMI que diga "este módulo está soldado" — varía por fabricante de equipo. Por eso **no** se
+intentó adivinar automáticamente cuál módulo va en "Descripción RAM adicional (Tarjeta)" del
+perfil manual (ese campo ya se validó a mano contra la ficha física real del contrato Lenovo, y
+arriesgar una descripción equivocada en un documento oficial que firma el empleado no vale la
+pena). Heurística útil para que un humano lo distinga con solo mirar, sin garantía al 100%: el
+módulo **soldado** normalmente tiene `Número de Parte` vacío/código de fábrica raro y su
+`Ranura` (`DeviceLocator`) dice algo como "Onboard Memory"; el módulo **agregado** normalmente
+trae un número de parte real de mercado (buscable) y una ranura tipo "SODIMM1"/"DIMM A".
+
+**Lo que sí se implementó** (solo lectura, sin tocar ningún campo del perfil manual):
+- `agent-inventario.ps1`, bloque de Memoria RAM: por cada módulo de `Win32_PhysicalMemory`, se
+  traduce `SMBIOSMemoryType` (código estándar SMBIOS Type 17) a texto legible — DDR, DDR2, DDR3,
+  DDR4, DDR5, LPDDR, LPDDR2, LPDDR3, LPDDR4, LPDDR5 (fallback `"Desconocido (<código>)"` para
+  códigos no mapeados) — nuevo campo `tipoDdr` en cada objeto de `hardware.memoria.modulos`.
+- `app.js`, vista "Inventario Automático" → pestaña "Memoria RAM": nueva columna **"Tipo"**
+  entre Capacidad y Fabricante, mostrando `m.tipoDdr` por cada fila/módulo. Verificado con
+  Playwright: un módulo "Onboard Memory" (LPDDR5) y uno "SODIMM1" (DDR5, con fabricante y
+  número de parte reales) se muestran correctamente diferenciados en la misma tabla.
+
 ### Credenciales Firebase (proyecto `inventario-ti-riol`)
 - projectId: `inventario-ti-riol`
 - database/colección Firestore del agente: `equiposTI_v2`

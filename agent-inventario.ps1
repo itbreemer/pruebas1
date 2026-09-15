@@ -189,12 +189,33 @@ function Get-ComputerHardware {
             $ram = Get-CimInstance Win32_ComputerSystem
             $modulos = @()
             Get-CimInstance Win32_PhysicalMemory | ForEach-Object {
+                # SMBIOSMemoryType: codigo estandar SMBIOS (Type 17) para el tipo de RAM.
+                # No hay forma confiable de saber por WMI cual modulo esta soldado a la
+                # placa vs cual es una tarjeta SODIMM agregada — eso varia por fabricante
+                # de equipo. Se reporta el tipo POR MODULO (ranura) para que quede visible
+                # en la vista del agente; no se intenta adivinar cual va en "Descripcion
+                # RAM adicional" del perfil manual del equipo.
+                $tipoDdr = switch ($_.SMBIOSMemoryType) {
+                    20 { "DDR" }
+                    21 { "DDR2" }
+                    22 { "DDR2 FB-DIMM" }
+                    24 { "DDR3" }
+                    26 { "DDR4" }
+                    27 { "LPDDR" }
+                    28 { "LPDDR2" }
+                    29 { "LPDDR3" }
+                    30 { "LPDDR4" }
+                    34 { "DDR5" }
+                    35 { "LPDDR5" }
+                    default { "Desconocido ($($_.SMBIOSMemoryType))" }
+                }
                 $modulos += @{
                     ranura = $_.DeviceLocator
                     capacidad = "$([math]::Round($_.Capacity / 1GB, 2)) GB"
                     fabricante = $_.Manufacturer
                     velocidad = "$($_.Speed) MHz"
                     numeroParte = $(if ($_.PartNumber) { $_.PartNumber.Trim() } else { "N/A" })
+                    tipoDdr = $tipoDdr
                 }
             }
             $hardware.memoria = @{

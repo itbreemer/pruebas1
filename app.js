@@ -4496,8 +4496,8 @@ function abrirDetalleEquipoTIv2(item) {
       html: `
         <p class="subseccion-nota">Total: ${esc(ram.total)}</p>
         ${tablaDetalleTIv2(
-          ["Ranura", "Capacidad", "Fabricante", "Velocidad", "N° Parte"],
-          (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.fabricante, m.velocidad, m.numeroParte])
+          ["Ranura", "Capacidad", "Tipo", "Fabricante", "Velocidad", "N° Parte"],
+          (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.tipoDdr, m.fabricante, m.velocidad, m.numeroParte])
         )}
       `,
     },
