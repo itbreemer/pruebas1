@@ -3454,9 +3454,16 @@ function onCambioNombreRedIngreso() {
   const equipo = buscarEquipoPorNombreRed($("ingresoNombreRed").value);
   if (equipo) {
     Object.entries(CAMPOS_INGRESO_EQUIPO).forEach(([campoId, campoEquipo]) => {
-      if (campoId === "ingresoNombreRed" || campoId === "ingresoAgencia") return;
+      if (campoId === "ingresoNombreRed") return;
       $(campoId).value = equipo[campoEquipo] || "";
     });
+    // "Agencia / Ubicación" es readonly con "Bodega 2" como default para un
+    // ingreso realmente nuevo (recepcion en bodega). Si el equipo ya existe y
+    // ya tiene una ubicacion real capturada (ej. "Generadora 2"), hay que
+    // respetarla en vez de dejar el "Bodega 2" fijo del modal recien abierto
+    // — de lo contrario generarIngresoCompleto() la pisa con "Bodega 2" al
+    // guardar, borrando la ubicacion real (bug confirmado en PCLNV237).
+    if (!$("ingresoAgencia").value) $("ingresoAgencia").value = "Bodega 2";
     $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se cargaron sus datos actuales; edita solo lo que cambió.`;
     $("ingresoEstado").className = "acta-estado";
   } else if ($("ingresoNombreRed").value.trim()) {
