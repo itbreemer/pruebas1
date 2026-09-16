@@ -3278,7 +3278,7 @@ function tarjetaHTML(equipo, transaccion) {
           <td class="tlabel">AREA:</td><td class="tvalue">${esc(equipo.unidadNegocio)}</td>
         </tr>
         <tr>
-          <td class="tlabel">AGENCIA:</td><td class="tvalue plano">${esc(equipo.ubicaciones)}</td>
+          <td class="tlabel">AGENCIA:</td><td class="tvalue plano">Bodega 2</td>
           <td class="tlabel">CODIGO SAP:</td><td class="tvalue plano">${esc(equipo.codigoEmpleado)}</td>
         </tr>
         <tr>
@@ -3422,7 +3422,13 @@ const CAMPOS_INGRESO_EQUIPO = {
   ingresoDepartamento: "departamento",
   ingresoArea: "unidadNegocio",
   ingresoEmpresa: "empresa",
-  ingresoAgencia: "ubicaciones",
+  // "Agencia" (Tarjeta de Responsabilidad) y "Ubicaciones" (Editar equipo /
+  // Acta) son conceptos distintos que por error compartian el mismo campo:
+  // Agencia es fija ("Bodega 2", de donde siempre sale el equipo al
+  // entregarse), Ubicaciones es donde va a operar el equipo (ej. "Generadora
+  // 2", capturado a mano). NO se mapea aqui a proposito, para que Nuevo
+  // Ingreso nunca vuelva a pisar equipo.ubicaciones (bug real confirmado en
+  // PCLNV237). "Agencia" se imprime como texto fijo directo en tarjetaHTML.
   ingresoCodigoSap: "codigoEmpleado",
   ingresoDpi: "dpi",
   ingresoFechaIngresoEquipo: "fechaIngresoEquipo",
@@ -3457,13 +3463,6 @@ function onCambioNombreRedIngreso() {
       if (campoId === "ingresoNombreRed") return;
       $(campoId).value = equipo[campoEquipo] || "";
     });
-    // "Agencia / Ubicación" es readonly con "Bodega 2" como default para un
-    // ingreso realmente nuevo (recepcion en bodega). Si el equipo ya existe y
-    // ya tiene una ubicacion real capturada (ej. "Generadora 2"), hay que
-    // respetarla en vez de dejar el "Bodega 2" fijo del modal recien abierto
-    // — de lo contrario generarIngresoCompleto() la pisa con "Bodega 2" al
-    // guardar, borrando la ubicacion real (bug confirmado en PCLNV237).
-    if (!$("ingresoAgencia").value) $("ingresoAgencia").value = "Bodega 2";
     $("ingresoEstado").textContent = `Ya existe un equipo con este Nombre en Red (${equipo.empresa || "N/A"} · ${equipo.status || "N/A"}). Se cargaron sus datos actuales; edita solo lo que cambió.`;
     $("ingresoEstado").className = "acta-estado";
   } else if ($("ingresoNombreRed").value.trim()) {
