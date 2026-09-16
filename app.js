@@ -180,16 +180,26 @@ function fusionarContratosDesdeSeed() {
     }
   });
 
-  const IDS_ALTAS_NUEVAS_SEED = ["pendiente-pcriolsa005", "pendiente-bascula1"];
-  // Alta masiva del contrato Lenovo 8030028191 (30 laptops + 18 desktops,
-  // Tecnoelec) — cada id nuevo se sincroniza a Firestore igual que los de
-  // IDS_ALTAS_NUEVAS_SEED, sin tener que listar los 48 uno por uno.
-  const esAltaContrato8030028191 = (id) => (id || "").startsWith("alta-8030028191-");
+  // IMPORTANTE — bug real corregido: `idsActuales` sale del localStorage de
+  // ESTE navegador, no de si el equipo ya existe de verdad en Firestore. La
+  // migración masiva del contrato Lenovo 8030028191 (30 laptops + 18
+  // desktops, Tecnoelec) y los 2 ids de abajo ya se completó hace tiempo —
+  // el `sincronizarEquipo(seed)` que corría aqui la primera vez que CUALQUIER
+  // navegador sin cache local veia estos ids ya cumplio su proposito, pero se
+  // quedo activo como riesgo permanente: cualquier equipo del lote que ya se
+  // hubiera editado a mano en Firestore (status, ubicaciones, numero de
+  // inventario, etc.) se sobrescribia de vuelta al dato de fabrica cada vez
+  // que alguien abria la app desde un navegador que aun no tuviera ese id en
+  // su localStorage (cache limpiada, equipo distinto, modo incognito...) —
+  // caso real confirmado en PCLNV237. Se quita el sincronizarEquipo() de
+  // este bloque: seguir agregando el registro en memoria local si falta es
+  // inofensivo (el listener en tiempo real de Firestore lo corrige solo con
+  // el dato real segundos despues), pero ya NO debe volver a escribirse el
+  // seed en la base de datos.
   SEED_DATA.forEach((seed) => {
     if (!idsActuales.has(seed.id)) {
       equipos.push({ ...seed });
       cambio = true;
-      if (IDS_ALTAS_NUEVAS_SEED.includes(seed.id) || esAltaContrato8030028191(seed.id)) sincronizarEquipo(seed);
     }
   });
 
