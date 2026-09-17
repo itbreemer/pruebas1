@@ -279,7 +279,20 @@ if ($RunImmediately) {
     Write-Host "`nEjecutando agente por primera vez..." -ForegroundColor Cyan
 
     try {
-        Start-ScheduledTask -TaskName $TaskName
+        # Justo despues de Register-ScheduledTask, el servicio de Task
+        # Scheduler a veces tarda un instante en indexar la tarea nueva -
+        # intentar arrancarla de inmediato puede fallar con "el sistema no
+        # puede encontrar el archivo especificado" (HRESULT 0x80070002)
+        # aunque la tarea SI quedo bien registrada (condicion de carrera real,
+        # confirmada en LAPLNV309). Un reintento con una breve espera evita
+        # el falso aviso de error sin afectar nada mas.
+        try {
+            Start-ScheduledTask -TaskName $TaskName
+        }
+        catch {
+            Start-Sleep -Seconds 3
+            Start-ScheduledTask -TaskName $TaskName
+        }
         Write-Host "✓ Agente ejecutado. Espera 30 segundos y revisa los logs..." -ForegroundColor Green
         Start-Sleep -Seconds 3
 

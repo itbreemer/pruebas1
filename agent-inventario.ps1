@@ -810,7 +810,25 @@ function Send-ToFirebase {
             fields = @{}
         }
 
-        foreach ($key in $Inventory.PSObject.Properties.Name) {
+        # $Inventory.PSObject.Properties.Name solo funciona si $Inventory es un
+        # PSCustomObject (ej. al recargarlo desde JSON local en un reintento,
+        # via ConvertFrom-Json). En el envio normal $Inventory es un Hashtable
+        # nativo (ver "$inventory = @{" en Build-Inventory) - ahi
+        # .PSObject.Properties.Name NO devuelve las claves reales, sino
+        # propiedades internas de .NET del Hashtable (Keys, Values, Count,
+        # SyncRoot, etc.), armando un documento corrupto que fallaba mas
+        # adelante con "No se puede llamar a un metodo en una expresion con
+        # valor NULL" - el envio "funcionaba" solo porque el reintento
+        # siguiente recargaba desde JSON (PSCustomObject) y ahi si tomaba las
+        # claves correctas. Bug real, se corrige leyendo las claves segun el
+        # tipo real del objeto.
+        $inventoryKeys = if ($Inventory -is [System.Collections.IDictionary]) {
+            $Inventory.Keys
+        } else {
+            $Inventory.PSObject.Properties.Name
+        }
+
+        foreach ($key in $inventoryKeys) {
             $firestoreDoc.fields[$key] = ConvertTo-FirestoreValue -Value $Inventory.$key
         }
 
