@@ -37,7 +37,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     exit 1
 }
 
-Write-Host "✓ Permisos de administrador confirmados" -ForegroundColor Green
+Write-Host "[OK] Permisos de administrador confirmados" -ForegroundColor Green
 
 # Validar archivos de origen
 $requiredFiles = @("agent-inventario.ps1", "config.json")
@@ -47,7 +47,7 @@ foreach ($file in $requiredFiles) {
         Write-Host "ERROR: Archivo no encontrado: $filePath" -ForegroundColor Red
         exit 1
     }
-    Write-Host "✓ Archivo encontrado: $file" -ForegroundColor Green
+    Write-Host "[OK] Archivo encontrado: $file" -ForegroundColor Green
 }
 
 # ============================================================================
@@ -64,10 +64,10 @@ $BinDir = "$BaseDir\bin"
 @($BaseDir, $LogDir, $DataDir, $BinDir) | ForEach-Object {
     if (-not (Test-Path $_)) {
         New-Item -ItemType Directory -Path $_ -Force | Out-Null
-        Write-Host "✓ Directorio creado: $_" -ForegroundColor Green
+        Write-Host "[OK] Directorio creado: $_" -ForegroundColor Green
     }
     else {
-        Write-Host "✓ Directorio existe: $_" -ForegroundColor Green
+        Write-Host "[OK] Directorio existe: $_" -ForegroundColor Green
     }
 }
 
@@ -82,13 +82,13 @@ try {
     $sourcescript = Join-Path -Path $SourcePath -ChildPath "agent-inventario.ps1"
     $targetScript = "$BinDir\agent-inventario.ps1"
     Copy-Item -Path $sourcescript -Destination $targetScript -Force
-    Write-Host "✓ Agente copiado a: $targetScript" -ForegroundColor Green
+    Write-Host "[OK] Agente copiado a: $targetScript" -ForegroundColor Green
 
     # Copiar configuración
     $sourceConfig = Join-Path -Path $SourcePath -ChildPath "config.json"
     $targetConfig = "$BaseDir\config.json"
     Copy-Item -Path $sourceConfig -Destination $targetConfig -Force
-    Write-Host "✓ Configuración copiada a: $targetConfig" -ForegroundColor Green
+    Write-Host "[OK] Configuración copiada a: $targetConfig" -ForegroundColor Green
 }
 catch {
     Write-Host "ERROR al copiar archivos: $_" -ForegroundColor Red
@@ -110,7 +110,7 @@ try {
     $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($existingTask) {
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false | Out-Null
-        Write-Host "✓ Tarea anterior eliminada" -ForegroundColor Green
+        Write-Host "[OK] Tarea anterior eliminada" -ForegroundColor Green
     }
 }
 catch {
@@ -124,25 +124,25 @@ $configPath = "$BaseDir\config.json"
 $action = New-ScheduledTaskAction -Execute "powershell.exe" `
     -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`" -ConfigPath `"$configPath`""
 
-Write-Host "✓ Acción de tarea configurada" -ForegroundColor Green
+Write-Host "[OK] Acción de tarea configurada" -ForegroundColor Green
 
 # Crear disparador
 switch ($Frequency) {
     "hourly" {
         $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 999)
-        Write-Host "✓ Disparador: Cada hora" -ForegroundColor Green
+        Write-Host "[OK] Disparador: Cada hora" -ForegroundColor Green
     }
     "daily" {
         $trigger = New-ScheduledTaskTrigger -Daily -At "22:00"
-        Write-Host "✓ Disparador: Diariamente a las 22:00" -ForegroundColor Green
+        Write-Host "[OK] Disparador: Diariamente a las 22:00" -ForegroundColor Green
     }
     "weekly" {
         $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At "02:00"
-        Write-Host "✓ Disparador: Semanalmente (lunes a las 02:00)" -ForegroundColor Green
+        Write-Host "[OK] Disparador: Semanalmente (lunes a las 02:00)" -ForegroundColor Green
     }
     default {
         $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 999)
-        Write-Host "✓ Disparador: Cada hora (por defecto)" -ForegroundColor Green
+        Write-Host "[OK] Disparador: Cada hora (por defecto)" -ForegroundColor Green
     }
 }
 
@@ -163,7 +163,7 @@ try {
         -Description $TaskDescription `
         -Force | Out-Null
 
-    Write-Host "✓ Tarea programada registrada: $TaskName" -ForegroundColor Green
+    Write-Host "[OK] Tarea programada registrada: $TaskName" -ForegroundColor Green
 }
 catch {
     Write-Host "ERROR al registrar tarea: $_" -ForegroundColor Red
@@ -184,7 +184,7 @@ try {
     $acl.AddAccessRule($rule)
     Set-Acl -Path $BaseDir -AclObject $acl
 
-    Write-Host "✓ Permisos configurados para SYSTEM" -ForegroundColor Green
+    Write-Host "[OK] Permisos configurados para SYSTEM" -ForegroundColor Green
 }
 catch {
     Write-Host "Aviso: No se pudieron configurar permisos avanzados (no crítico): $_" -ForegroundColor Yellow
@@ -269,7 +269,7 @@ Remove-Item -Path "C:\ProgramData\AgentInventario" -Recurse -Force
 
 $readmePath = "$BaseDir\README.txt"
 $readmeContent | Set-Content -Path $readmePath -Encoding UTF8
-Write-Host "✓ Documentación creada: $readmePath" -ForegroundColor Green
+Write-Host "[OK] Documentación creada: $readmePath" -ForegroundColor Green
 
 # ============================================================================
 # EJECUTAR AGENTE INMEDIATAMENTE (OPCIONAL)
@@ -293,7 +293,7 @@ if ($RunImmediately) {
             Start-Sleep -Seconds 3
             Start-ScheduledTask -TaskName $TaskName
         }
-        Write-Host "✓ Agente ejecutado. Espera 30 segundos y revisa los logs..." -ForegroundColor Green
+        Write-Host "[OK] Agente ejecutado. Espera 30 segundos y revisa los logs..." -ForegroundColor Green
         Start-Sleep -Seconds 3
 
         $logFile = "$LogDir\agent-$(Get-Date -Format 'yyyyMMdd').log"
@@ -312,7 +312,7 @@ if ($RunImmediately) {
 # ============================================================================
 
 Write-Host "`n=========================================="
-Write-Host "✓ INSTALACIÓN COMPLETADA"
+Write-Host "[OK] INSTALACIÓN COMPLETADA"
 Write-Host "=========================================="
 Write-Host "
 Próximos pasos:
