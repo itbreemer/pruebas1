@@ -25,20 +25,38 @@ Archivos clave:
 - `agent-inventario.ps1` — script principal del agente
 - `config.json` — configuración (endpoint, credenciales, frecuencia, retry, logging)
 - `install-agent-gpo.ps1` — instalador (crea tarea programada, para distribuir vía GPO)
+- `instalar-agente.cmd` — lanzador de un clic para `install-agent-gpo.ps1` (clic derecho →
+  "Ejecutar como administrador"; corre con `-ExecutionPolicy Bypass` automático, para no tener
+  que escribir `Set-ExecutionPolicy` a mano en cada equipo). **Usar este en vez de correr el
+  `.ps1` directo** al instalar manualmente en un equipo nuevo.
 - `test-agent.ps1` — script de validación/diagnóstico
 - `AGENT-SETUP.md` — guía completa de instalación y GPO
 
 Instala en `C:\ProgramData\AgentInventario` (bin/, config.json, logs/, data/).
 Tarea programada: `AgentInventarioTI`, corre como SYSTEM.
-Equipo de prueba: `LAPLNV250` (usuario `victor.morales`, dominio `GRUPOLTZ`).
+Equipos de prueba: `LAPLNV250` (usuario `victor.morales`, dominio `GRUPOLTZ`), `LAPLNV309`
+(instalación manual validada end-to-end, confirmó los 2 bugs de la sección de abajo).
 
 ### Cómo corre el agente (para explicarlo sin tener que releer el código)
-No se ejecuta a mano: `install-agent-gpo.ps1` (una vez por equipo, o distribuido vía GPO a todo
-el dominio) crea la Tarea Programada `AgentInventarioTI`, corriendo como SYSTEM, disparada según
-`config.json → schedule.frequency` (`"hourly"` = cada hora indefinidamente,
-`"daily"` = una vez al día a `schedule.hour`, `"weekly"` = una vez por semana, día lunes).
-Cada disparo corre el script en segundo plano sin sesión de usuario, recolecta hardware/software/
-red y lo manda a Firestore (`equiposTI_v2`). Para diagnosticar una máquina puntual: `test-agent.ps1`.
+No se ejecuta a mano normalmente: `install-agent-gpo.ps1` (vía `instalar-agente.cmd`, una vez
+por equipo, o distribuido vía GPO a todo el dominio) crea la Tarea Programada
+`AgentInventarioTI`, corriendo como SYSTEM, disparada según `config.json → schedule.frequency`
+(`"hourly"` = cada hora indefinidamente, `"daily"` = una vez al día a `schedule.hour`,
+`"weekly"` = una vez por semana, día lunes). Cada disparo corre el script en segundo plano sin
+sesión de usuario, recolecta hardware/software/red y lo manda a Firestore (`equiposTI_v2`). Para
+diagnosticar una máquina puntual: `test-agent.ps1`. Para forzar un envío inmediato sin esperar la
+tarea programada: `& "C:\ProgramData\AgentInventario\bin\agent-inventario.ps1"`.
+
+### Instalación manual en un equipo nuevo — ya no requiere prueba y error
+Antes, instalar en un equipo nuevo requería 3 pasos manuales de por sí (permitir la ejecución de
+scripts, re-guardar el archivo en UTF-8 por el bug de símbolos de abajo, y escribir el comando de
+instalación) — validado y simplificado tras instalarlo en `LAPLNV309`:
+1. Descargar el ZIP de la rama `claude/project-status-bp3wfn` (nunca la rama por defecto).
+2. Clic derecho en `instalar-agente.cmd` → "Ejecutar como administrador". Ya no hace falta
+   `Set-ExecutionPolicy` a mano (el `.cmd` ya usa `-ExecutionPolicy Bypass`) ni re-guardar los
+   `.ps1` en UTF-8 (el bug de codificación de abajo ya se corrigió de raíz).
+3. Confirmar en los logs (`C:\ProgramData\AgentInventario\logs\agent-*.log`) o en la web
+   ("Inventario Automático") que el equipo ya aparece.
 
 ### Firmware/BIOS — se recolecta, se muestra, y ya tiene puente al perfil manual
 El agente ya lee `Get-CimInstance Win32_BIOS` (`agent-inventario.ps1` ~línea 162-165) y guarda
@@ -217,13 +235,18 @@ El resto de colecciones del sistema usan `allow read, write: if request.auth != 
    — se usa `%28default%29` en su lugar. (Al final este NO era la causa raíz del bug de PATCH,
    pero de todas formas es más correcto codificarlo.)
 
-3. **Codificación UTF-8 al descargar el ZIP de GitHub en Windows**: los símbolos `✓`/`✗` en los
-   scripts pueden romper el parser de PowerShell si el archivo no se re-guarda como UTF-8 tras
-   extraer el ZIP. Aplicar en cada máquina tras descargar/actualizar el script:
-   ```powershell
-   $c = Get-Content .\archivo.ps1 -Raw -Encoding UTF8
-   $c | Set-Content .\archivo.ps1 -Encoding UTF8
-   ```
+3. **Codificación UTF-8 al descargar el ZIP de GitHub en Windows** — **corregido de raíz, ya no
+   requiere workaround**: los símbolos `✓`/`✗`/`⚠` en `install-agent-gpo.ps1`/`test-agent.ps1`
+   (ninguno tiene equivalente en Windows-1252, a diferencia de acentos/ñ que sí lo tienen) podían
+   romper el parser de PowerShell ("Token inesperado", "Falta un bloque Catch") si la codificación
+   no se preservaba exactamente al extraer el ZIP en Windows — confirmado real en `LAPLNV309`. En
+   vez de seguir pidiendo re-guardar cada script como UTF-8 a mano en cada equipo nuevo (generaba
+   prueba-y-error innecesario), se reemplazaron esos símbolos por texto plano ASCII
+   (`[OK]`/`[ERROR]`/`[AVISO]`), que no se puede corromper así. `agent-inventario.ps1` no tenía
+   esos símbolos (los únicos caracteres especiales que le quedan, un guion largo `—`, están solo
+   dentro de comentarios, sin riesgo real). Si en el futuro se agrega texto nuevo a estos scripts,
+   **no usar símbolos Unicode fuera de Windows-1252** (nada de ✓/✗/⚠/emojis) en cadenas que se
+   imprimen — usar equivalentes en texto plano.
 
 4. **`Send-ToFirebase` serializaba vacíos los campos anidados (hardware/software/red)**: el
    loop original solo manejaba campos de primer nivel; hashtables/arrays anidados se guardaban
@@ -257,6 +280,26 @@ El resto de colecciones del sistema usan `allow read, write: if request.auth != 
    `ConvertFrom-Json`, lo que produce `PSCustomObject` en vez de `Hashtable`.
    `ConvertTo-FirestoreValue` ahora también reconoce `[System.Management.Automation.PSCustomObject]`
    (además de `[hashtable]`) para no perder la estructura anidada en los reintentos.
+
+8. **`Send-ToFirebase` fallaba SIEMPRE en el primer intento de envío** (se salvaba solo porque el
+   reintento lo mandaba bien) — mismo patrón de fondo que el bug #5/#7 (Hashtable vs
+   PSCustomObject), pero en un lugar distinto: `foreach ($key in $Inventory.PSObject.Properties.Name)`
+   en `Send-ToFirebase` solo devuelve las claves reales cuando `$Inventory` es un `PSCustomObject`
+   (como al recargarlo desde JSON en un reintento). En el envío normal `$inventory` es un
+   Hashtable nativo (`$inventory = @{` en `Build-Inventario`), y ahí `.PSObject.Properties.Name`
+   devuelve propiedades internas de .NET del Hashtable (`Keys`, `Values`, `Count`, `SyncRoot`...)
+   en vez de las claves reales — armando un `$firestoreDoc` corrupto que fallaba más adelante con
+   "No se puede llamar a un método en una expresión con valor NULL". Confirmado real con el log
+   de `LAPLNV309` (ERROR en el primer intento, SUCCESS en el reintento). **Fix**: leer las claves
+   según el tipo real del objeto (`.Keys` si es `[System.Collections.IDictionary]`, si no
+   `.PSObject.Properties.Name`).
+
+9. **`install-agent-gpo.ps1`: `Start-ScheduledTask` fallaba justo después de crearla** ("el
+   sistema no puede encontrar el archivo especificado", HRESULT `0x80070002`) aunque la tarea
+   quedaba bien registrada — condición de carrera real (el servicio de Task Scheduler tarda un
+   instante en indexar la tarea recién creada), confirmada en `LAPLNV309`. No es crítico (el
+   `catch` ya lo trataba como aviso, no rompía la instalación), pero confundía. **Fix**: reintento
+   con una breve espera (`Start-Sleep -Seconds 3`) antes de reintentar `Start-ScheduledTask`.
 
 ### Metodología útil para depurar este tipo de bug
 Cuando algo llega vacío o corrupto a Firestore: (1) confirmar con `console.log(JSON.stringify(...))`
