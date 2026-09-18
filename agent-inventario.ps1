@@ -157,6 +157,34 @@ function Get-ComputerHardware {
         $hardware.tipoEquipo = $computerInfo.SystemType
         $hardware.usuarioDominio = $computerInfo.UserName
 
+        # Tipo de chasis (Desktop/Laptop/Rack/etc, para el campo "Tipos de
+        # computadores" del perfil manual) -- distinto de $hardware.tipoEquipo
+        # de arriba, que es la arquitectura (SystemType, ej. "x64-based PC").
+        # ChassisTypes es un array por SMBIOS; se usa el primer valor.
+        try {
+            $chasis = (Get-CimInstance Win32_SystemEnclosure | Select-Object -First 1).ChassisTypes[0]
+            $hardware.tipoChasis = switch ($chasis) {
+                3  { "Desktop" }
+                4  { "Low Profile Desktop" }
+                6  { "Mini Tower" }
+                7  { "Tower" }
+                8  { "Portable" }
+                9  { "Laptop" }
+                10 { "Notebook" }
+                11 { "Hand Held" }
+                17 { "Main System Chassis" }
+                23 { "Rack Mount Chassis" }
+                30 { "Tablet" }
+                31 { "Convertible" }
+                32 { "Detachable" }
+                default { "Desconocido ($chasis)" }
+            }
+        }
+        catch {
+            LogWarning "No se pudo obtener el tipo de chasis: $_"
+            $hardware.tipoChasis = "N/A"
+        }
+
         # Serial/Service Tag
         try {
             $bios = Get-CimInstance Win32_BIOS

@@ -2104,7 +2104,11 @@ function sincronizarSOdesdeAgente() {
       nonEmpty(equipo.soSerial) &&
       nonEmpty(equipo.firmwareInventario) &&
       tipoDiscoEsUtil(equipo.tipoDisco) &&
-      nonEmpty(equipo.tamanoDisco);
+      nonEmpty(equipo.tamanoDisco) &&
+      nonEmpty(equipo.fabricante) &&
+      nonEmpty(equipo.modelo) &&
+      nonEmpty(equipo.numeroSerial) &&
+      nonEmpty(equipo.tipoEquipo);
     if (yaCompleto) return;
     const agente = equiposTIv2Data.find((a) => equipoCoincideConAgente(equipo, a));
     const hw = agente ? agente.hardware : null;
@@ -2139,6 +2143,24 @@ function sincronizarSOdesdeAgente() {
     }
     if (hw && !nonEmpty(equipo.tamanoDisco) && Number(hw.discoFisicoTamanoGB) > 0) {
       equipo.tamanoDisco = String(hw.discoFisicoTamanoGB);
+      cambio = true;
+    }
+    // Datos del equipo en si (Fabricante/Modelo/Serial/Tipo de computador) --
+    // el agente ya los recolecta de Win32_ComputerSystem/Win32_BIOS/chasis.
+    if (hw && !nonEmpty(equipo.fabricante) && nonEmpty(hw.fabricante)) {
+      equipo.fabricante = hw.fabricante;
+      cambio = true;
+    }
+    if (hw && !nonEmpty(equipo.modelo) && nonEmpty(hw.modelo)) {
+      equipo.modelo = hw.modelo;
+      cambio = true;
+    }
+    if (hw && !nonEmpty(equipo.numeroSerial) && nonEmpty(hw.serialNumber) && hw.serialNumber !== "N/A") {
+      equipo.numeroSerial = hw.serialNumber;
+      cambio = true;
+    }
+    if (hw && !nonEmpty(equipo.tipoEquipo) && nonEmpty(hw.tipoChasis) && hw.tipoChasis !== "N/A") {
+      equipo.tipoEquipo = hw.tipoChasis;
       cambio = true;
     }
     if (cambio) {
@@ -2576,6 +2598,29 @@ function renderSugerenciasMonitor(filtro) {
     lista.appendChild(item);
   });
   lista.classList.add("open");
+}
+
+// Autocompleta Empresa/Nombre de empleado/Puesto/Departamento/DPI en el modal
+// de editar equipo a partir del padron de empleados activos (PADRON_EMPLEADOS,
+// definido en empleados.js), buscando por Codigo de empleado (Nº pers., llave
+// unica y confiable a diferencia de intentar adivinar el nombre desde el
+// usuario de dominio). Solo llena los campos que sigan vacios -- nunca pisa
+// una edicion manual ya hecha. No sincroniza a Firestore por si mismo: solo
+// rellena el formulario abierto, el usuario sigue teniendo que dar Guardar.
+function buscarEmpleadoPorCodigo(codigo) {
+  const c = String(codigo || "").trim();
+  if (!c) return null;
+  return PADRON_EMPLEADOS.find((emp) => emp.codigo === c) || null;
+}
+
+function autocompletarEmpleadoPorCodigo() {
+  const emp = buscarEmpleadoPorCodigo($("codigoEmpleado").value);
+  if (!emp) return;
+  if (!$("empresa").value.trim()) $("empresa").value = emp.empresa;
+  if (!$("nombreEmpleado").value.trim()) $("nombreEmpleado").value = emp.nombre;
+  if (!$("puesto").value.trim()) $("puesto").value = emp.puesto;
+  if (!$("departamento").value.trim()) $("departamento").value = emp.departamento;
+  if (!$("dpi").value.trim()) $("dpi").value = emp.dpi;
 }
 
 function inicializarAutocompleteMonitor() {
@@ -5062,6 +5107,7 @@ $("btnSugerirIdGlpi").addEventListener("click", () => {
   $("idGlpi").value = siguienteIdGlpi();
 });
 $("nombreRed").addEventListener("input", onCambioNombreRedEquipo);
+$("codigoEmpleado").addEventListener("blur", autocompletarEmpleadoPorCodigo);
 inicializarAutocompleteMonitor();
 $("btnCerrarModal").addEventListener("click", cerrarModal);
 $("btnCancelar").addEventListener("click", cerrarModal);

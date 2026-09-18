@@ -174,6 +174,45 @@ real de disco que Windows sí mostraba):
   equipo sin estos 6 campos se llena solo cuando el agente ya tiene el dato de esa máquina; un
   equipo con `soVersion`/`firmwareInventario`/`tipoDisco`/`tamanoDisco` ya editado a mano queda
   intacto aunque el agente tenga datos distintos.
+- **Extensión (sep/2026) — Fabricante / Modelo / Número de serial / Tipos de computadores**:
+  mismo puente (`sincronizarSOdesdeAgente`, misma guardia "solo si sigue vacío"), ahora también
+  llena `equipo.fabricante`/`modelo`/`numeroSerial` desde `hw.fabricante`/`hw.modelo`/
+  `hw.serialNumber` (ya se recolectaban, solo faltaba mapearlos) y `equipo.tipoEquipo` desde
+  el campo NUEVO `hw.tipoChasis` (`agent-inventario.ps1`, bloque de hardware: lee
+  `Win32_SystemEnclosure.ChassisTypes[0]` y lo traduce a texto — Desktop/Laptop/Notebook/Rack
+  Mount Chassis/etc., mismos nombres que ya usa el datalist de "Tipos de computadores" en la
+  app). Distinto de `hw.tipoEquipo` (que es `SystemType`, la arquitectura tipo "x64-based PC",
+  ya existía y no se toca). Se agregaron estos 4 campos también al guardia `yaCompleto` de la
+  función, por la misma razón de la nota de arriba. Campos que el agente **no puede** llenar
+  porque no son de hardware (Ubicaciones, Empresa, Puesto, Departamento, Contratos, DPI) se
+  quedan fuera de este puente a propósito.
+
+### Autocompletado por Código de empleado (padrón de empleados activos)
+El usuario pidió que, en el modal de editar equipo, con solo escribir el **Código de empleado**
+(Nº pers.) se autocompleten Empresa / Nombre de empleado / Puesto / Departamento / DPI, en vez
+de escribirlos a mano — jalando del padrón real de RRHH (`Empleados_activo_sal_13-08-2026.xlsx`,
+2,081 empleados únicos en las hojas `textil`/`Resto de empresas`/`RIOL`). Se descartó intentar
+adivinar el código a partir del usuario de dominio del agente (`victor.morales` → nombre, luego
+buscar por nombre) porque el padrón no tiene columna de usuario de dominio y el matcheo por
+nombre ya demostró ser ambiguo en el pasado (ver alta del contrato 8030028191, candidatos con el
+mismo nombre) — el Código de empleado en cambio es una llave única y exacta, cero ambigüedad.
+- **`empleados.js`** (archivo nuevo, mismo patrón que `monitores.js`): `PADRON_EMPLEADOS`, array
+  estático con `{codigo, nombre, puesto, departamento, empresa, dpi}` por cada Nº pers. único del
+  Excel (snapshot al 13/08/2026 — si RRHH manda un padrón más reciente, hay que regenerar este
+  archivo, no editarlo a mano).
+- **`app.js`**: `buscarEmpleadoPorCodigo(codigo)` (lookup exacto por `codigo`) +
+  `autocompletarEmpleadoPorCodigo()` (llena `empresa`/`nombreEmpleado`/`puesto`/`departamento`/
+  `dpi` **solo si cada campo sigue vacío**, nunca pisa una edición manual), conectada al evento
+  `blur` del input `codigoEmpleado`. A diferencia del puente del agente, esto **no sincroniza
+  solo** a Firestore — solo rellena el formulario abierto, el usuario sigue dando clic en
+  Guardar como cualquier edición manual.
+- **`Unidad de Negocio` queda fuera** — el padrón no tiene esa columna y no existe ya una tabla
+  Empresa→Unidad de Negocio en el código para derivarla con confianza; sigue siendo manual.
+- **`Contratos` no se automatiza con esto** — el padrón de empleados no tiene datos de contrato,
+  y no existe un archivo maestro con todos los contratos por serial (solo se tiene el detalle de
+  contratos puntuales ya usados, ej. `Detalle_66_Equipos_Lenovo_a_Tecnoelec.xlsx` para el
+  contrato 8030028191, ya cargado). Contratos nuevos se siguen validando caso por caso con el
+  archivo que entregue el proveedor, igual que se hizo con ese contrato.
 
 ### Tipo de RAM (DDR3/DDR4/DDR5/LPDDR) por módulo — solo en "Inventario Automático", sin puente
 El usuario preguntó cómo saber el tipo de DDR de la RAM, específicamente para equipos con
