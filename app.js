@@ -2613,6 +2613,32 @@ function buscarEmpleadoPorCodigo(codigo) {
   return PADRON_EMPLEADOS.find((emp) => emp.codigo === c) || null;
 }
 
+// Mapeo Empresa (Sociedad del padron) -> Unidad de Negocio, confirmado por el
+// usuario contra las 17 Sociedades reales del padron (ninguna cae en Hotel ni
+// en Servicios por ahora). Usa la ortografia que el usuario pidio de aqui en
+// adelante (ej. "Agroindustria", "Energía" con tilde) aunque algunos equipos
+// viejos ya tengan capturado "Agricola"/"Energia" a mano — no se tocan esos,
+// el datalist simplemente terminara mostrando ambas variantes.
+const EMPRESA_A_UNIDAD_NEGOCIO = {
+  "BREEMER S.A.": "Corporativo",
+  "BROADCLOTH S.A.": "Corporativo",
+  "TECNOELEC S.A.": "Corporativo",
+  "RIOL S.A.": "Agroindustria",
+  "COM ELECTRIC DEL PACIFICO": "Energía",
+  "ENERGIA INMEDIATA S.A.": "Energía",
+  "GENERADORA EL QUETZAL S.A": "Energía",
+  "GENERADORA SOL, S.A.": "Energía",
+  "NADAL, S.A.": "Energía",
+  "RECUR ENERGETICOS PASAC": "Energía",
+  "TERTER, S.A.": "Energía",
+  "PLANISALARIS, S.A.": "Inmobiliaria",
+  "PLANI YA, S.A.": "Inmobiliaria",
+  "PERSONAS Y SERVICIOS S.A.": "Inmobiliaria",
+  "LIZITEX, S.A.": "Textil",
+  "NEWTEX, S.A.": "Textil",
+  "TENNAT S.A.": "Textil",
+};
+
 function autocompletarEmpleadoPorCodigo() {
   const emp = buscarEmpleadoPorCodigo($("codigoEmpleado").value);
   if (!emp) return;
@@ -2621,6 +2647,9 @@ function autocompletarEmpleadoPorCodigo() {
   if (!$("puesto").value.trim()) $("puesto").value = emp.puesto;
   if (!$("departamento").value.trim()) $("departamento").value = emp.departamento;
   if (!$("dpi").value.trim()) $("dpi").value = emp.dpi;
+  if (!$("unidadNegocio").value.trim() && EMPRESA_A_UNIDAD_NEGOCIO[emp.empresa]) {
+    $("unidadNegocio").value = EMPRESA_A_UNIDAD_NEGOCIO[emp.empresa];
+  }
 }
 
 function inicializarAutocompleteMonitor() {

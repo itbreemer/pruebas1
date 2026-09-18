@@ -206,8 +206,16 @@ mismo nombre) — el Código de empleado en cambio es una llave única y exacta,
   `blur` del input `codigoEmpleado`. A diferencia del puente del agente, esto **no sincroniza
   solo** a Firestore — solo rellena el formulario abierto, el usuario sigue dando clic en
   Guardar como cualquier edición manual.
-- **`Unidad de Negocio` queda fuera** — el padrón no tiene esa columna y no existe ya una tabla
-  Empresa→Unidad de Negocio en el código para derivarla con confianza; sigue siendo manual.
+- **`Unidad de Negocio` (sep/2026, agregado después)**: el padrón no tiene esa columna, pero el
+  usuario confirmó la agrupación real de las 17 Empresas (Sociedad) del padrón → mapa
+  `EMPRESA_A_UNIDAD_NEGOCIO` en `app.js` (Corporativo: Breemer/Broadcloth/Tecnoelec; Agroindustria:
+  Riol; Energía: Com Electric del Pacífico/Energía Inmediata/Generadora El Quetzal/Generadora
+  Sol/Nadal/Recur Energéticos Pasac/Terter; Inmobiliaria: Planisalaris/Plani Ya/Personas y
+  Servicios; Textil: Lizitex/Newtex/Tennat — ninguna Empresa del padrón cae hoy en "Hotel" ni
+  "Servicios"). Mismo `autocompletarEmpleadoPorCodigo()`, misma guardia de "solo si sigue vacío".
+  Usa la ortografía que pidió el usuario de aquí en adelante (`"Agroindustria"`, `"Energía"` con
+  tilde) aunque equipos viejos ya tengan capturado a mano `"Agricola"`/`"Energia"` sin tilde — no
+  se tocan esos, es normal que el datalist de sugerencias termine mostrando ambas variantes.
 - **`Contratos` no se automatiza con esto** — el padrón de empleados no tiene datos de contrato,
   y no existe un archivo maestro con todos los contratos por serial (solo se tiene el detalle de
   contratos puntuales ya usados, ej. `Detalle_66_Equipos_Lenovo_a_Tecnoelec.xlsx` para el
