@@ -186,6 +186,11 @@ real de disco que Windows sí mostraba):
   función, por la misma razón de la nota de arriba. Campos que el agente **no puede** llenar
   porque no son de hardware (Ubicaciones, Empresa, Puesto, Departamento, Contratos, DPI) se
   quedan fuera de este puente a propósito.
+- **Extensión (sep/2026) — Procesador / Memoria**: a pedido explícito del usuario, se agregaron
+  también al puente (`hw.procesador.nombre` / `hw.memoria.total`, datos que el agente ya
+  recolectaba y solo se mostraban en "Inventario Automático"), con la misma guardia de "solo si
+  sigue vacío" y agregados al guardia `yaCompleto`. Verificado con Playwright: un equipo vacío se
+  llena con ambos; uno con `procesador` ya editado a mano queda intacto.
 
 ### Autocompletado por Código de empleado (padrón de empleados activos)
 El usuario pidió que, en el modal de editar equipo, con solo escribir el **Código de empleado**

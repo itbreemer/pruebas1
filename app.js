@@ -2108,7 +2108,9 @@ function sincronizarSOdesdeAgente() {
       nonEmpty(equipo.fabricante) &&
       nonEmpty(equipo.modelo) &&
       nonEmpty(equipo.numeroSerial) &&
-      nonEmpty(equipo.tipoEquipo);
+      nonEmpty(equipo.tipoEquipo) &&
+      nonEmpty(equipo.procesador) &&
+      nonEmpty(equipo.memoria);
     if (yaCompleto) return;
     const agente = equiposTIv2Data.find((a) => equipoCoincideConAgente(equipo, a));
     const hw = agente ? agente.hardware : null;
@@ -2161,6 +2163,15 @@ function sincronizarSOdesdeAgente() {
     }
     if (hw && !nonEmpty(equipo.tipoEquipo) && nonEmpty(hw.tipoChasis) && hw.tipoChasis !== "N/A") {
       equipo.tipoEquipo = hw.tipoChasis;
+      cambio = true;
+    }
+    // Procesador/Memoria: mismo puente, mismo cuidado de "solo si esta vacio".
+    if (hw && !nonEmpty(equipo.procesador) && hw.procesador && nonEmpty(hw.procesador.nombre) && hw.procesador.nombre !== "N/A") {
+      equipo.procesador = hw.procesador.nombre;
+      cambio = true;
+    }
+    if (hw && !nonEmpty(equipo.memoria) && hw.memoria && nonEmpty(hw.memoria.total) && hw.memoria.total !== "N/A") {
+      equipo.memoria = hw.memoria.total;
       cambio = true;
     }
     if (cambio) {
