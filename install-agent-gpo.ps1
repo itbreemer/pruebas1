@@ -312,12 +312,21 @@ if ($RunImmediately) {
 # ============================================================================
 
 Write-Host "`n=========================================="
-Write-Host "[OK] INSTALACIÓN COMPLETADA"
+Write-Host "[OK] INSTALACION COMPLETADA"
 Write-Host "=========================================="
-Write-Host "
-Próximos pasos:
+# Se usa un here-string (@"..."@) en vez de una cadena normal de varias
+# lineas: un here-string solo se puede "romper" si una linea empieza
+# exactamente con `"@` - una cadena normal se puede romper por cualquier
+# comilla suelta, incluida una corrompida por un problema de codificacion al
+# descargar el ZIP en Windows (bug real confirmado: este mismo bloque, con
+# acentos, ya causo un ParserError real en una maquina - "Falta una
+# expresion despues del operador unario '-'"). Tambien se quitan los acentos
+# de este texto por seguridad extra.
+$resumenFinal = @"
 
-1. Edita la configuración:
+Proximos pasos:
+
+1. Edita la configuracion:
    notepad '$targetConfig'
 
 2. Verifica la tarea programada:
@@ -327,12 +336,13 @@ Próximos pasos:
    Get-Content '$logDir\agent-*.log' -Tail 50
 
 4. Para distribuir via GPO:
-   - Copia la carpeta a un compartida de red
+   - Copia la carpeta a una compartida de red
    - Configura GPO para ejecutar este script
    - O crea GPO para ejecutar el agente directamente
 
 ---
 Para ayuda, revisa: $readmePath
-" -ForegroundColor Green
+"@
+Write-Host $resumenFinal -ForegroundColor Green
 
 exit 0
