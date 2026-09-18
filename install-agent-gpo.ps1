@@ -286,12 +286,19 @@ if ($RunImmediately) {
         # aunque la tarea SI quedo bien registrada (condicion de carrera real,
         # confirmada en LAPLNV309). Un reintento con una breve espera evita
         # el falso aviso de error sin afectar nada mas.
+        # -ErrorAction Stop es necesario: Start-ScheduledTask lanza un error
+        # NO terminante por defecto, asi que un try/catch normal nunca lo
+        # detecta (el catch nunca se ejecuta) - el error solo se imprime en
+        # pantalla como texto suelto y el script sigue de largo, dejando ver
+        # el error feo sin que el reintento llegue a intentarse. Confirmado
+        # real: sin -ErrorAction Stop aqui, el reintento de abajo nunca se
+        # disparaba.
         try {
-            Start-ScheduledTask -TaskName $TaskName
+            Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
         }
         catch {
             Start-Sleep -Seconds 3
-            Start-ScheduledTask -TaskName $TaskName
+            Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
         }
         Write-Host "[OK] Agente ejecutado. Espera 30 segundos y revisa los logs..." -ForegroundColor Green
         Start-Sleep -Seconds 3
