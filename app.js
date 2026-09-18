@@ -4516,6 +4516,17 @@ function tablaDetalleTIv2(columnas, filas) {
   return `<section class="tabla-wrap"><table class="tabla"><thead><tr>${encabezado}</tr></thead><tbody>${cuerpo}</tbody></table></section>`;
 }
 
+// PowerShell/Firestore a veces "desenvuelve" un array de un solo elemento y lo
+// manda como un objeto suelto en vez de un array de 1 (bug real confirmado:
+// hw.monitores llegaba como objeto cuando el equipo solo tiene un monitor,
+// rompiendo el modal con "(hw.monitores || []).map is not a function"). Esta
+// funcion normaliza cualquier campo de listas del agente antes de iterarlo.
+function comoArray(valor) {
+  if (Array.isArray(valor)) return valor;
+  if (valor && typeof valor === "object") return [valor];
+  return [];
+}
+
 function abrirDetalleEquipoTIv2(item) {
   const e = item.dato;
   const hw = e.hardware || {};
@@ -4526,7 +4537,7 @@ function abrirDetalleEquipoTIv2(item) {
 
   $("modalDetalleEquipoTIv2Titulo").textContent = `Detalle — ${e.computadora || e.equipoId || "N/A"}`;
 
-  const softwareLista = sw.softwareInstalado || [];
+  const softwareLista = comoArray(sw.softwareInstalado);
 
   // Cada pestaña replica una categoría del sidebar de GLPI (Computadora > pestañas con
   // contador), en vez del scroll único anterior.
@@ -4593,103 +4604,103 @@ function abrirDetalleEquipoTIv2(item) {
     {
       id: "ram",
       label: "Memoria RAM",
-      count: (ram.modulos || []).length,
+      count: comoArray(ram.modulos).length,
       html: `
         <p class="subseccion-nota">Total: ${esc(ram.total)}</p>
         ${tablaDetalleTIv2(
           ["Ranura", "Capacidad", "Tipo", "Fabricante", "Velocidad", "N° Parte"],
-          (ram.modulos || []).map((m) => [m.ranura, m.capacidad, m.tipoDdr, m.fabricante, m.velocidad, m.numeroParte])
+          comoArray(ram.modulos).map((m) => [m.ranura, m.capacidad, m.tipoDdr, m.fabricante, m.velocidad, m.numeroParte])
         )}
       `,
     },
     {
       id: "discos",
       label: "Discos",
-      count: (hw.discos || []).length,
+      count: comoArray(hw.discos).length,
       html: tablaDetalleTIv2(
         ["Unidad", "Tamaño", "Espacio Libre", "% Uso"],
-        (hw.discos || []).map((d) => [d.unidad, d.tamanio, d.espacioLibre, d.porcentajeUso != null ? `${d.porcentajeUso}%` : ""])
+        comoArray(hw.discos).map((d) => [d.unidad, d.tamanio, d.espacioLibre, d.porcentajeUso != null ? `${d.porcentajeUso}%` : ""])
       ),
     },
     {
       id: "red",
       label: "Red",
-      count: (hw.redAdaptadores || []).length,
+      count: comoArray(hw.redAdaptadores).length,
       html: tablaDetalleTIv2(
         ["Adaptador", "Descripción", "MAC", "IP", "Estado", "Velocidad"],
-        (hw.redAdaptadores || []).map((n) => [n.nombre, n.descripcion, n.mac, n.ip, n.estado, n.velocidad])
+        comoArray(hw.redAdaptadores).map((n) => [n.nombre, n.descripcion, n.mac, n.ip, n.estado, n.velocidad])
       ),
     },
     {
       id: "monitores",
       label: "Monitores",
-      count: (hw.monitores || []).length,
+      count: comoArray(hw.monitores).length,
       html: tablaDetalleTIv2(
         ["Fabricante", "Modelo", "Serial", "Activo"],
-        (hw.monitores || []).map((m) => [m.fabricante, m.modelo, m.serial, m.activo ? "Sí" : "No"])
+        comoArray(hw.monitores).map((m) => [m.fabricante, m.modelo, m.serial, m.activo ? "Sí" : "No"])
       ),
     },
     {
       id: "antivirus",
       label: "Antivirus",
-      count: (hw.antivirus || []).length,
+      count: comoArray(hw.antivirus).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Habilitado", "Actualizado"],
-        (hw.antivirus || []).map((a) => [a.nombre, a.habilitado ? "Sí" : "No", a.actualizado ? "Sí" : "No"])
+        comoArray(hw.antivirus).map((a) => [a.nombre, a.habilitado ? "Sí" : "No", a.actualizado ? "Sí" : "No"])
       ),
     },
     {
       id: "firewall",
       label: "Firewall",
-      count: (hw.firewall || []).length,
+      count: comoArray(hw.firewall).length,
       html: tablaDetalleTIv2(
         ["Perfil", "Activo"],
-        (hw.firewall || []).map((f) => [f.perfil, f.activo ? "Sí" : "No"])
+        comoArray(hw.firewall).map((f) => [f.perfil, f.activo ? "Sí" : "No"])
       ),
     },
     {
       id: "pci",
       label: "Controladores PCI",
-      count: (hw.controladores || []).length,
+      count: comoArray(hw.controladores).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Fabricante", "Device ID"],
-        (hw.controladores || []).map((c) => [c.nombre, c.fabricante, c.deviceId])
+        comoArray(hw.controladores).map((c) => [c.nombre, c.fabricante, c.deviceId])
       ),
     },
     {
       id: "usb",
       label: "Dispositivos USB",
-      count: (hw.usbDispositivos || []).length,
+      count: comoArray(hw.usbDispositivos).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Fabricante", "Device ID"],
-        (hw.usbDispositivos || []).map((u) => [u.nombre, u.fabricante, u.deviceId])
+        comoArray(hw.usbDispositivos).map((u) => [u.nombre, u.fabricante, u.deviceId])
       ),
     },
     {
       id: "sonido",
       label: "Tarjetas de Sonido",
-      count: (hw.tarjetasSonido || []).length,
+      count: comoArray(hw.tarjetasSonido).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Fabricante"],
-        (hw.tarjetasSonido || []).map((t) => [t.nombre, t.fabricante])
+        comoArray(hw.tarjetasSonido).map((t) => [t.nombre, t.fabricante])
       ),
     },
     {
       id: "puertos",
       label: "Puertos Físicos",
-      count: (hw.puertos || []).length,
+      count: comoArray(hw.puertos).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Tipo", "Descripción"],
-        (hw.puertos || []).map((p) => [p.nombre, p.tipo, p.descripcion])
+        comoArray(hw.puertos).map((p) => [p.nombre, p.tipo, p.descripcion])
       ),
     },
     {
       id: "slots",
       label: "Ranuras de Expansión",
-      count: (hw.slots || []).length,
+      count: comoArray(hw.slots).length,
       html: tablaDetalleTIv2(
         ["Nombre", "Estado", "Tipo"],
-        (hw.slots || []).map((s) => [s.nombre, s.estado, s.tipo])
+        comoArray(hw.slots).map((s) => [s.nombre, s.estado, s.tipo])
       ),
     },
     {

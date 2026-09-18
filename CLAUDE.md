@@ -353,6 +353,23 @@ El resto de colecciones del sistema usan `allow read, write: if request.auth != 
    `catch` ya lo trataba como aviso, no rompía la instalación), pero confundía. **Fix**: reintento
    con una breve espera (`Start-Sleep -Seconds 3`) antes de reintentar `Start-ScheduledTask`.
 
+### Bug real corregido — modal de detalle en "Inventario Automático" no abría con equipos de un solo item en una lista
+El usuario detectó (con la consola del navegador) que al hacer clic en un equipo de "Inventario
+Automático" no pasaba nada. Error real: `TypeError: (hw.monitores || []).map is not a function`
+en `abrirDetalleEquipoTIv2`. Causa raíz: mismo patrón de fondo que otros bugs de serialización de
+PowerShell/Firestore ya documentados arriba — cuando una lista del agente (`hardware.monitores`,
+`hardware.antivirus`, `software.softwareInstalado`, etc.) solo tiene **un elemento**, a veces
+llega como un objeto suelto en vez de un array de 1, y `(campo || []).map(...)` truena porque
+`.map` no existe en un objeto. `formatearMonitorTIv2` (usada en la tabla principal) ya tenía la
+guardia correcta (`Array.isArray(...) ? ... : []`), pero `abrirDetalleEquipoTIv2` (el modal de
+detalle) no la tenía en ninguna de sus 10 listas. **Fix**: nueva función `comoArray(valor)`
+(`Array.isArray` ya es un array; un objeto suelto lo envuelve en `[valor]`; cualquier otra cosa
+da `[]`) — reemplaza los `(campo || [])` de las 10 listas del modal (monitores, antivirus,
+firewall, controladores PCI, USB, tarjetas de sonido, puertos, ranuras, discos, red, módulos de
+RAM, software instalado). Verificado con Playwright: reproducido el caso real (monitor/antivirus/
+software como objeto suelto, no array) y confirmado que el modal abre sin error y muestra el dato
+único correctamente en cada pestaña.
+
 ### Metodología útil para depurar este tipo de bug
 Cuando algo llega vacío o corrupto a Firestore: (1) confirmar con `console.log(JSON.stringify(...))`
 en la consola del navegador qué llega realmente al cliente web, (2) comparar contra Firebase
