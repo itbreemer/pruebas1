@@ -652,6 +652,38 @@ versión final, a pedido del usuario: **fila 1 columna "S/N MONITOR" en blanco**
 a "(MODELO) DESCRIPCION". Verificado con Playwright: el serial aparece una sola vez, en la fila
 del monitor, no en la del equipo.
 
+### "Generar Acta" (Hoja de Responsabilidad) ahora sí registra la Entrega/Devolución en el equipo
+**Bug real encontrado por el usuario**: `generarEImprimirActa()` era una función que **solo
+imprimía** — leía el equipo por Nombre en Red, armaba el PDF con `renderActa()`, y cerraba el
+modal, pero nunca llamaba a `guardarDatos()` ni a `sincronizarEquipo()`. Esto es distinto de
+"📦 Nuevo Ingreso" (`generarIngresoCompleto`), que sí persiste. El usuario generó una Hoja de
+Responsabilidad de **Devolución** para `LAPLNV181` y de **Entrega** para `LAPLNV317` (ambas a
+nombre de Marco Polanco) y, al buscarlo después en "👤 Usuarios" (que se arma en vivo desde
+`equipos`, ver más abajo), Marco no aparecía en ningún lado — ninguna de las dos actas había
+tocado la base de datos: `LAPLNV181` seguía con los datos de antes de la devolución y `LAPLNV317`
+nunca quedó con su nombre asignado (si ni siquiera existía aún como equipo registrado, la función
+armaba un objeto `{ nombreRed }` desechable solo para imprimir, sin crear nada real).
+
+**Fix**: `generarEImprimirActa()` ahora sí actualiza el equipo antes de imprimir:
+- **Requiere que el equipo ya exista** en el inventario (buscado por Nombre en Red) — si no,
+  bloquea con alerta pidiendo registrarlo primero con "+ Nuevo equipo" o "📦 Nuevo Ingreso" (ya
+  no se imprime un acta de un equipo fantasma que nunca quedó guardado).
+- **Requiere información completa antes de imprimir** (`CAMPOS_ACTA_OBLIGATORIOS`): Empresa,
+  Tipo de Equipo, Marca, Modelo y Service Tag/Serial del equipo, más Declarante/Técnico/Jefe del
+  formulario — si falta algo, bloquea con alerta indicando exactamente qué completar primero en
+  "Editar equipo" (evita imprimir un acta con huecos).
+- **Entrega**: `equipo.nombreEmpleado = declarante` (la persona que el formulario dice que
+  recibe) y `equipo.status = "Asignada"`.
+- **Devolución**: a propósito **NO se limpia** `nombreEmpleado`/`usuarioDominio`/`correo` — el
+  equipo debe seguir mostrando el nombre de quien lo devolvió (a pedido explícito del usuario)
+  **hasta que una próxima acta de Entrega lo reasigne** a otra persona. Solo cambia
+  `equipo.status = "Devolucion > Pendiente Reasignacion"`.
+- Ambos casos llaman `guardarDatos()` + `sincronizarEquipo(equipo)` y refrescan la vista
+  (`render()`, `refrescarVistasSecundarias()`, `poblarFiltrosYDatalists()`) antes de imprimir.
+Verificado con Playwright: equipo incompleto bloquea sin imprimir ni cambiar nada; al completarlo,
+Devolución conserva el nombre del usuario y cambia el status; Entrega sí asigna el nuevo usuario;
+un Nombre en Red inexistente bloquea sin crear ningún equipo fantasma.
+
 ### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
 - **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de
   mantenimientos de ESE equipo (`registrosMantenimientoDeEquipo`, `abrirHistorialMantenimientoEquipo`),
