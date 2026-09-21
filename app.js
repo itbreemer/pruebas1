@@ -1077,22 +1077,46 @@ function ajustarStockToner(tonerTexto, delta) {
   actualizarStockDeToner(clave, String(actual + delta));
 }
 
-// Al elegir/escribir el Serial: autocompleta Modelo/Ubicación desde el
-// catálogo de Impresoras (informativo, de solo lectura) y llena el
-// desplegable de Toner solo con las variantes que de verdad le sirven a esa
-// impresora (una por color, o una sola si es B/N), mostrando su stock.
-// `tonerPreseleccionado` se usa al elegir una sugerencia del buscador (ver
-// renderSugerenciasSalidaToner) para dejar marcado exactamente el Toner/color
-// que se buscó, en vez del primero de la lista.
-function poblarCamposSalidaToner(prefijo, tonerPreseleccionado) {
-  const serial = $(`${prefijo}Serial`).value.trim();
+// Cada línea del formulario de Salidas es su propia fila con su propio
+// Serial/Modelo/Ubicación/Toner/Cantidad — un mismo No. de Vale puede incluir
+// varios Toners a la vez (varios colores de una impresora, o impresoras
+// distintas de una misma área). Mismo patrón de renderizado de fila que
+// Ingreso de Tóner (ver lineasIngresoTonerCapturadas), pero aquí cada línea
+// necesita su propio autocompletado de Serial en vez de una lista fija.
+
+function filaLineaSalidaTonerHTML(v = {}) {
+  return `
+    <tr class="fila-linea-salida-toner">
+      <td>
+        <div class="autocomplete-wrap">
+          <input type="text" class="ls-serial" autocomplete="off" placeholder="Serial, Modelo o Toner" value="${esc(v.serial || "")}">
+          <div class="autocomplete-lista ls-sugerencias"></div>
+        </div>
+      </td>
+      <td><input type="text" class="ls-modelo" disabled value="${esc(v.modelo || "")}"></td>
+      <td><input type="text" class="ls-ubicacion" disabled value="${esc(v.ubicacion || "")}"></td>
+      <td><select class="ls-toner"></select></td>
+      <td><input type="number" class="ls-cantidad" min="1" value="${esc(v.cantidad || "")}"></td>
+      <td><button type="button" class="btn btn-secondary btn-quitar-linea-salida" title="Quitar línea">✕</button></td>
+    </tr>
+  `;
+}
+
+// Al elegir/escribir el Serial de una línea: autocompleta Modelo/Ubicación
+// desde el catálogo de Impresoras (informativo, de solo lectura) y llena el
+// desplegable de Toner de ESA línea solo con las variantes que de verdad le
+// sirven a esa impresora (una por color, o una sola si es B/N), mostrando su
+// stock. `tonerPreseleccionado` se usa al elegir una sugerencia del buscador
+// para dejar marcado exactamente el Toner/color que se buscó.
+function poblarCamposLineaSalidaToner(fila, tonerPreseleccionado) {
+  const serial = fila.querySelector(".ls-serial").value.trim();
   const claveSerial = normalizarTextoComparar(serial);
   const impresora = impresorasData.find((p) => normalizarTextoComparar(p.serial) === claveSerial);
-  $(`${prefijo}Modelo`).value = impresora ? impresora.modelo || "" : "";
-  $(`${prefijo}Ubicacion`).value = impresora ? impresora.ubicacion || "" : "";
+  fila.querySelector(".ls-modelo").value = impresora ? impresora.modelo || "" : "";
+  fila.querySelector(".ls-ubicacion").value = impresora ? impresora.ubicacion || "" : "";
 
   const opciones = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.serial) === claveSerial);
-  const select = $(`${prefijo}Toner`);
+  const select = fila.querySelector(".ls-toner");
   const valorPrevio = tonerPreseleccionado ?? select.value;
   select.innerHTML = opciones.length
     ? opciones.map((c) => `<option value="${esc(c.toner)}">${esc(c.toner)} (stock: ${esc(c.stockActual || 0)})</option>`).join("")
@@ -1100,13 +1124,12 @@ function poblarCamposSalidaToner(prefijo, tonerPreseleccionado) {
   if (opciones.some((c) => c.toner === valorPrevio)) select.value = valorPrevio;
 }
 
-// Buscador único de Serial/Modelo/Toner para el formulario de Salidas —
-// mismo patrón que el autocompletado de Monitor (ver renderSugerenciasMonitor):
-// el bodeguero muchas veces solo sabe uno de los tres datos, así que se busca
-// por cualquiera de ellos y al elegir una coincidencia se completa todo lo
-// demás (Modelo, Ubicación y el Toner exacto que se buscó).
-function renderSugerenciasSalidaToner(prefijo, filtro) {
-  const lista = $(`${prefijo}SerialSugerencias`);
+// Buscador único de Serial/Modelo/Toner por línea — mismo patrón que el
+// autocompletado de Monitor (ver renderSugerenciasMonitor): el bodeguero
+// muchas veces solo sabe uno de los tres datos, así que se busca por
+// cualquiera de ellos y al elegir una coincidencia se completa todo lo demás.
+function renderSugerenciasLineaSalidaToner(fila, filtro) {
+  const lista = fila.querySelector(".ls-sugerencias");
   if (!lista) return;
   const t = (filtro || "").trim().toLowerCase();
   const filtrados = t
@@ -1127,27 +1150,54 @@ function renderSugerenciasSalidaToner(prefijo, filtro) {
     item.innerHTML = `${esc(c.toner)}<small>Serial ${esc(c.serial)} · ${esc(c.modelo)} · Stock: ${esc(c.stockActual || 0)}</small>`;
     item.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      $(`${prefijo}Serial`).value = c.serial;
+      fila.querySelector(".ls-serial").value = c.serial;
       lista.classList.remove("open");
-      poblarCamposSalidaToner(prefijo, c.toner);
+      poblarCamposLineaSalidaToner(fila, c.toner);
     });
     lista.appendChild(item);
   });
   lista.classList.add("open");
 }
 
-function inicializarAutocompleteSalidaToner(prefijo) {
-  const input = $(`${prefijo}Serial`);
-  const lista = $(`${prefijo}SerialSugerencias`);
-  if (!input || !lista) return;
-  input.addEventListener("focus", () => renderSugerenciasSalidaToner(prefijo, input.value));
+function inicializarLineaSalidaToner(fila) {
+  const input = fila.querySelector(".ls-serial");
+  const lista = fila.querySelector(".ls-sugerencias");
+  input.addEventListener("focus", () => renderSugerenciasLineaSalidaToner(fila, input.value));
   input.addEventListener("input", () => {
-    renderSugerenciasSalidaToner(prefijo, input.value);
-    poblarCamposSalidaToner(prefijo);
+    renderSugerenciasLineaSalidaToner(fila, input.value);
+    poblarCamposLineaSalidaToner(fila);
   });
   input.addEventListener("blur", () => {
     setTimeout(() => lista.classList.remove("open"), 150);
   });
+  fila.querySelector(".btn-quitar-linea-salida").addEventListener("click", () => fila.remove());
+}
+
+// Agrega una línea vacía (nuevo registro) o precargada (al editar uno
+// existente, `valores` trae serial/modelo/ubicacion/toner/cantidad).
+function agregarLineaSalidaToner(tbodyId, valores) {
+  const tbody = $(tbodyId);
+  if (!tbody) return;
+  tbody.insertAdjacentHTML("beforeend", filaLineaSalidaTonerHTML(valores));
+  const fila = tbody.lastElementChild;
+  inicializarLineaSalidaToner(fila);
+  if (valores && valores.serial) poblarCamposLineaSalidaToner(fila, valores.toner);
+  return fila;
+}
+
+// Lee todas las líneas capturadas en un tbody — descarta las que quedaron
+// incompletas (sin Serial, sin Toner válido o sin Cantidad > 0), igual que
+// lineasIngresoTonerCapturadas descarta las de cantidad 0.
+function lineasSalidaTonerCapturadas(tbodyId) {
+  return [...document.querySelectorAll(`#${tbodyId} .fila-linea-salida-toner`)]
+    .map((fila) => ({
+      serial: fila.querySelector(".ls-serial").value.trim(),
+      modelo: fila.querySelector(".ls-modelo").value.trim(),
+      ubicacion: fila.querySelector(".ls-ubicacion").value.trim(),
+      toner: fila.querySelector(".ls-toner").value,
+      cantidad: Number(fila.querySelector(".ls-cantidad").value) || 0,
+    }))
+    .filter((l) => l.serial && l.toner && l.cantidad > 0);
 }
 
 function renderSalidasToner() {
@@ -1155,21 +1205,21 @@ function renderSalidasToner() {
   if (!tbody) return;
   tbody.innerHTML = salidasTonerData.length
     ? salidasTonerData
-        .map(
-          (s) => `
+        .map((s) => {
+          const lineas = s.lineas || [];
+          const total = lineas.reduce((sum, l) => sum + (Number(l.cantidad) || 0), 0);
+          const detalle = lineas.map((l) => `${l.serial}: ${l.toner} (${l.cantidad})`).join("; ");
+          return `
             <tr data-salida-id="${esc(s.id)}">
               <td>${esc(s.noVale)}</td>
-              <td>${esc(s.serial)}</td>
-              <td>${esc(s.modelo)}</td>
-              <td>${esc(s.ubicacion)}</td>
-              <td>${esc(s.toner)}</td>
-              <td>${esc(s.cantidad)}</td>
+              <td>${esc(detalle)}</td>
+              <td>${esc(total)}</td>
               <td>${esc(s.fecha)}</td>
             </tr>
-          `
-        )
+          `;
+        })
         .join("")
-    : `<tr><td colspan="7" class="empty-state">Sin salidas registradas todavía.</td></tr>`;
+    : `<tr><td colspan="4" class="empty-state">Sin salidas registradas todavía.</td></tr>`;
 
   tbody.querySelectorAll("tr[data-salida-id]").forEach((tr) => {
     tr.addEventListener("click", () => abrirModalSalidaToner(tr.dataset.salidaId));
@@ -1178,36 +1228,35 @@ function renderSalidasToner() {
 
 function onSubmitNuevaSalidaToner(e) {
   e.preventDefault();
+  const noVale = $("svNoVale").value.trim();
+  const fecha = $("svFecha").value;
+  if (!noVale || !fecha) {
+    alert("Indica el No. de Vale y la Fecha");
+    return;
+  }
+  const lineas = lineasSalidaTonerCapturadas("tbodyFormSalidaToner");
+  if (!lineas.length) {
+    alert("Agrega al menos una línea con Serial, Toner y Cantidad válidos");
+    return;
+  }
+
   const datos = {
-    noVale: $("svNoVale").value.trim(),
-    serial: $("svSerial").value.trim(),
-    modelo: $("svModelo").value.trim(),
-    ubicacion: $("svUbicacion").value.trim(),
-    toner: $("svToner").value,
-    cantidad: Number($("svCantidad").value) || 0,
-    fecha: $("svFecha").value,
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    noVale,
+    fecha,
+    lineas,
+    ultimaModificacion: new Date().toISOString().slice(0, 16),
   };
-  if (!datos.serial || !datos.toner) {
-    alert("Indica el Serial y el Toner de la impresora");
-    return;
-  }
-  if (!datos.cantidad || datos.cantidad <= 0) {
-    alert("Indica una Cantidad mayor a 0");
-    return;
-  }
+  lineas.forEach((l) => ajustarStockToner(l.toner, -l.cantidad));
 
-  datos.id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-  datos.ultimaModificacion = new Date().toISOString().slice(0, 16);
   salidasTonerData.unshift(datos);
-  ajustarStockToner(datos.toner, -datos.cantidad);
-
   guardarSalidasToner();
   sincronizarSalidaToner(datos);
   renderSalidasToner();
+
   e.target.reset();
-  $("svModelo").value = "";
-  $("svUbicacion").value = "";
-  $("svToner").innerHTML = "";
+  $("tbodyFormSalidaToner").innerHTML = "";
+  agregarLineaSalidaToner("tbodyFormSalidaToner");
 }
 
 let salidaTonerActualId = null;
@@ -1218,11 +1267,14 @@ function abrirModalSalidaToner(id) {
   salidaTonerActualId = id;
   $("esvId").value = registro.id;
   $("esvNoVale").value = registro.noVale || "";
-  $("esvSerial").value = registro.serial || "";
-  poblarCamposSalidaToner("esv");
-  $("esvToner").value = registro.toner || "";
-  $("esvCantidad").value = registro.cantidad || "";
   $("esvFecha").value = registro.fecha || "";
+  $("tbodyEditarSalidaToner").innerHTML = "";
+  const lineas = registro.lineas || [];
+  if (lineas.length) {
+    lineas.forEach((l) => agregarLineaSalidaToner("tbodyEditarSalidaToner", l));
+  } else {
+    agregarLineaSalidaToner("tbodyEditarSalidaToner");
+  }
   $("modalSalidaTonerOverlay").style.display = "flex";
 }
 
@@ -1237,32 +1289,31 @@ function onSubmitEditarSalidaToner(e) {
   if (idx === -1) return;
   const anterior = salidasTonerData[idx];
 
-  const datos = {
-    id: anterior.id,
-    noVale: $("esvNoVale").value.trim(),
-    serial: $("esvSerial").value.trim(),
-    modelo: $("esvModelo").value.trim(),
-    ubicacion: $("esvUbicacion").value.trim(),
-    toner: $("esvToner").value,
-    cantidad: Number($("esvCantidad").value) || 0,
-    fecha: $("esvFecha").value,
-  };
-  if (!datos.serial || !datos.toner) {
-    alert("Indica el Serial y el Toner de la impresora");
+  const noVale = $("esvNoVale").value.trim();
+  const fecha = $("esvFecha").value;
+  if (!noVale || !fecha) {
+    alert("Indica el No. de Vale y la Fecha");
     return;
   }
-  if (!datos.cantidad || datos.cantidad <= 0) {
-    alert("Indica una Cantidad mayor a 0");
+  const lineas = lineasSalidaTonerCapturadas("tbodyEditarSalidaToner");
+  if (!lineas.length) {
+    alert("Agrega al menos una línea con Serial, Toner y Cantidad válidos");
     return;
   }
-  datos.ultimaModificacion = new Date().toISOString().slice(0, 16);
 
   // Se devuelve al Stock lo que esta salida había rebajado antes de aplicar
-  // los datos corregidos (aunque haya cambiado de Toner/color), para que el
-  // ajuste nunca quede descuadrado.
-  ajustarStockToner(anterior.toner, anterior.cantidad);
-  ajustarStockToner(datos.toner, -datos.cantidad);
+  // los datos corregidos (aunque hayan cambiado líneas/Toner/color), para
+  // que el ajuste nunca quede descuadrado.
+  (anterior.lineas || []).forEach((l) => ajustarStockToner(l.toner, Number(l.cantidad) || 0));
+  lineas.forEach((l) => ajustarStockToner(l.toner, -l.cantidad));
 
+  const datos = {
+    ...anterior,
+    noVale,
+    fecha,
+    lineas,
+    ultimaModificacion: new Date().toISOString().slice(0, 16),
+  };
   salidasTonerData[idx] = datos;
   guardarSalidasToner();
   sincronizarSalidaToner(datos);
@@ -1275,7 +1326,7 @@ function eliminarSalidaTonerActual() {
   if (idx === -1) return;
   if (!confirm("¿Eliminar esta Salida de Tóner? Se devolverá la cantidad al Stock Actual.")) return;
   const registro = salidasTonerData[idx];
-  ajustarStockToner(registro.toner, registro.cantidad);
+  (registro.lineas || []).forEach((l) => ajustarStockToner(l.toner, Number(l.cantidad) || 0));
   salidasTonerData.splice(idx, 1);
   guardarSalidasToner();
   sincronizarEliminacionSalidaToner(registro.id);
@@ -1564,18 +1615,20 @@ function descargarReporteStockToner() {
     .join("");
 
   const filasSalidas = salidasFiltradas
-    .map(
-      (s) => `
+    .flatMap((s) =>
+      (s.lineas || []).map(
+        (l) => `
         <tr>
           <td>${esc(s.noVale)}</td>
-          <td>${esc(s.serial)}</td>
-          <td>${esc(s.modelo)}</td>
-          <td>${esc(s.ubicacion)}</td>
-          <td>${esc(s.toner)}</td>
-          <td>${esc(s.cantidad)}</td>
+          <td>${esc(l.serial)}</td>
+          <td>${esc(l.modelo)}</td>
+          <td>${esc(l.ubicacion)}</td>
+          <td>${esc(l.toner)}</td>
+          <td>${esc(l.cantidad)}</td>
           <td>${esc(s.fecha)}</td>
         </tr>
       `
+      )
     )
     .join("");
 
@@ -5209,9 +5262,10 @@ $("btnMigrarStockToner").addEventListener("click", migrarStockTonerDesdeImpresor
 $("btnCerrarImpresorasPorToner").addEventListener("click", cerrarModalImpresorasPorToner);
 $("btnCerrarImpresorasPorToner2").addEventListener("click", cerrarModalImpresorasPorToner);
 
-inicializarAutocompleteSalidaToner("sv");
+agregarLineaSalidaToner("tbodyFormSalidaToner");
+$("btnAgregarLineaSalidaToner").addEventListener("click", () => agregarLineaSalidaToner("tbodyFormSalidaToner"));
 $("formSalidaToner").addEventListener("submit", onSubmitNuevaSalidaToner);
-inicializarAutocompleteSalidaToner("esv");
+$("btnAgregarLineaEditarSalidaToner").addEventListener("click", () => agregarLineaSalidaToner("tbodyEditarSalidaToner"));
 $("formEditarSalidaToner").addEventListener("submit", onSubmitEditarSalidaToner);
 $("btnCancelarSalidaToner").addEventListener("click", cerrarModalSalidaToner);
 $("btnCerrarModalSalidaToner").addEventListener("click", cerrarModalSalidaToner);

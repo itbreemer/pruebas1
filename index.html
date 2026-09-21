@@ -404,22 +404,25 @@
         </section>
 
         <h3 class="subseccion-titulo" style="margin-top: 28px;">📤 Salidas de Tóner</h3>
-        <p class="subseccion-nota">Registra cada vale de salida — al guardar se rebaja automático esa cantidad del Stock Actual de ese Tóner (el mismo del Resumen de arriba). Escribe el Serial, el Modelo o el # de Toner (lo que tengas a la mano) y elige la coincidencia; Modelo, Ubicación y Toner se completan solos.</p>
+        <p class="subseccion-nota">Registra cada vale de salida — puede incluir varios Toners a la vez en un mismo No. de Vale (de la misma impresora o de impresoras distintas). Escribe el Serial, el Modelo o el # de Toner (lo que tengas a la mano) y elige la coincidencia; Modelo, Ubicación y Toner se completan solos. Al guardar se rebaja automático cada cantidad del Stock Actual de su Tóner exacto.</p>
         <section class="tabla-wrap" style="margin-bottom: 14px; padding: 16px;">
-          <form id="formSalidaToner" class="form-salida-toner">
-            <label>No. Vale<input type="text" id="svNoVale" required></label>
-            <label>Serial, Modelo o Toner
-              <div class="autocomplete-wrap">
-                <input type="text" id="svSerial" autocomplete="off" required>
-                <div class="autocomplete-lista" id="svSerialSugerencias"></div>
-              </div>
-            </label>
-            <label>Modelo<input type="text" id="svModelo" disabled></label>
-            <label>Ubicación<input type="text" id="svUbicacion" disabled></label>
-            <label>Toner<select id="svToner" required></select></label>
-            <label>Cantidad<input type="number" id="svCantidad" min="1" required></label>
-            <label>Fecha<input type="date" id="svFecha" required></label>
-            <label>&nbsp;<button type="submit" class="btn btn-primary">Registrar salida</button></label>
+          <form id="formSalidaToner">
+            <div class="form-salida-toner">
+              <label>No. Vale<input type="text" id="svNoVale" required></label>
+              <label>Fecha<input type="date" id="svFecha" required></label>
+            </div>
+            <section class="tabla-wrap" style="margin: 14px 0;">
+              <table class="tabla">
+                <thead>
+                  <tr><th>Serial, Modelo o Toner</th><th>Modelo</th><th>Ubicación</th><th>Toner</th><th>Cantidad</th><th></th></tr>
+                </thead>
+                <tbody id="tbodyFormSalidaToner"></tbody>
+              </table>
+            </section>
+            <section class="toolbar" style="justify-content: space-between;">
+              <button type="button" id="btnAgregarLineaSalidaToner" class="btn btn-secondary">+ Agregar línea</button>
+              <button type="submit" class="btn btn-primary">Registrar salida</button>
+            </section>
           </form>
         </section>
 
@@ -428,11 +431,8 @@
             <thead>
               <tr>
                 <th>No. Vale</th>
-                <th>Serial</th>
-                <th>Modelo</th>
-                <th>Ubicación</th>
-                <th>Toner</th>
-                <th>Cantidad</th>
+                <th>Detalle</th>
+                <th>Cantidad Total</th>
                 <th>Fecha</th>
               </tr>
             </thead>
@@ -1109,18 +1109,19 @@
         <input type="hidden" id="esvId">
         <div class="form-salida-toner">
           <label>No. Vale<input type="text" id="esvNoVale" required></label>
-          <label>Serial, Modelo o Toner
-            <div class="autocomplete-wrap">
-              <input type="text" id="esvSerial" autocomplete="off" required>
-              <div class="autocomplete-lista" id="esvSerialSugerencias"></div>
-            </div>
-          </label>
-          <label>Modelo<input type="text" id="esvModelo" disabled></label>
-          <label>Ubicación<input type="text" id="esvUbicacion" disabled></label>
-          <label>Toner<select id="esvToner" required></select></label>
-          <label>Cantidad<input type="number" id="esvCantidad" min="1" required></label>
           <label>Fecha<input type="date" id="esvFecha" required></label>
         </div>
+        <section class="tabla-wrap" style="margin: 14px 0;">
+          <table class="tabla">
+            <thead>
+              <tr><th>Serial, Modelo o Toner</th><th>Modelo</th><th>Ubicación</th><th>Toner</th><th>Cantidad</th><th></th></tr>
+            </thead>
+            <tbody id="tbodyEditarSalidaToner"></tbody>
+          </table>
+        </section>
+        <section class="toolbar" style="justify-content: flex-start; margin-bottom: 10px;">
+          <button type="button" id="btnAgregarLineaEditarSalidaToner" class="btn btn-secondary">+ Agregar línea</button>
+        </section>
         <div class="modal-actions">
           <button type="button" id="btnEliminarSalidaToner" class="btn btn-danger">Eliminar salida</button>
           <div class="modal-actions-right">

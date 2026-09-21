@@ -772,17 +772,32 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   letras, solo el nombre del Tóner) y la tabla de abajo queda sin columna de Stock.
 - **Salidas de Tóner** (nueva sub-sección dentro de "Stock Tóner Bodega 2", colección Firestore
   `salidasToner`, `salidas-toner-sync.js` con el mismo patrón anti-resurrección que
-  `contadores-impresoras-sync.js`): formulario para registrar vales de salida (No. Vale, Serial,
-  Modelo/Ubicación autocompletados de solo lectura desde el catálogo de Impresoras — la Ubicación
-  es dónde está esa impresora, NO de dónde se sacó el tóner en bodega —, Toner con desplegable
-  filtrado a las variantes compatibles con ese Serial mostrando su stock, Cantidad, Fecha). Al
-  guardar, `ajustarStockToner(tonerTexto, delta)` rebaja automático esa cantidad del Stock Actual
-  exacto de ese Tóner/color (mismo mecanismo que usa `actualizarStockDeToner`). Clic en una fila
-  del historial abre un modal de edición/eliminación: al editar se **revierte** el efecto anterior
-  sobre el stock (aunque haya cambiado de Toner/color) antes de aplicar los datos corregidos; al
-  eliminar se devuelve la cantidad al Stock, como si la salida nunca hubiera pasado. Requiere la
-  regla de Firestore estándar en la colección `salidasToner`:
+  `contadores-impresoras-sync.js`): formulario para registrar vales de salida (No. Vale, Fecha, y
+  una o varias **líneas** — Serial, Modelo/Ubicación autocompletados de solo lectura desde el
+  catálogo de Impresoras, Toner con desplegable filtrado a las variantes compatibles con ese
+  Serial mostrando su stock, Cantidad). Al guardar, `ajustarStockToner(tonerTexto, delta)` rebaja
+  automático cada cantidad del Stock Actual exacto de su Tóner/color (mismo mecanismo que usa
+  `actualizarStockDeToner`). Clic en una fila del historial abre un modal de edición/eliminación:
+  al editar se **revierte** el efecto anterior de todas las líneas sobre el stock antes de aplicar
+  las corregidas; al eliminar se devuelve la cantidad de cada línea al Stock, como si la salida
+  nunca hubiera pasado. Requiere la regla de Firestore estándar en la colección `salidasToner`:
   `match /salidasToner/{salidaId} { allow read, write: if request.auth != null; }`.
+  - **Un vale = varias líneas (nov/2026, agregado después)**: el usuario detectó en la práctica
+    que un mismo vale de bodega a veces retira varios Tóners a la vez (ej. los 4 colores de una
+    impresora, o Tóners de 2 impresoras distintas de una misma área) — la primera versión solo
+    dejaba capturar un Toner por vale, obligando a repetir el mismo No. de Vale en varios
+    registros. Se cambió el modelo: cada Salida ahora guarda `lineas: [{ serial, modelo,
+    ubicacion, toner, cantidad }]` (mismo patrón de arreglo que ya usaba Ingreso de Tóner) en vez
+    de un solo Serial/Modelo/Ubicación/Toner/Cantidad de primer nivel. El formulario (`app.js`,
+    `agregarLineaSalidaToner`/`lineasSalidaTonerCapturadas`) permite agregar/quitar líneas
+    dinámicamente, cada una con su propio autocompletado de Serial (`poblarCamposLineaSalidaToner`,
+    `renderSugerenciasLineaSalidaToner`) — a diferencia de Ingreso, donde las líneas son una lista
+    fija de todos los Toners existentes, aquí cada línea es libre porque puede ser de cualquier
+    impresora. La tabla de historial y el reporte PDF ahora expanden cada línea de una salida en
+    su propio renglón (mismo No. de Vale y Fecha repetidos). **Salidas guardadas antes de este
+    cambio** (con Serial/Toner/Cantidad de primer nivel, sin `lineas`) ya no se muestran en la
+    tabla ni cuentan en el reporte — si hace falta conservarlas, migrar esos documentos viejos en
+    Firestore a `lineas: [{ ...ese mismo dato... }]` antes de esta fecha.
 - **Reporte de auditoría** (`descargarReporteStockToner`, botón "📄 Descargar reporte PDF"): arma
   un `<div>` fuera de pantalla con la tabla de Stock Actual (agrupado igual que el Resumen) +
   Ingresos y Salidas filtrados por un rango de fechas (`repTonerDesde`/`repTonerHasta`, ambos
