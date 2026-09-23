@@ -2898,12 +2898,6 @@ function esc(v) {
   return v && String(v).trim() !== "" ? v : "N/A";
 }
 
-function enlaceIp(ip) {
-  const v = (ip || "").trim();
-  if (!v || !/^\d{1,3}(\.\d{1,3}){3}$/.test(v)) return esc(ip);
-  return `<a href="http://${v}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${v}</a>`;
-}
-
 function nonEmpty(v) {
   return v && String(v).trim() !== "" && String(v).trim().toUpperCase() !== "N/A";
 }
@@ -4598,7 +4592,7 @@ function obtenerCatalogoImpresoras() {
     impresora: p,
     celdas: `
       <td>${esc(p.tipoEquipoImp)}</td>
-      <td>${enlaceIp(p.ip)}</td>
+      <td>${esc(p.ip)}</td>
       <td>${esc(p.gpr)}</td>
       <td>${esc(p.serial)}</td>
       <td>${esc(p.modelo)}</td>

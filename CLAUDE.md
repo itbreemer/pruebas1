@@ -982,6 +982,15 @@ mismo patrón (envolver el sub-bloque en su propio `id`, ocultarlo por separado 
 `aplicarRestriccionesPorRol`) — no asumir que toda una `<section id="vista-...">` es
 homogénea solo porque comparte nav-item.
 
+**Ajuste — la columna IP del catálogo de Impresoras ya no abre nada al hacer clic**: el usuario
+notó que cada IP se mostraba como un link (`enlaceIp()` en `app.js`, generaba `<a
+href="http://<ip>" target="_blank">`) que intentaba abrir `http://<ip>` en pestaña nueva al
+hacer clic — no útil en la práctica (son IPs de red interna, no una interfaz web real de la
+impresora en la mayoría de los casos) y confuso para quien solo quiere leer el dato. Se quitó
+`enlaceIp()` por completo y la celda de IP ahora usa `esc(p.ip)` como cualquier otra columna de
+texto plano, igual que antes de que existiera ese link. Verificado con Playwright: la celda ya
+no contiene ningún `<a>`, solo el texto de la IP.
+
 **Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
 (`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para
 cualquier usuario autenticado). El usuario de bodega técnicamente sigue teniendo acceso de
