@@ -111,13 +111,29 @@ function esCorreoBodega(correo) {
 
 // Botones de la barra superior que son de Computadoras/Equipos (no del
 // menú lateral, por eso quedaban fuera del filtro anterior) — no aplican
-// para el bodeguero, solo "Salir" se queda.
-const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "contadorTotal"];
+// para el bodeguero, solo "Salir" se queda. "btnNuevaImpresora" también se
+// oculta aquí aunque vive dentro de la vista "Impresoras" (no en el header):
+// el bodeguero solo puede buscar en ese catálogo, no crear/editar (ver
+// "esSesionBodega" y `abrirModalImpresora`).
+const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "contadorTotal", "btnNuevaImpresora"];
 
-const VISTAS_PERMITIDAS_BODEGA = ["contadoresImpresoras", "ingresoToner"];
+// "impresoras" se agregó a pedido del usuario: el bodeguero a veces solo
+// tiene el nombre del Tóner (ej. "GPR52") sin el Serial del equipo que lo
+// pidió, y necesita ubicar a qué impresora pertenece — antes no tenía forma
+// de buscar el catálogo de Impresoras en absoluto. Es de solo consulta (ver
+// `esSesionBodega` más abajo): puede buscar y ver el detalle, pero el modal
+// de editar impresora se abre en modo lectura (campos deshabilitados, sin
+// botones de Guardar/Eliminar) cuando el bodeguero está en sesión.
+const VISTAS_PERMITIDAS_BODEGA = ["contadoresImpresoras", "ingresoToner", "impresoras"];
+
+// Se guarda aparte de la restricción de menú porque `abrirModalImpresora`
+// necesita saber, al momento de abrir el modal (no solo al cargar el menú),
+// si el usuario en sesión es el bodeguero — para abrirlo en modo lectura.
+let esSesionBodega = false;
 
 window.aplicarRestriccionesPorRol = (correo) => {
   const esBodega = esCorreoBodega(correo);
+  esSesionBodega = esBodega;
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.style.display = esBodega && !VISTAS_PERMITIDAS_BODEGA.includes(btn.dataset.vista) ? "none" : "";
   });
@@ -3118,6 +3134,22 @@ function abrirModalImpresora(impresora) {
     $("impTipo").value = "B/N";
     $("btnEliminarModalImpresora").style.display = "none";
   }
+
+  // El bodeguero solo puede buscar/consultar este catálogo, nunca editarlo
+  // (ver `esSesionBodega` y `VISTAS_PERMITIDAS_BODEGA`) — se deshabilitan
+  // los campos y se ocultan Guardar/Eliminar en vez de abrir un modal
+  // completamente funcional que además nunca debería llegar a mostrarse
+  // vacío ("Nueva impresora") para este rol.
+  const soloConsulta = esSesionBodega;
+  IMPRESORA_FIELD_IDS.forEach((idCampo) => {
+    $(idCampo).disabled = soloConsulta;
+  });
+  $("btnEliminarModalImpresora").style.display = soloConsulta ? "none" : $("btnEliminarModalImpresora").style.display;
+  $("formImpresora").querySelector('button[type="submit"]').style.display = soloConsulta ? "none" : "";
+  if (soloConsulta) {
+    $("modalImpresoraTitulo").textContent = `${impresora ? impresora.modelo || impresora.serial || "" : ""} (solo consulta)`;
+  }
+
   $("modalImpresoraOverlay").classList.add("open");
 }
 
@@ -3127,6 +3159,7 @@ function cerrarModalImpresora() {
 
 function onSubmitImpresora(e) {
   e.preventDefault();
+  if (esSesionBodega) return; // el bodeguero solo consulta este catálogo, nunca lo edita.
   const data = {};
   IMPRESORA_FIELD_IDS.forEach((idCampo) => {
     data[IMPRESORA_CAMPO_POR_ID[idCampo]] = $(idCampo).value.trim();
@@ -3151,6 +3184,7 @@ function onSubmitImpresora(e) {
 }
 
 function eliminarImpresoraActual() {
+  if (esSesionBodega) return; // el bodeguero solo consulta este catálogo, nunca lo edita.
   const id = $("impId").value;
   if (!id) return;
   if (!confirm("¿Eliminar esta impresora de forma permanente?")) return;
@@ -4575,8 +4609,11 @@ const vistaCatalogoImpresoras = crearVistaLista({
   prefix: "catalogoImpresoras",
   columnas: 11,
   obtenerFilas: obtenerCatalogoImpresoras,
+  // Incluye "gpr" (Tóner) a propósito: el bodeguero a veces solo tiene el
+  // nombre del Tóner (ej. "GPR52", sin Serial) y necesita ubicar la
+  // impresora — antes esta búsqueda no lo encontraba (ver nota en CLAUDE.md).
   filtrar: (r, t) =>
-    [r.impresora.ip, r.impresora.serial, r.impresora.modelo, r.impresora.departamento, r.impresora.ubicacion, r.impresora.empresa, r.impresora.tipo]
+    [r.impresora.ip, r.impresora.serial, r.impresora.modelo, r.impresora.departamento, r.impresora.ubicacion, r.impresora.empresa, r.impresora.tipo, r.impresora.gpr]
       .join(" ")
       .toLowerCase()
       .includes(t),

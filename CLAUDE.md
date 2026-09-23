@@ -929,9 +929,38 @@ crearlo en Firebase → Authentication → Users como cualquier otro técnico): 
 `app.js` + `window.aplicarRestriccionesPorRol(correo)`, llamada desde `auth.js` en
 `onAuthStateChanged` (con el correo al iniciar sesión, con `""` al cerrar sesión para restaurar
 el menú completo para el siguiente login). Si el correo está en esa lista: oculta todos los
-`.nav-item` salvo los de `VISTAS_PERMITIDAS_BODEGA` (`contadoresImpresoras` e `ingresoToner`) y
-fuerza `cambiarVista("contadoresImpresoras")` para que entre directo a Stock Tóner Bodega 2 (con
-Ingreso Tóner Bodega también visible en el menú, como pantalla aparte).
+`.nav-item` salvo los de `VISTAS_PERMITIDAS_BODEGA` (`contadoresImpresoras`, `ingresoToner`,
+`impresoras`) y fuerza `cambiarVista("contadoresImpresoras")` para que entre directo a Stock
+Tóner Bodega 2 (con Ingreso Tóner Bodega también visible en el menú, como pantalla aparte).
+
+**Extensión — acceso de solo consulta al catálogo de "Impresoras" (sep/2026, agregado después)**:
+el bodeguero reportó un caso real: un empleado fue a pedir un Tóner y solo dio el nombre del
+Tóner (ej. "GPR52"), sin el Serial de su impresora — el bodeguero no tenía forma de ubicar a qué
+impresora pertenecía, porque (a) no tenía acceso en absoluto al catálogo de "Impresoras" y (b)
+aunque lo hubiera tenido, ese buscador tampoco indexaba el campo Tóner (`gpr`) — ver el bug
+"Pendiente/sin resolver" ya documentado arriba en "Stock Tóner Bodega 2". El usuario pidió
+explícitamente darle acceso de **solo búsqueda**, sin poder modificar nada. Dos cambios:
+- `vistaCatalogoImpresoras.filtrar` (`app.js`) ahora también busca en `r.impresora.gpr` — con
+  esto ya se puede escribir el nombre del Tóner y encontrar la(s) impresora(s) compatibles
+  (mismo campo que ya mostraba la columna "Toner" de la tabla). Placeholder del buscador
+  actualizado en `index.html` para mencionarlo.
+- `"impresoras"` se agregó a `VISTAS_PERMITIDAS_BODEGA`, y se agregó una variable de módulo
+  `esSesionBodega` (poblada en `aplicarRestriccionesPorRol`, a diferencia del resto de esa
+  función que solo actúa sobre el DOM del menú al momento de iniciar sesión — esta variable
+  hace falta también más tarde, cada vez que se abre el modal de una impresora).
+  `abrirModalImpresora()` la revisa: si es sesión de bodega, deshabilita los 12 campos del
+  formulario (`IMPRESORA_FIELD_IDS`), oculta el botón "Guardar" y "Eliminar", y cambia el
+  título a "... (solo consulta)". `"btnNuevaImpresora"` (el botón "+ Nueva impresora" de la
+  toolbar de esa vista) se agregó a `IDS_BOTONES_HEADER_SOLO_IT` para ocultarse igual que los
+  demás botones exclusivos de IT, aunque vive dentro de la vista y no en el header — mismo
+  arreglo, se reutilizó porque ya recorre por `id` sin importar dónde esté el elemento en el DOM.
+  Doble seguro (defensa en profundidad, no solo ocultar botones): `onSubmitImpresora()` y
+  `eliminarImpresoraActual()` también revisan `esSesionBodega` al inicio y no hacen nada si es
+  sesión de bodega, por si el formulario llegara a dispararse por otro medio (ej. Enter en un
+  campo). Verificado con Playwright: sesión de bodega encuentra 2 impresoras al buscar "GPR52",
+  abre el modal con todos los campos deshabilitados y sin Guardar/Eliminar/+Nueva impresora;
+  una sesión normal de IT sigue con edición completa igual que antes. Sigue aplicando la misma
+  advertencia de la nota de abajo: esto es solo de interfaz, no seguridad real de Firestore.
 
 **Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
 (`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para
