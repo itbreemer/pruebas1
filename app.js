@@ -141,6 +141,13 @@ window.aplicarRestriccionesPorRol = (correo) => {
     const el = $(id);
     if (el) el.style.display = esBodega ? "none" : "";
   });
+  // "Códigos de usuario" (claves reales de impresión/escaneo) vive dentro de
+  // la misma vista #vista-impresoras que el catálogo de impresoras — no es
+  // una vista aparte — así que no basta con la lista de nav-items de arriba
+  // para ocultarla: se oculta este bloque puntual, al que el bodeguero no
+  // necesita entrar (solo busca la impresora dueña de un Tóner).
+  const bloqueCodigos = $("bloqueCodigosUsuario");
+  if (bloqueCodigos) bloqueCodigos.style.display = esBodega ? "none" : "";
   if (esBodega) cambiarVista("contadoresImpresoras");
 };
 

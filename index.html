@@ -355,34 +355,36 @@
           <button id="btnUltimo_catalogoImpresoras">&raquo;</button>
         </section>
 
-        <h3 class="subseccion-titulo">Códigos de usuario para impresión, escaneo y copia</h3>
-        <p class="subseccion-nota">Busca por nombre, apellido, ID o clave — no importa el orden ni si escribes solo una parte. Puede haber nombres repetidos con distinto ID/clave; son registros separados.</p>
-        <section class="toolbar">
-          <input type="text" id="buscador_codigos" placeholder="Buscar por nombre, apellido, ID o clave...">
-          <button type="button" id="btnNuevoCodigo" class="btn btn-primary">+ Nuevo usuario</button>
-        </section>
-        <section class="tabla-wrap">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre Completo</th>
-                <th>Clave</th>
-                <th>Correo / Observación</th>
-                <th>Departamento (origen)</th>
-                <th>Agregado por</th>
-              </tr>
-            </thead>
-            <tbody id="tbody_codigos"></tbody>
-          </table>
-        </section>
-        <section class="paginacion">
-          <button id="btnPrimero_codigos">&laquo;</button>
-          <button id="btnAnterior_codigos">&lsaquo;</button>
-          <span id="infoPagina_codigos"></span>
-          <button id="btnSiguiente_codigos">&rsaquo;</button>
-          <button id="btnUltimo_codigos">&raquo;</button>
-        </section>
+        <div id="bloqueCodigosUsuario">
+          <h3 class="subseccion-titulo">Códigos de usuario para impresión, escaneo y copia</h3>
+          <p class="subseccion-nota">Busca por nombre, apellido, ID o clave — no importa el orden ni si escribes solo una parte. Puede haber nombres repetidos con distinto ID/clave; son registros separados.</p>
+          <section class="toolbar">
+            <input type="text" id="buscador_codigos" placeholder="Buscar por nombre, apellido, ID o clave...">
+            <button type="button" id="btnNuevoCodigo" class="btn btn-primary">+ Nuevo usuario</button>
+          </section>
+          <section class="tabla-wrap">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre Completo</th>
+                  <th>Clave</th>
+                  <th>Correo / Observación</th>
+                  <th>Departamento (origen)</th>
+                  <th>Agregado por</th>
+                </tr>
+              </thead>
+              <tbody id="tbody_codigos"></tbody>
+            </table>
+          </section>
+          <section class="paginacion">
+            <button id="btnPrimero_codigos">&laquo;</button>
+            <button id="btnAnterior_codigos">&lsaquo;</button>
+            <span id="infoPagina_codigos"></span>
+            <button id="btnSiguiente_codigos">&rsaquo;</button>
+            <button id="btnUltimo_codigos">&raquo;</button>
+          </section>
+        </div>
       </section>
 
       <!-- Contador de Impresoras (lecturas para pedir cartuchos/tóner/tambor a tiempo) -->
@@ -1678,7 +1680,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20260923c"></script>
+<script src="app.js?v=20260923d"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>

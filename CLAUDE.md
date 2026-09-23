@@ -962,6 +962,26 @@ explícitamente darle acceso de **solo búsqueda**, sin poder modificar nada. Do
   una sesión normal de IT sigue con edición completa igual que antes. Sigue aplicando la misma
   advertencia de la nota de abajo: esto es solo de interfaz, no seguridad real de Firestore.
 
+**Bug real encontrado y corregido — "Códigos de usuario" (claves reales) quedó visible para el
+bodeguero al darle acceso a "Impresoras"**: el usuario reportó, con una captura real, que
+al entrar a "Impresoras" el bodeguero también veía la tabla "Códigos de usuario para impresión,
+escaneo y copia" (con IDs y **claves reales** de usuarios de dominio). Causa raíz: esa tabla
+**no es una vista aparte** — vive dentro del mismo `<section id="vista-impresoras">` que el
+catálogo de impresoras (`index.html`), así que agregar `"impresoras"` a
+`VISTAS_PERMITIDAS_BODEGA` (extensión de arriba) sin querer también expuso esta tabla, que el
+bodeguero no necesita para nada ("al bodeguero no le sirve esa parte"). **Fix**: se envolvió esa
+tabla completa (encabezado + buscador + "+ Nuevo usuario" + tabla + paginación) en
+`<div id="bloqueCodigosUsuario">` (`index.html`), y `aplicarRestriccionesPorRol()` (`app.js`) la
+oculta explícitamente cuando `esBodega` es verdadero (`bloqueCodigosUsuario.style.display =
+"none"`) — el catálogo de impresoras en la misma vista sigue funcionando normal. Verificado con
+Playwright: sesión de bodega oculta el bloque de Códigos pero conserva el catálogo de
+impresoras; una sesión normal de IT sigue viendo ambas tablas. **Importante para el futuro**: si
+se le da acceso de bodega a otra vista que resulte tener un sub-bloque de datos sensibles
+mezclado en la misma `<section>` (en vez de ser su propia vista independiente), replicar este
+mismo patrón (envolver el sub-bloque en su propio `id`, ocultarlo por separado en
+`aplicarRestriccionesPorRol`) — no asumir que toda una `<section id="vista-...">` es
+homogénea solo porque comparte nav-item.
+
 **Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
 (`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para
 cualquier usuario autenticado). El usuario de bodega técnicamente sigue teniendo acceso de
