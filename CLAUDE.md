@@ -652,6 +652,38 @@ versión final, a pedido del usuario: **fila 1 columna "S/N MONITOR" en blanco**
 a "(MODELO) DESCRIPCION". Verificado con Playwright: el serial aparece una sola vez, en la fila
 del monitor, no en la del equipo.
 
+### "Generar Acta" (Hoja de Responsabilidad) ahora sí registra la Entrega/Devolución en el equipo
+**Bug real encontrado por el usuario**: `generarEImprimirActa()` era una función que **solo
+imprimía** — leía el equipo por Nombre en Red, armaba el PDF con `renderActa()`, y cerraba el
+modal, pero nunca llamaba a `guardarDatos()` ni a `sincronizarEquipo()`. Esto es distinto de
+"📦 Nuevo Ingreso" (`generarIngresoCompleto`), que sí persiste. El usuario generó una Hoja de
+Responsabilidad de **Devolución** para `LAPLNV181` y de **Entrega** para `LAPLNV317` (ambas a
+nombre de Marco Polanco) y, al buscarlo después en "👤 Usuarios" (que se arma en vivo desde
+`equipos`, ver más abajo), Marco no aparecía en ningún lado — ninguna de las dos actas había
+tocado la base de datos: `LAPLNV181` seguía con los datos de antes de la devolución y `LAPLNV317`
+nunca quedó con su nombre asignado (si ni siquiera existía aún como equipo registrado, la función
+armaba un objeto `{ nombreRed }` desechable solo para imprimir, sin crear nada real).
+
+**Fix**: `generarEImprimirActa()` ahora sí actualiza el equipo antes de imprimir:
+- **Requiere que el equipo ya exista** en el inventario (buscado por Nombre en Red) — si no,
+  bloquea con alerta pidiendo registrarlo primero con "+ Nuevo equipo" o "📦 Nuevo Ingreso" (ya
+  no se imprime un acta de un equipo fantasma que nunca quedó guardado).
+- **Requiere información completa antes de imprimir** (`CAMPOS_ACTA_OBLIGATORIOS`): Empresa,
+  Tipo de Equipo, Marca, Modelo y Service Tag/Serial del equipo, más Declarante/Técnico/Jefe del
+  formulario — si falta algo, bloquea con alerta indicando exactamente qué completar primero en
+  "Editar equipo" (evita imprimir un acta con huecos).
+- **Entrega**: `equipo.nombreEmpleado = declarante` (la persona que el formulario dice que
+  recibe) y `equipo.status = "Asignada"`.
+- **Devolución**: a propósito **NO se limpia** `nombreEmpleado`/`usuarioDominio`/`correo` — el
+  equipo debe seguir mostrando el nombre de quien lo devolvió (a pedido explícito del usuario)
+  **hasta que una próxima acta de Entrega lo reasigne** a otra persona. Solo cambia
+  `equipo.status = "Devolucion > Pendiente Reasignacion"`.
+- Ambos casos llaman `guardarDatos()` + `sincronizarEquipo(equipo)` y refrescan la vista
+  (`render()`, `refrescarVistasSecundarias()`, `poblarFiltrosYDatalists()`) antes de imprimir.
+Verificado con Playwright: equipo incompleto bloquea sin imprimir ni cambiar nada; al completarlo,
+Devolución conserva el nombre del usuario y cambia el status; Entrega sí asigna el nuevo usuario;
+un Nombre en Red inexistente bloquea sin crear ningún equipo fantasma.
+
 ### Historial por equipo (dentro del modal de editar equipo, debajo de "Dominio")
 - **"Mantenimiento"**: botón con contador en vivo + modal con el historial completo de
   mantenimientos de ESE equipo (`registrosMantenimientoDeEquipo`, `abrirHistorialMantenimientoEquipo`),
@@ -807,6 +839,25 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   a pedido explícito del usuario para reducir el margen de error de los bodegueros. Editar el
   Stock Actual a mano solo es posible desde "🔎 Detalle completo". El ajuste real de Stock pasa
   siempre por Salidas/Ingreso de Tóner (automático) o por "Detalle completo" (manual).
+- **Alerta de stock bajo (solo visual dentro de la app, sin correo/notificación externa)**: el
+  usuario pidió un proceso para detectar cuando un Tóner/color se queda con muy poco stock (dio
+  como ejemplo real un caso con Magenta en 0). Se evaluaron 3 opciones (visual dentro de la app,
+  correo disparado al momento de una Salida, o revisión diaria automática vía GitHub Actions +
+  Firestore REST + correo) — el usuario eligió la primera (Opción A) por ser la más simple y sin
+  costo, dejando la posibilidad de la revisión diaria para más adelante si hiciera falta.
+  **Implementación**: `STOCK_TONER_MINIMO = 1` (constante en `app.js`) — `renderResumenToner()`
+  ahora arma un aviso rojo (reutiliza la clase `.acta-estado.no-encontrado`) arriba de la tabla
+  "📋 Stock por Tóner" (`#alertaStockBajoToner` en `index.html`) listando cada caso con Stock
+  Actual ≤ ese mínimo (por color, o el valor plano de un Tóner B/N), y también marca en rojo el
+  número exacto dentro de la tabla (`.punto.bajo` para colores, `.stock-plano-bajo` para B/N).
+  Se revisa cada vez que se renderiza esa vista — **es una alerta visual, no manda correo ni
+  notificación fuera de la app**: solo se ve si alguien abre "Stock Tóner Bodega 2". Verificado
+  con Playwright reproduciendo el caso real (GPR52 con Negro=6, Cyan=1, Magenta=0, Amarillo=1):
+  el aviso lista los 3 casos bajos y el "0" de Magenta se muestra correctamente (no como "N/A" —
+  ojo con esto si se toca este código: `esc()` trata `0` numérico como falso y lo muestra como
+  "N/A", pero el dato real siempre llega como string desde los inputs/`ajustarStockToner`, así
+  que en la práctica no pasa; si se reescribe esta lógica, mantenerlo como string o no usar
+  `esc()` para el número).
 
 ### Ingreso de Tóner (entregas de Canella, complementa a Salidas de Tóner)
 

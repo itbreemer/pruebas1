@@ -1719,6 +1719,13 @@ function impresoraDebeExcluirseDeStockToner(p) {
 const COLORES_CMYK = ["Negro", "Cyan", "Magenta", "Amarillo"];
 const COLOR_LETRA_TONER = { Negro: "N", Cyan: "C", Magenta: "M", Amarillo: "Y" };
 
+// Mínimo de Stock Actual (por Tóner o por color) antes de considerarse
+// "bajo" y mostrarse en la alerta de "📋 Stock por Tóner". Alerta visual
+// dentro de la app únicamente (Opción A) — se revisa cada vez que se
+// renderiza el resumen, así que basta con abrir esa vista para verla; no
+// manda correo ni notificación fuera de la app.
+const STOCK_TONER_MINIMO = 1;
+
 function variantesDeTonerParaImpresora(p) {
   const toner = (p.gpr || "").trim();
   const esColor = normalizarTextoComparar(p.tipo).includes("color");
@@ -1909,14 +1916,52 @@ function renderResumenToner() {
 
   const tbody = $("tbodyResumenToner");
   if (!tbody) return;
+
+  // Junta todos los casos con Stock Actual <= STOCK_TONER_MINIMO (por color,
+  // o el valor plano de un Tóner B/N) para la alerta de arriba de la tabla.
+  const alertas = [];
+  filas.forEach((f) => {
+    if (f.esColor) {
+      COLORES_CMYK.forEach((color) => {
+        const valor = f.stockPorColor[color];
+        if (valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO) {
+          alertas.push(`${f.base} - ${color} (${valor})`);
+        }
+      });
+    } else {
+      const valor = f.stockPlano;
+      if (valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO) {
+        alertas.push(`${f.base} (${valor})`);
+      }
+    }
+  });
+
+  const avisoStock = $("alertaStockBajoToner");
+  if (avisoStock) {
+    if (alertas.length) {
+      avisoStock.style.display = "";
+      avisoStock.className = "acta-estado no-encontrado";
+      avisoStock.textContent = `⚠️ ${alertas.length} tóner${alertas.length === 1 ? "" : "s"} con stock bajo (≤ ${STOCK_TONER_MINIMO}): ${alertas.join(", ")}`;
+    } else {
+      avisoStock.style.display = "none";
+      avisoStock.textContent = "";
+    }
+  }
+
   tbody.innerHTML = filas.length
     ? filas
         .map((f) => {
           const celdaStock = f.esColor
-            ? `<span class="stock-mini-toner">${COLORES_CMYK.map(
-                (color) => `<span class="punto punto-${COLOR_LETRA_TONER[color]}">${esc(f.stockPorColor[color] ?? "-")}</span>`
-              ).join("")}</span>`
-            : esc(f.stockPlano || "0");
+            ? `<span class="stock-mini-toner">${COLORES_CMYK.map((color) => {
+                const valor = f.stockPorColor[color];
+                const bajo = valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO;
+                return `<span class="punto punto-${COLOR_LETRA_TONER[color]}${bajo ? " bajo" : ""}">${esc(valor ?? "-")}</span>`;
+              }).join("")}</span>`
+            : (() => {
+                const valor = f.stockPlano || "0";
+                const bajo = Number(valor) <= STOCK_TONER_MINIMO;
+                return `<span class="${bajo ? "stock-plano-bajo" : ""}">${esc(valor)}</span>`;
+              })();
           return `
             <tr data-toner-clave="${esc(f.clave)}">
               <td>${esc(f.base)}</td>
@@ -3520,25 +3565,81 @@ function onCambioNombreRedActa() {
   }
 }
 
+// Campos del equipo que deben estar llenos para que el acta impresa no salga
+// con huecos — si el equipo aun no existe en el inventario, o le faltan
+// estos datos, hay que completarlo primero (Editar equipo / Nuevo Ingreso)
+// en vez de imprimir un acta a medias.
+const CAMPOS_ACTA_OBLIGATORIOS = [
+  { campo: "empresa", etiqueta: "Empresa" },
+  { campo: "tipoEquipo", etiqueta: "Tipo de Equipo" },
+  { campo: "fabricante", etiqueta: "Marca de Equipo" },
+  { campo: "modelo", etiqueta: "Modelo Equipo" },
+  { campo: "numeroSerial", etiqueta: "Service Tag / Serial" },
+];
+
 function generarEImprimirActa() {
   const nombreRed = $("actaNombreRed").value.trim();
   if (!nombreRed) {
     alert("Escribe el Nombre en Red del equipo.");
     return;
   }
-  const equipo = buscarEquipoPorNombreRed(nombreRed) || { nombreRed };
+  const accion = $("actaAccion").value;
+  const declarante = $("actaDeclarante").value.trim();
   const tecnico = $("actaTecnico").value.trim();
   const jefe = $("actaJefe").value.trim();
 
+  if (!declarante || !tecnico || !jefe) {
+    alert("Completa Declarante, Técnico y Jefe antes de generar el acta.");
+    return;
+  }
+
+  const equipo = buscarEquipoPorNombreRed(nombreRed);
+  if (!equipo) {
+    alert(
+      `"${nombreRed}" todavía no existe en el inventario. Regístralo primero con "+ Nuevo equipo" o "📦 Nuevo Ingreso" antes de generar su acta.`
+    );
+    return;
+  }
+
+  const faltantes = CAMPOS_ACTA_OBLIGATORIOS.filter((c) => !nonEmpty(equipo[c.campo]));
+  if (faltantes.length) {
+    alert(
+      `El equipo "${nombreRed}" tiene información incompleta para imprimir el acta. Completa primero en "Editar equipo": ${faltantes
+        .map((c) => c.etiqueta)
+        .join(", ")}.`
+    );
+    return;
+  }
+
+  // El acta impresa ya no es solo un documento de salida: también deja
+  // registrado en el equipo quién lo tiene, para no depender de que alguien
+  // vaya aparte a "Editar equipo" a mano (ver historial: LAPLNV181/LAPLNV317
+  // quedaron sin registrar porque esta función antes solo imprimía).
+  if (accion === "Devolucion") {
+    // A propósito NO se limpia nombreEmpleado/usuarioDominio/correo: el
+    // equipo debe seguir mostrando el nombre de quien lo devolvió hasta que
+    // una próxima acta de Entrega lo reasigne a otra persona.
+    equipo.status = "Devolucion > Pendiente Reasignacion";
+  } else {
+    equipo.nombreEmpleado = declarante;
+    equipo.status = "Asignada";
+  }
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  guardarDatos();
+  sincronizarEquipo(equipo);
+
   renderActa(equipo, {
-    accion: $("actaAccion").value,
-    declarante: $("actaDeclarante").value.trim(),
+    accion,
+    declarante,
     tecnico,
     jefe,
     observaciones: $("actaObservaciones").value.trim(),
     numeroForma: siguienteNumeroForma(),
   });
   cerrarModalActa();
+  poblarFiltrosYDatalists();
+  render();
+  refrescarVistasSecundarias();
 }
 
 /* ---------- Modal "Nuevo Ingreso" (recepción de equipo de bodega) ---------- */
