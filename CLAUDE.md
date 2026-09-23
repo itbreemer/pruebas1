@@ -858,6 +858,24 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   "N/A", pero el dato real siempre llega como string desde los inputs/`ajustarStockToner`, así
   que en la práctica no pasa; si se reescribe esta lógica, mantenerlo como string o no usar
   `esc()` para el número).
+- **Extensión — también se marca en rojo el ítem del menú lateral** (sep/2026, agregado después):
+  el usuario notó la limitación ya explicada arriba ("solo se ve si alguien abre esa vista") y
+  pidió que, por si acaso el bodeguero no entra, el nav-item "🔢 Stock Tóner Bodega 2" ya se vea
+  en rojo desde afuera — con la idea de que, ante la duda, entre a revisar y ahí sí se encuentre
+  con el aviso detallado de arriba. Confirmado que es posible porque
+  `establecerContadoresImpresorasDesdeSync` (el `onSnapshot` de `contadoresImpresorasData`)
+  siempre llama a `refrescarVistasSecundarias()` → `renderResumenToner()`, sin importar qué vista
+  esté activa en pantalla — o sea el chequeo de stock bajo ya corría de fondo con cada sync,
+  solo faltaba pintar el nav-item con el resultado. **Implementación**: al final de
+  `renderResumenToner()` (`app.js`), `document.querySelector('.nav-item[data-vista=
+  "contadoresImpresoras"]').classList.toggle("nav-item-alerta", alertas.length > 0)`; clases
+  nuevas en `style.css` (`.nav-item.nav-item-alerta` texto rojo claro y negrita,
+  `.nav-item.nav-item-alerta.active` variante para cuando esa vista además está abierta). Sigue
+  siendo solo visual dentro de la app (nada de correo/notificación externa, igual que el resto de
+  esta alerta). Verificado con Playwright: el nav-item se pone rojo con datos de stock bajo sin
+  haber abierto la vista, se quita solo al reponerse el stock, y al abrir la vista después con
+  stock aún bajo se ve el nav-item rojo+activo junto con el aviso detallado de arriba (el
+  comportamiento exacto que pidió el usuario).
 
 ### Ingreso de Tóner (entregas de Canella, complementa a Salidas de Tóner)
 

@@ -1948,6 +1948,13 @@ function renderResumenToner() {
     }
   }
 
+  // Marca en rojo el ítem del menú aunque nadie haya entrado todavía a esta
+  // vista — se actualiza cada vez que llegan datos de Firestore (vía
+  // refrescarVistasSecundarias), así que el bodeguero ve la alerta apenas
+  // abre la app, sin tener que dar clic en "Stock Tóner Bodega 2" primero.
+  const navStock = document.querySelector('.nav-item[data-vista="contadoresImpresoras"]');
+  if (navStock) navStock.classList.toggle("nav-item-alerta", alertas.length > 0);
+
   tbody.innerHTML = filas.length
     ? filas
         .map((f) => {
