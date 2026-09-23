@@ -1719,6 +1719,13 @@ function impresoraDebeExcluirseDeStockToner(p) {
 const COLORES_CMYK = ["Negro", "Cyan", "Magenta", "Amarillo"];
 const COLOR_LETRA_TONER = { Negro: "N", Cyan: "C", Magenta: "M", Amarillo: "Y" };
 
+// Mínimo de Stock Actual (por Tóner o por color) antes de considerarse
+// "bajo" y mostrarse en la alerta de "📋 Stock por Tóner". Alerta visual
+// dentro de la app únicamente (Opción A) — se revisa cada vez que se
+// renderiza el resumen, así que basta con abrir esa vista para verla; no
+// manda correo ni notificación fuera de la app.
+const STOCK_TONER_MINIMO = 1;
+
 function variantesDeTonerParaImpresora(p) {
   const toner = (p.gpr || "").trim();
   const esColor = normalizarTextoComparar(p.tipo).includes("color");
@@ -1909,14 +1916,52 @@ function renderResumenToner() {
 
   const tbody = $("tbodyResumenToner");
   if (!tbody) return;
+
+  // Junta todos los casos con Stock Actual <= STOCK_TONER_MINIMO (por color,
+  // o el valor plano de un Tóner B/N) para la alerta de arriba de la tabla.
+  const alertas = [];
+  filas.forEach((f) => {
+    if (f.esColor) {
+      COLORES_CMYK.forEach((color) => {
+        const valor = f.stockPorColor[color];
+        if (valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO) {
+          alertas.push(`${f.base} - ${color} (${valor})`);
+        }
+      });
+    } else {
+      const valor = f.stockPlano;
+      if (valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO) {
+        alertas.push(`${f.base} (${valor})`);
+      }
+    }
+  });
+
+  const avisoStock = $("alertaStockBajoToner");
+  if (avisoStock) {
+    if (alertas.length) {
+      avisoStock.style.display = "";
+      avisoStock.className = "acta-estado no-encontrado";
+      avisoStock.textContent = `⚠️ ${alertas.length} tóner${alertas.length === 1 ? "" : "s"} con stock bajo (≤ ${STOCK_TONER_MINIMO}): ${alertas.join(", ")}`;
+    } else {
+      avisoStock.style.display = "none";
+      avisoStock.textContent = "";
+    }
+  }
+
   tbody.innerHTML = filas.length
     ? filas
         .map((f) => {
           const celdaStock = f.esColor
-            ? `<span class="stock-mini-toner">${COLORES_CMYK.map(
-                (color) => `<span class="punto punto-${COLOR_LETRA_TONER[color]}">${esc(f.stockPorColor[color] ?? "-")}</span>`
-              ).join("")}</span>`
-            : esc(f.stockPlano || "0");
+            ? `<span class="stock-mini-toner">${COLORES_CMYK.map((color) => {
+                const valor = f.stockPorColor[color];
+                const bajo = valor !== undefined && valor !== "" && Number(valor) <= STOCK_TONER_MINIMO;
+                return `<span class="punto punto-${COLOR_LETRA_TONER[color]}${bajo ? " bajo" : ""}">${esc(valor ?? "-")}</span>`;
+              }).join("")}</span>`
+            : (() => {
+                const valor = f.stockPlano || "0";
+                const bajo = Number(valor) <= STOCK_TONER_MINIMO;
+                return `<span class="${bajo ? "stock-plano-bajo" : ""}">${esc(valor)}</span>`;
+              })();
           return `
             <tr data-toner-clave="${esc(f.clave)}">
               <td>${esc(f.base)}</td>
