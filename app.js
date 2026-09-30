@@ -4586,13 +4586,25 @@ const vistaCatalogoMonitores = crearVistaLista({
   },
 });
 
+// Restaurado a pedido del usuario: al agregar la restricción de solo-consulta para la sesión de
+// Bodega (ver CLAUDE.md, "Extensión — acceso de solo consulta al catálogo de Impresoras") se
+// había quitado por completo el link de la columna IP (antes abría la interfaz web de la
+// impresora en pestaña nueva) porque en la práctica casi nunca servía. El usuario aclaró que a
+// él (IT) sí le servía para entrar directo a la impresora — así que se restaura el link, pero
+// SOLO para sesiones normales de IT; la sesión de Bodega sigue viendo la IP como texto plano
+// (sin activárselo a ellos, ya que su acceso a esta vista es explícitamente de solo lectura).
+function enlaceIp(ip) {
+  if (!ip || esSesionBodega) return esc(ip);
+  return `<a href="http://${esc(ip)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(ip)}</a>`;
+}
+
 function obtenerCatalogoImpresoras() {
   const ordenada = [...impresorasData].sort((a, b) => (a.departamento || "").localeCompare(b.departamento || ""));
   return ordenada.map((p) => ({
     impresora: p,
     celdas: `
       <td>${esc(p.tipoEquipoImp)}</td>
-      <td>${esc(p.ip)}</td>
+      <td>${enlaceIp(p.ip)}</td>
       <td>${esc(p.gpr)}</td>
       <td>${esc(p.serial)}</td>
       <td>${esc(p.modelo)}</td>

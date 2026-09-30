@@ -982,14 +982,24 @@ mismo patrón (envolver el sub-bloque en su propio `id`, ocultarlo por separado 
 `aplicarRestriccionesPorRol`) — no asumir que toda una `<section id="vista-...">` es
 homogénea solo porque comparte nav-item.
 
-**Ajuste — la columna IP del catálogo de Impresoras ya no abre nada al hacer clic**: el usuario
-notó que cada IP se mostraba como un link (`enlaceIp()` en `app.js`, generaba `<a
-href="http://<ip>" target="_blank">`) que intentaba abrir `http://<ip>` en pestaña nueva al
-hacer clic — no útil en la práctica (son IPs de red interna, no una interfaz web real de la
-impresora en la mayoría de los casos) y confuso para quien solo quiere leer el dato. Se quitó
-`enlaceIp()` por completo y la celda de IP ahora usa `esc(p.ip)` como cualquier otra columna de
-texto plano, igual que antes de que existiera ese link. Verificado con Playwright: la celda ya
-no contiene ningún `<a>`, solo el texto de la IP.
+**Ajuste — la columna IP del catálogo de Impresoras ya no abre nada al hacer clic — luego
+revertido parcialmente**: el usuario notó que cada IP se mostraba como un link (`enlaceIp()` en
+`app.js`, generaba `<a href="http://<ip>" target="_blank">`) que intentaba abrir `http://<ip>`
+en pestaña nueva al hacer clic — no útil en la práctica (son IPs de red interna, no una interfaz
+web real de la impresora en la mayoría de los casos) y confuso para quien solo quiere leer el
+dato. Se quitó `enlaceIp()` por completo y la celda de IP pasó a usar `esc(p.ip)` como cualquier
+otra columna de texto plano.
+
+**Revertido después, a pedido explícito del usuario**: al agregar el acceso de solo consulta de
+Bodega a esta misma vista (extensión de sep/2026, más abajo), el usuario notó que quitar
+`enlaceIp()` también le había quitado a él (IT, uso normal) la forma rápida de entrar a la
+interfaz web de la impresora — sí le servía en la práctica para su propio trabajo, aunque no
+para Bodega. Se restauró `enlaceIp(ip)`, pero condicionada a `esSesionBodega`: en sesión normal
+de IT genera el link igual que antes (con `onclick="event.stopPropagation()"` para no disparar
+también el click de la fila, que abre el modal de edición); en sesión de Bodega sigue mostrando
+la IP como texto plano (`esc(ip)`), sin activarles ese acceso — consistente con que su vista de
+este catálogo es explícitamente de solo lectura. Verificado: `enlaceIp("172.16.105.233")` con
+`esSesionBodega=false` genera el `<a>`; con `esSesionBodega=true` devuelve solo el texto.
 
 **Importante — esto es SOLO de interfaz, no seguridad real**: las reglas de Firestore no cambiaron
 (`allow read, write: if request.auth != null;` sigue aplicando igual a todas las colecciones para
