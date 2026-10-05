@@ -231,20 +231,24 @@ mismo nombre) — el Código de empleado en cambio es una llave única y exacta,
   esa persona no estaba en el snapshot original (13/08/2026). El usuario compartió un archivo
   más reciente (`Empleados_activos_01-10-2026.XLSX`, mismo formato de 3 hojas, ahora con columna
   `CORREO` que este padrón no usa) — se comparó cada `Nº pers.` contra `PADRON_EMPLEADOS` y se
-  agregaron los **13 códigos que no existían todavía** (10006787/88/89/90/91/93/95/96/97/98/99/
-  10006801/802), sin tocar ni duplicar los 2,081 ya existentes. **2,081 → 2,094 registros**.
-  - **Caso especial detectado y confirmado por el usuario — código `10006794` (Mario Leiva)
-    quedó pendiente, no se agregó todavía**: en el archivo nuevo, su DPI aparece como
-    `D02834941` (con letra, no son los 13 dígitos normales) — el usuario confirmó que es en
-    realidad su **número de pasaporte**, no su DPI, y quedó en validar con él antes de decidir
-    si ese dato va en el campo `dpi` o se necesita su DPI real. Además su "Área de nómina" dice
-    "Mensual Inactiva" en el Excel. **No agregar `10006794` a `PADRON_EMPLEADOS` hasta que el
-    usuario confirme qué dato usar.**
+  agregaron los **14 códigos que no existían todavía** (10006787/88/89/90/91/93/94/95/96/97/98/
+  99/10006801/802), sin tocar ni duplicar los 2,081 ya existentes. **2,081 → 2,095 registros**.
+  - **Caso especial — código `10006794` (Mario Leiva), ya resuelto**: en el archivo nuevo, su
+    campo DPI traía `D02834941` (con letra, no son los 13 dígitos normales) — el usuario
+    confirmó que ese campo es en realidad su **número de pasaporte de El Salvador**, y que el
+    valor del Excel tenía un error de dedo: el real es `D7119841` (no `D02834941`). Se usó este
+    valor corregido, dado directo por el usuario, en el campo `dpi` del registro (mismo patrón
+    ya usado antes con otros pasaportes/DPIs dados directamente, sin cruzar contra el padrón).
+    Su "Área de nómina" sigue diciendo "Mensual Inactiva" en el Excel — no se investigó más a
+    fondo, no bloqueó agregarlo al padrón de todas formas.
   - **Detalle curioso encontrado en el proceso**: el DPI que el usuario ya había dado
     manualmente para Mario Leiva tiempo atrás (`3269522331015`, aplicado vía
     `corregirDpiLAPLNV304` en `app.js`, equipo `LAPLNV304`) en este padrón nuevo le pertenece a
-    **otra persona** (`10006793`, Enzo Efrain Cortez Cumatzil, sí agregado normalmente) — posible
-    confusión de datos en el origen, no se tocó la corrección ya aplicada en `app.js`.
+    **otra persona** (`10006793`, Enzo Efrain Cortez Cumatzil, también agregado normalmente) —
+    posible confusión de datos en el origen; no se tocó la corrección ya aplicada en `app.js`
+    (el campo `dpi` de `LAPLNV304` en la colección `equipos` sigue con `3269522331015`, distinto
+    del pasaporte `D7119841` ahora en el padrón — son dos campos y dos propósitos distintos, no
+    hace falta igualarlos).
 
 ### Tipo de RAM (DDR3/DDR4/DDR5/LPDDR) por módulo — solo en "Inventario Automático", sin puente
 El usuario preguntó cómo saber el tipo de DDR de la RAM, específicamente para equipos con
