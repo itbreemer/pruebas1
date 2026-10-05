@@ -231,6 +231,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
+  if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
   if (corregirEmpresasMalCapturadas()) cambio = true;
@@ -264,6 +265,20 @@ function eliminarDuplicadoP025194() {
   equipos = equipos.filter((e) => e.id !== "cronograma-4");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("cronograma-4");
+  return cambio;
+}
+
+function eliminarDuplicadoLAPGEN2025Cronograma() {
+  // "LAPGEN2025" (Generadora 2, cronograma-37) se agregó desde el Cronograma de
+  // Migración AD 2026 sin datos técnicos, pero el usuario confirmó que el
+  // registro real ya existente (seed-113, Generadora I, con toda la info) es
+  // el único que hace falta — eliminó este duplicado vacío desde la app, pero
+  // sigue en SEED_DATA, así que fusionarContratosDesdeSeed lo re-agregaba cada
+  // vez que se guardaba el otro equipo. Mismo patrón que eliminarDuplicadoP025194.
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => e.id !== "cronograma-37");
+  const cambio = equipos.length !== antes;
+  if (cambio) sincronizarEliminacion("cronograma-37");
   return cambio;
 }
 
@@ -807,6 +822,7 @@ function establecerEquiposDesdeSync(remotos) {
 
   equipos = combinados;
   eliminarDuplicadoP025194();
+  eliminarDuplicadoLAPGEN2025Cronograma();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
@@ -4289,6 +4305,7 @@ document.addEventListener("mouseout", (ev) => {
 function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
+  if (eliminarDuplicadoLAPGEN2025Cronograma()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;

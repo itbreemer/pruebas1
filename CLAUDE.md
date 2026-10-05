@@ -410,6 +410,24 @@ resto de la app) — son dos inventarios distintos a propósito (Opción B que e
 - Pendiente: distribuir vía GPO a más equipos del dominio; considerar restringir la API Key de
   Firebase (por IP o servicio) antes de distribución masiva.
 
+### Bug real corregido — un equipo eliminado desde la app volvía a aparecer solo (duplicado "LAPGEN2025" vacío)
+El usuario reportó un caso confuso: tenía 2 registros con el mismo Nombre en Red `LAPGEN2025`
+(uno completo, `seed-113`, Generadora I; otro vacío "Nuevo > Sin Asignar", `cronograma-37`,
+Generadora 2, agregado desde el Cronograma de Migración AD 2026 sin datos técnicos). Al eliminar
+el vacío, se borraba bien — pero apenas guardaba o editaba el otro equipo (el completo), el
+vacío **reaparecía solo**, como si nunca se hubiera eliminado. Causa raíz: mismo patrón de fondo
+ya documentado una vez para "P02-5194 bod2" (`eliminarDuplicadoP025194`) — `cronograma-37` sigue
+existiendo en `SEED_DATA` (`data.js`), y `fusionarContratosDesdeSeed()` (`app.js`) agrega
+automáticamente cualquier id de `SEED_DATA` que falte en el navegador cada vez que corre (carga
+de página, guardado de otro equipo, sync en tiempo real de Firestore) — sin saber que el usuario
+ya lo había eliminado a propósito desde la app. **Fix**: nueva función
+`eliminarDuplicadoLAPGEN2025Cronograma()` (mismo patrón que `eliminarDuplicadoP025194`, filtra el
+id y llama a `sincronizarEliminacion`), enganchada en los 3 lugares donde corre la de P02-5194
+(`fusionarContratosDesdeSeed`, la fusión de sync en tiempo real, y `renderTablero`). **Importante
+para el futuro**: si se elimina desde la app cualquier otro equipo que haya entrado originalmente
+por `SEED_DATA` (no capturado a mano), replicar este mismo patrón — si no, `SEED_DATA` lo sigue
+re-agregando indefinidamente aunque Firestore ya lo tenga borrado.
+
 ## Dashboard flotante (dashboard.html / dashboard.js)
 
 Ventana emergente de solo lectura (`window.open` desde `app.js`, botón del Tablero) con
