@@ -226,6 +226,25 @@ mismo nombre) — el Código de empleado en cambio es una llave única y exacta,
   contratos puntuales ya usados, ej. `Detalle_66_Equipos_Lenovo_a_Tecnoelec.xlsx` para el
   contrato 8030028191, ya cargado). Contratos nuevos se siguen validando caso por caso con el
   archivo que entregue el proveedor, igual que se hizo con ese contrato.
+- **Actualización del padrón (oct/2026)**: el usuario reportó que el autocompletado no llenaba
+  nada para el código `10006794` (Mario Walter Leiva) — causa real: no es un bug, simplemente
+  esa persona no estaba en el snapshot original (13/08/2026). El usuario compartió un archivo
+  más reciente (`Empleados_activos_01-10-2026.XLSX`, mismo formato de 3 hojas, ahora con columna
+  `CORREO` que este padrón no usa) — se comparó cada `Nº pers.` contra `PADRON_EMPLEADOS` y se
+  agregaron los **13 códigos que no existían todavía** (10006787/88/89/90/91/93/95/96/97/98/99/
+  10006801/802), sin tocar ni duplicar los 2,081 ya existentes. **2,081 → 2,094 registros**.
+  - **Caso especial detectado y confirmado por el usuario — código `10006794` (Mario Leiva)
+    quedó pendiente, no se agregó todavía**: en el archivo nuevo, su DPI aparece como
+    `D02834941` (con letra, no son los 13 dígitos normales) — el usuario confirmó que es en
+    realidad su **número de pasaporte**, no su DPI, y quedó en validar con él antes de decidir
+    si ese dato va en el campo `dpi` o se necesita su DPI real. Además su "Área de nómina" dice
+    "Mensual Inactiva" en el Excel. **No agregar `10006794` a `PADRON_EMPLEADOS` hasta que el
+    usuario confirme qué dato usar.**
+  - **Detalle curioso encontrado en el proceso**: el DPI que el usuario ya había dado
+    manualmente para Mario Leiva tiempo atrás (`3269522331015`, aplicado vía
+    `corregirDpiLAPLNV304` en `app.js`, equipo `LAPLNV304`) en este padrón nuevo le pertenece a
+    **otra persona** (`10006793`, Enzo Efrain Cortez Cumatzil, sí agregado normalmente) — posible
+    confusión de datos en el origen, no se tocó la corrección ya aplicada en `app.js`.
 
 ### Tipo de RAM (DDR3/DDR4/DDR5/LPDDR) por módulo — solo en "Inventario Automático", sin puente
 El usuario preguntó cómo saber el tipo de DDR de la RAM, específicamente para equipos con
