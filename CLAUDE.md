@@ -166,6 +166,22 @@ real de disco que Windows sí mostraba):
   volver a correr el agente actualizado en esa máquina (el envío anterior con el bug ya quedó
   guardado en Firestore con el valor equivocado; el puente nunca lo reescribe solo porque ya
   "tiene algo" a menos que ese algo sea reconocido como "generic").
+- **Bug real encontrado y corregido — `Win32_DiskDrive` reportaba mal el tamaño de un SSD NVMe
+  (ThinkPad P16V G3, oct/2026)**: el usuario validó el "Tamaño Disco (GB)" de `LAPLNV329` (una de
+  las 14 laptops nuevas de este modelo) contra el hardware físico real — el disco es un SSD NVMe
+  Samsung de 1TB (confirmado por el propio modelo que ya traía el agente,
+  `SAMSUNG MZVLC1T0HFLU-00BLL` — el "1T0" en el nombre es la nomenclatura de Samsung para 1TB),
+  pero el campo mostraba 512. El `Model` se identificaba bien (mismo objeto de WMI), así que no
+  era el bug viejo del lector SD/MMC — era el campo `Size` de `Win32_DiskDrive` el que venía mal
+  para esta combinación de disco/driver NVMe. Confirmado real comparando contra `Get-PhysicalDisk`
+  (módulo Storage) en la misma máquina, que sí dio el dato correcto (954 GB, consistente con un
+  SSD de 1TB real). **Fix**: `agent-inventario.ps1` ahora usa `Get-PhysicalDisk` como fuente
+  principal para el disco físico (`BusType -ne "USB"` en vez de `InterfaceType -ne "USB"`,
+  `FriendlyName` en vez de `Model`), con `Win32_DiskDrive` como respaldo solo si `Get-PhysicalDisk`
+  no está disponible (equipos muy viejos sin el módulo Storage). **Pendiente de confirmación**: el
+  usuario debe volver a correr el agente actualizado en `LAPLNV329` (y las otras 13 laptops P16V
+  G3 cuando se le entregue a cada una) para confirmar que ahora reporta ~954GB en vez de 512 — el
+  dato viejo ya quedó guardado en Firestore con el valor equivocado, el puente no lo corrige solo.
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
   `soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos

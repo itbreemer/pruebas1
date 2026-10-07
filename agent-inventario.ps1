@@ -288,19 +288,41 @@ function Get-ComputerHardware {
         # todo si el lector aparece primero en el listado. Fix: se prioriza el disco
         # NO-USB con mayor tamaño (el disco real de sistema); si ninguno califica
         # (caso raro), se cae al de mayor tamaño general como respaldo.
+        #
+        # Bug real encontrado y corregido (ThinkPad P16V G3, LAPLNV329): Win32_DiskDrive
+        # reporto el tamano de un SSD NVMe Samsung (modelo "MZVLC1T0HFLU" — el "1T0" en
+        # el nombre confirma que es un disco de 1TB) como solo 512GB — el campo Size de
+        # esa clase WMI venia mal para esta combinacion de disco/driver NVMe, aunque el
+        # Model si se identificaba bien. Confirmado real comparando contra
+        # Get-PhysicalDisk (modulo Storage), que para el mismo disco fisico si dio el
+        # dato correcto (954 GB, consistente con un SSD de 1TB real). Fix: se cambia a
+        # Get-PhysicalDisk como fuente principal (mas confiable para NVMe), con
+        # Win32_DiskDrive como respaldo solo si Get-PhysicalDisk no esta disponible
+        # (equipos muy viejos sin el modulo Storage, Windows 7 o anterior).
         try {
-            $discosFisicos = @(Get-CimInstance Win32_DiskDrive)
-            $discoFisico = $discosFisicos | Where-Object { $_.InterfaceType -ne "USB" -and $_.Size -gt 0 } | Sort-Object -Property Size -Descending | Select-Object -First 1
+            $discosFisicos = @(Get-PhysicalDisk -ErrorAction Stop)
+            $discoFisico = $discosFisicos | Where-Object { $_.BusType -ne "USB" -and $_.Size -gt 0 } | Sort-Object -Property Size -Descending | Select-Object -First 1
             if (-not $discoFisico) {
                 $discoFisico = $discosFisicos | Sort-Object -Property Size -Descending | Select-Object -First 1
             }
-            $hardware.discoFisicoModelo = $discoFisico.Model
+            $hardware.discoFisicoModelo = $discoFisico.FriendlyName
             $hardware.discoFisicoTamanoGB = [math]::Round($discoFisico.Size / 1GB, 0)
         }
         catch {
-            LogWarning "No se pudo obtener info del disco fisico: $_"
-            $hardware.discoFisicoModelo = "N/A"
-            $hardware.discoFisicoTamanoGB = $null
+            try {
+                $discosFisicos = @(Get-CimInstance Win32_DiskDrive)
+                $discoFisico = $discosFisicos | Where-Object { $_.InterfaceType -ne "USB" -and $_.Size -gt 0 } | Sort-Object -Property Size -Descending | Select-Object -First 1
+                if (-not $discoFisico) {
+                    $discoFisico = $discosFisicos | Sort-Object -Property Size -Descending | Select-Object -First 1
+                }
+                $hardware.discoFisicoModelo = $discoFisico.Model
+                $hardware.discoFisicoTamanoGB = [math]::Round($discoFisico.Size / 1GB, 0)
+            }
+            catch {
+                LogWarning "No se pudo obtener info del disco fisico: $_"
+                $hardware.discoFisicoModelo = "N/A"
+                $hardware.discoFisicoTamanoGB = $null
+            }
         }
 
         # Sistema Operativo
