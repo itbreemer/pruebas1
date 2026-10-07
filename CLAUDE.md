@@ -526,6 +526,21 @@ contrato — este nuevo corrector es necesario porque, en algún momento posteri
 el valor en Firestore cambió a "01/01/2031"/"27/01/2027" (probablemente edición manual directa
 en el programa), divergiendo del dato real de GBM.
 
+**Contrato 8030028027 (renovación de 2 contratos viejos, oct/2026)**: GBM reportó este contrato
+("Contrato regularizado de 3 equipos en préstamo": 2 ThinkPad E14 Gen2 + 1 ThinkCentre M70s
+Gen2, vence 31/12/2026) como algo nuevo que no existía en `data.js` — pero el usuario confirmó
+que son los mismos 3 equipos que el programa ya tenía registrados bajo sus números de contrato
+VIEJOS, antes de que GBM los regularizara/renovara bajo este número nuevo: `8030019043` (las 2
+laptops E14 Gen2: `LAPLNV102`/`seed-194`, `LAPLNV196`/`seed-255`) y `8030018830` (el desktop
+M70s: `PCLNV208`/`seed-706`). Función `corregirContratoRenovado8030028027()` en `app.js` (mismo
+patrón que `corregirFechaVencimientoContrato8030028059GBM`, pero matchea por `id` porque los 3
+sí existen en `SEED_DATA`) fuerza `contratos = "8030028027 (vence 31/12/2026)"` en esos 3 y
+resincroniza a Firestore. **Importante para el futuro**: cuando GBM reporte un contrato que
+"no aparece" en el programa, antes de asumir que son equipos faltantes, buscar si la
+descripción (modelo + cantidad) coincide con equipos ya existentes bajo un número de contrato
+viejo — GBM puede renovar/regularizar contratos cambiándoles el número sin que eso signifique
+equipos nuevos.
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código

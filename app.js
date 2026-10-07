@@ -229,6 +229,7 @@ function fusionarContratosDesdeSeed() {
   if (limpiarPendientesDuplicados()) cambio = true;
   if (corregirFechaContrato8030028059()) cambio = true;
   if (corregirFechaVencimientoContrato8030028059GBM()) cambio = true;
+  if (corregirContratoRenovado8030028027()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
@@ -505,6 +506,30 @@ function corregirFechaVencimientoContrato8030028059GBM() {
     if (!NOMBRES_RED.includes(e.nombreRed)) return;
     const actual = (e.contratos || "").trim();
     if (!actual.startsWith("8030028059") || actual === NUEVO) return;
+    e.contratos = NUEVO;
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(e);
+    cambio = true;
+  });
+  return cambio;
+}
+
+// GBM reportó el contrato 8030028027 ("Contrato regularizado de 3 equipos en
+// préstamo": 2 ThinkPad E14 Gen2 + 1 ThinkCentre M70s Gen2) como una
+// renovación que finaliza 31/12/2026 — el usuario confirmó que son los
+// mismos 3 equipos que el programa ya tenía registrados con sus números de
+// contrato VIEJOS (8030019043 para las 2 laptops, 8030018830 para el
+// desktop), antes de que GBM los regularizara bajo este número nuevo.
+// Se matchea por id (LAPLNV102=seed-194, LAPLNV196=seed-255,
+// PCLNV208=seed-706 — los 3 ya existen en SEED_DATA) y se fuerza la
+// corrección + resincroniza, igual que las demás correcciones de contrato.
+function corregirContratoRenovado8030028027() {
+  const IDS = ["seed-194", "seed-255", "seed-706"];
+  const NUEVO = "8030028027 (vence 31/12/2026)";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!IDS.includes(e.id)) return;
+    if ((e.contratos || "").trim() === NUEVO) return;
     e.contratos = NUEVO;
     e.ultimaModificacion = new Date().toISOString().slice(0, 16);
     sincronizarEquipo(e);
