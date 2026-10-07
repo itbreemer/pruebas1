@@ -642,6 +642,40 @@ próxima entrega de equipos**:
   (empleado, puesto, departamento, modelo, serial, contrato) y solo falta el DPI (si no estaba
   ya cargado) para generar el Acta + Tarjeta de Responsabilidad.
 
+### Segunda entrega del contrato 8030028191 (oct/2026) — 20 equipos más
+El usuario compartió un segundo archivo del mismo contrato (`contrato8030028191.xlsx`), con 2
+grupos distintos de equipos nuevos, agregados directo a `SEED_DATA` en `data.js` con el mismo
+patrón ya establecido (mismo prefijo de id `alta-8030028191-`, así que `esAltaContrato8030028191`
+los sube solos a Firestore sin necesidad de código nuevo):
+- **14 laptops de un modelo NUEVO en este contrato**: ThinkPad P16V G3, Intel Core Ultra 9 285
+  (`LAPLNV325`–`LAPLNV338`). 13 ya venían con Código de empleado asignado en el Excel — se
+  cruzaron contra el padrón (`empleados.js`) y los 13 calzaron exacto (nombre y código),
+  incluyendo varias personas del propio equipo de CORP-TI (Luis Alacam, Jorge Contreras, Lester
+  Yanes, Denis Bautista). Se llenó `empresa`/`departamento`/`puesto`/`dpi` directo del padrón (sin
+  necesitar una función de corrección forzada aparte, porque se completó todo en el alta inicial,
+  a diferencia del primer lote donde varios quedaron pendientes). `LAPLNV335` quedó sin asignar.
+  **Al ser modelo nuevo y sin ficha física confirmada todavía**, se dejaron vacíos a propósito
+  `soVersion`/`memoria`/`memoriaDescripcion`/`codigoRam`/`tamanoDisco` — no se adivinaron
+  copiando los valores del T14 Gen 6 (modelo distinto, specs no confirmadas). Si se confirma la
+  ficha técnica real de este modelo, hay que llenarlos a mano o pedirle al usuario los datos para
+  agregarlos (mismo patrón "solo si sigue vacío" del resto de la app, no hace falta una función
+  nueva para esto).
+- **6 laptops más del mismo modelo ya conocido**: ThinkPad T14 Gen 6, Intel Core Ultra 5
+  (`LAPLNV319`–`LAPLNV324`, continúa la numeración después de `LAPLNV317`/`318`) — todas
+  "Sin Asignar" en el Excel. Como es el mismo modelo/config ya confirmado del primer lote, sí se
+  reutilizaron los valores técnicos ya validados (`memoria` "32 Gb", `memoriaDescripcion`
+  "KINGSTON 16GB DDR5 5600MT/S SODIMM", `codigoRam` "KCP556SS8-15", `tamanoDisco` "512",
+  `soVersion` "64 bits - 25H2").
+- **Fecha de contrato — discrepancia detectada y resuelta**: este archivo nuevo traía arriba del
+  segundo grupo *"8030028191 - Fecha Inicio: 6/10/2026 - Fecha Fin: 6/10/2031"*, distinta a la ya
+  documentada ("vence 11/09/2031"). El usuario confirmó que fue un error de captura de su parte
+  al armar el Excel — **se ignoró esa fecha nueva** y se usó la misma ya establecida para todo el
+  contrato: `contratos: "8030028191 (vence 11/09/2031)"` y `fechaIngresoEquipo: "2026-09-11"` en
+  los 20 registros nuevos, igual que el resto del contrato.
+- Sin colisiones de `nombreRed` con equipos ya existentes (verificado antes de insertar). No se
+  tocó `numeroInventario` (se dejó vacío desde el inicio, no hubo Placa a limpiar después como en
+  el primer lote). `SEED_DATA`: 865 → 885 elementos (20 nuevos).
+
 ## Mejoras recientes a la app web principal (index.html / app.js)
 
 ### Monitor vinculado al Catálogo de Monitores
