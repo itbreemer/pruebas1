@@ -551,8 +551,10 @@ necesidad de listar los 45 ids), pero sí resincroniza cada equipo a Firestore (
 esa función más vieja). **Discrepancia de cantidad detectada pero NO investigada** (no era parte
 de este pedido puntual): GBM reporta 46 equipos (13 E14) pero `data.js` solo tiene 45 (12 E14)
 para este contrato — probablemente hay un equipo adicional que solo existe en Firestore (mismo
-patrón que `LAPLNV284`-`288` del contrato 8030028059, no en `SEED_DATA`). Si se retoma la
-validación completa de cantidades, buscar en la vista "Contratos" en vivo si aparece un 13er E14.
+patrón que `LAPLNV284`-`288` del contrato 8030028059, no en `SEED_DATA`). **Resuelto**: el
+usuario confirmó que el programa SÍ tiene los 45 correctos — el error de cantidad (46) fue de
+GBM, no del programa; el usuario lo corregirá directamente con GBM. La fecha 27/01/2027 ya
+corregida en los 45 equipos sigue siendo válida.
 
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
