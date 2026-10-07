@@ -570,6 +570,12 @@ Firestore).
 falta corregir la fecha (tenía "31/03/2026", un año antes). Función
 `corregirFechaVencimientoContrato8030017599GBM()` en `app.js`, mismo patrón que las anteriores.
 
+**Contrato 8030018389 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
+("SmartUser": 11 M75Q Ryzen 7 Pro, 16GB RAM, 512GB SSD) con fecha de fin 31/03/2027. El usuario
+confirmó que la cantidad de equipos cuadraba exacto (11 = 11) — solo hacía falta corregir la
+fecha (tenía "31/03/2026", un año antes). Función `corregirFechaVencimientoContrato8030018389GBM()`
+en `app.js`, mismo patrón que las anteriores.
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código

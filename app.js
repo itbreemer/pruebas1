@@ -233,6 +233,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirFechaVencimientoContrato8030016807GBM()) cambio = true;
   if (corregirFechaVencimientoContrato8030016507GBM()) cambio = true;
   if (corregirFechaVencimientoContrato8030017599GBM()) cambio = true;
+  if (corregirFechaVencimientoContrato8030018389GBM()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
@@ -574,6 +575,26 @@ function corregirFechaVencimientoContrato8030016507GBM() {
 function corregirFechaVencimientoContrato8030017599GBM() {
   const VIEJO = "8030017599 (vence 31/03/2026)";
   const NUEVO = "8030017599 (vence 31/03/2027)";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if ((e.contratos || "").trim() === VIEJO) {
+      e.contratos = NUEVO;
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    }
+  });
+  return cambio;
+}
+
+// GBM reportó el contrato 8030018389 ("SmartUser": 11 M75Q Ryzen 7 Pro, 16GB
+// RAM, 512GB SSD) con fecha de fin 31/03/2027 — el programa ya tenía
+// exactamente los 11 equipos de este contrato (cantidad confirmada igual por
+// el usuario), solo con fecha de fin vieja (31/03/2026, un año antes).
+// Mismo patrón que las demás correcciones de solo-fecha de GBM.
+function corregirFechaVencimientoContrato8030018389GBM() {
+  const VIEJO = "8030018389 (vence 31/03/2026)";
+  const NUEVO = "8030018389 (vence 31/03/2027)";
   let cambio = false;
   equipos.forEach((e) => {
     if ((e.contratos || "").trim() === VIEJO) {
