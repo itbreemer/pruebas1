@@ -541,6 +541,19 @@ descripción (modelo + cantidad) coincide con equipos ya existentes bajo un núm
 viejo — GBM puede renovar/regularizar contratos cambiándoles el número sin que eso signifique
 equipos nuevos.
 
+**Contrato 8030016807 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
+("SmartUser Laptops": 13 ThinkPad E14 + 33 ThinkPad T14, vence 27/01/2027) un año después de
+la fecha que tenía el programa (27/01/2026) para los mismos 45 equipos (12 E14 + 33 T14) que ya
+existían con este número de contrato. El usuario pidió corregir únicamente la fecha de
+vencimiento. Función `corregirFechaVencimientoContrato8030016807GBM()` en `app.js` — coincidencia
+exacta del texto completo del campo `contratos` (como `corregirFechaContrato8030028059`, sin
+necesidad de listar los 45 ids), pero sí resincroniza cada equipo a Firestore (a diferencia de
+esa función más vieja). **Discrepancia de cantidad detectada pero NO investigada** (no era parte
+de este pedido puntual): GBM reporta 46 equipos (13 E14) pero `data.js` solo tiene 45 (12 E14)
+para este contrato — probablemente hay un equipo adicional que solo existe en Firestore (mismo
+patrón que `LAPLNV284`-`288` del contrato 8030028059, no en `SEED_DATA`). Si se retoma la
+validación completa de cantidades, buscar en la vista "Contratos" en vivo si aparece un 13er E14.
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código
