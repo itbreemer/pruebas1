@@ -554,26 +554,6 @@ siguen en `SEED_DATA` y se re-agregarían solos si no se quitan explícitamente 
 **Importante**: esto deja a estos 3 equipos fuera del inventario desde ahora, antes de que el
 contrato realmente venza — es una decisión de negocio del usuario, no un error a corregir.
 
-### Panel del Tablero "Vencimiento y Renovación de Contratos" (antes "Contratos que vencen en 2027")
-
-El panel (dentro de "Contratos Lenovo" en el Tablero, `index.html`) estaba codificado a un año
-calendario fijo: título literal "Contratos que vencen en 2027" y filtro `fechaVenceEnAnio(f.fecha,
-2027)` en `app.js` (`renderContratosLenovo`). El usuario notó, validando el otro panel de "Contratos
-que vencen en 2027" contra el reporte de GBM, que esto se desactualizaría solo apenas pasen los
-contratos de 2027 a su próxima renovación (los contratos nuevos duran ~5 años) — el panel se
-iría vaciando con el título ya viejo, sin que nadie lo notara.
-
-**Fix**: se quitó el año fijo. Nuevo título genérico **"Vencimiento y Renovación de Contratos
-(próximos 12 meses)"**, y el filtro ahora es una ventana móvil de 12 meses hacia adelante desde
-hoy (`fechaVenceProximosMeses(fecha, 12)`, reemplaza a `fechaVenceEnAnio`) — siempre muestra los
-vencimientos reales sin tocar código cuando cambie el año. También se reemplazó `ordenMesDia`
-(ordenaba solo por mes/día, ignorando el año) por `fechaValorOrdenable` (orden cronológico real),
-necesario porque la ventana de 12 meses puede cruzar de un año calendario al siguiente (ej.
-noviembre 2026 a octubre 2027); y `nombreMesDeFecha` ahora incluye el año en la lista
-(`renderListaContratosConMes`) por la misma razón. Los `id` del DOM (`tableroContratoVence2027Dona`/
-`tableroContratoVence2027`) se dejaron igual a propósito (solo son identificadores internos, no
-texto visible) para no tener que tocar también el CSS/otros selectores.
-
 **Contrato 8030016807 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
 ("SmartUser Laptops": 13 ThinkPad E14 + 33 ThinkPad T14, vence 27/01/2027) un año después de
 la fecha que tenía el programa (27/01/2026) para los mismos 45 equipos (12 E14 + 33 T14) que ya
