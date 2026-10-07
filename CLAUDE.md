@@ -556,6 +556,14 @@ usuario confirmó que el programa SÍ tiene los 45 correctos — el error de can
 GBM, no del programa; el usuario lo corregirá directamente con GBM. La fecha 27/01/2027 ya
 corregida en los 45 equipos sigue siendo válida.
 
+**Contrato 8030016507 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
+("SmartUser": 49 ThinkCentre M720q core i3, 8GB RAM, 256GB SSD, Monitor 21.5") con fecha de fin
+06/03/2027. El usuario confirmó que la cantidad de equipos sí cuadraba exacto (49 = 49) — solo
+hacía falta corregir la fecha (tenía "6/03/2026", un año antes). Función
+`corregirFechaVencimientoContrato8030016507GBM()` en `app.js`, mismo patrón que la de 8030016807
+(coincidencia exacta del texto completo del campo `contratos`, resincroniza cada equipo a
+Firestore).
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código

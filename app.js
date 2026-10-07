@@ -231,6 +231,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirFechaVencimientoContrato8030028059GBM()) cambio = true;
   if (corregirContratoRenovado8030028027()) cambio = true;
   if (corregirFechaVencimientoContrato8030016807GBM()) cambio = true;
+  if (corregirFechaVencimientoContrato8030016507GBM()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
@@ -530,6 +531,28 @@ function corregirFechaVencimientoContrato8030028059GBM() {
 function corregirFechaVencimientoContrato8030016807GBM() {
   const VIEJO = "8030016807 (vence 27/01/2026)";
   const NUEVO = "8030016807 (vence 27/01/2027)";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if ((e.contratos || "").trim() === VIEJO) {
+      e.contratos = NUEVO;
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    }
+  });
+  return cambio;
+}
+
+// GBM reportó el contrato 8030016507 ("SmartUser": 49 ThinkCentre M720q core
+// i3, 8GB RAM, 256GB SSD, Monitor 21.5") con fecha de fin 06/03/2027 — el
+// programa ya tenía exactamente los 49 equipos de este contrato (cantidad
+// confirmada igual por el usuario), solo con fecha de fin vieja
+// (6/03/2026, un año antes). Mismo patrón que `corregirFechaVencimientoContrato8030016807GBM`:
+// coincidencia exacta del texto viejo, sin necesidad de listar cada id, y sí
+// resincroniza cada uno a Firestore.
+function corregirFechaVencimientoContrato8030016507GBM() {
+  const VIEJO = "8030016507 (vence 6/03/2026)";
+  const NUEVO = "8030016507 (vence 06/03/2027)";
   let cambio = false;
   equipos.forEach((e) => {
     if ((e.contratos || "").trim() === VIEJO) {
