@@ -564,6 +564,12 @@ hacía falta corregir la fecha (tenía "6/03/2026", un año antes). Función
 (coincidencia exacta del texto completo del campo `contratos`, resincroniza cada equipo a
 Firestore).
 
+**Contrato 8030017599 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
+("SmartUser": 4 ThinkPad P14s Gen 1, Core i7 vPro, 32GB RAM, 1TB SSD) con fecha de fin
+31/03/2027. El usuario confirmó que la cantidad de equipos cuadraba exacto (4 = 4) — solo hacía
+falta corregir la fecha (tenía "31/03/2026", un año antes). Función
+`corregirFechaVencimientoContrato8030017599GBM()` en `app.js`, mismo patrón que las anteriores.
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código
