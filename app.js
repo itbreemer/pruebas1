@@ -4109,22 +4109,44 @@ function construirContratosLenovo(equiposValidados) {
 
 let contratosLenovoFilas = [];
 
-function fechaVenceEnAnio(fecha, anio) {
-  const m = /\/(\d{4})\s*$/.exec(String(fecha || "").trim());
-  return !!m && m[1] === String(anio);
+// Antes este panel filtraba por año calendario fijo (2027, hardcodeado) — el
+// usuario pidió un encabezado genérico ("Vencimiento y Renovación de
+// Contratos") que no quede desactualizado cada vez que los contratos se
+// renuevan a un año distinto (los contratos nuevos duran ~5 años). Se
+// reemplaza por una ventana móvil de 12 meses hacia adelante desde hoy, para
+// que el panel siempre muestre los próximos vencimientos reales sin tocar
+// código cuando cambie el año.
+function fechaVenceProximosMeses(fecha, meses) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(String(fecha || "").trim());
+  if (!m) return false;
+  const vence = new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const limite = new Date(hoy);
+  limite.setMonth(limite.getMonth() + meses);
+  return vence >= hoy && vence <= limite;
 }
 
-function ordenMesDia(fecha) {
-  const m = /^(\d{1,2})\/(\d{1,2})\/\d{4}\s*$/.exec(String(fecha || "").trim());
-  if (!m) return 9999;
-  return parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
+// Reemplaza a la vieja `ordenMesDia` (ordenaba solo por mes/día, ignorando el
+// año) — con la ventana móvil de 12 meses el rango puede cruzar de un año al
+// siguiente (ej. noviembre 2026 a octubre 2027), así que hace falta un orden
+// cronológico real, no solo por mes/día.
+function fechaValorOrdenable(fecha) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(String(fecha || "").trim());
+  if (!m) return Infinity;
+  return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10)).getTime();
 }
 
 const NOMBRES_MES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function nombreMesDeFecha(fecha) {
-  const m = /^(\d{1,2})\/(\d{1,2})\/\d{4}\s*$/.exec(String(fecha || "").trim());
-  return m ? NOMBRES_MES[parseInt(m[2], 10) - 1] || "" : "";
+  // Incluye el año porque la ventana de 12 meses puede cruzar de un año
+  // calendario al siguiente (ej. "Noviembre 2026" y "Enero 2027" en la misma
+  // lista) — sin el año, dos meses iguales de años distintos se verían igual.
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(String(fecha || "").trim());
+  if (!m) return "";
+  const mes = NOMBRES_MES[parseInt(m[2], 10) - 1] || "";
+  return mes ? `${mes} ${m[3]}` : "";
 }
 
 function renderListaContratosConMes(idLista, filas, hex) {
@@ -4155,16 +4177,16 @@ function renderContratosLenovo(equiposValidados) {
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
 
-  const filasVence2027 = contratosLenovoFilas
-    .filter((f) => fechaVenceEnAnio(f.fecha, 2027))
-    .sort((a, b) => ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
-  const totalVence2027 = filasVence2027.reduce((s, f) => s + f.total, 0);
+  const filasVenceProximos = contratosLenovoFilas
+    .filter((f) => fechaVenceProximosMeses(f.fecha, 12))
+    .sort((a, b) => fechaValorOrdenable(a.fecha) - fechaValorOrdenable(b.fecha));
+  const totalVenceProximos = filasVenceProximos.reduce((s, f) => s + f.total, 0);
   pintarPanelConDona({
     idDona: "tableroContratoVence2027Dona", idLista: "tableroContratoVence2027", campo: "contratoLenovo",
     atributoCampo: "data-campo-contrato-lenovo",
-    datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#dc2626", modo: "B",
+    datosTop: filasVenceProximos.map((f) => [f.numero, f.total]), total: totalVenceProximos, hex: "#dc2626", modo: "B",
   });
-  renderListaContratosConMes("tableroContratoVence2027", filasVence2027, "#dc2626");
+  renderListaContratosConMes("tableroContratoVence2027", filasVenceProximos, "#dc2626");
 
   $("contratoLenovoDetalleWrap").style.display = "none";
 }
