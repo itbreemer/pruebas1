@@ -664,8 +664,14 @@ los sube solos a Firestore sin necesidad de código nuevo):
   (`LAPLNV319`–`LAPLNV324`, continúa la numeración después de `LAPLNV317`/`318`) — todas
   "Sin Asignar" en el Excel. Como es el mismo modelo/config ya confirmado del primer lote, sí se
   reutilizaron los valores técnicos ya validados (`memoria` "32 Gb", `memoriaDescripcion`
-  "KINGSTON 16GB DDR5 5600MT/S SODIMM", `codigoRam` "KCP556SS8-15", `tamanoDisco` "512",
-  `soVersion` "64 bits - 25H2").
+  "KINGSTON 16GB DDR5 5600MT/S SODIMM", `tamanoDisco` "512", `soVersion` "64 bits - 25H2").
+  **`codigoRam` distinto para este lote puntual**: el usuario compartió la hoja de entrega real
+  de Lenovo para estos 6 equipos, que trae `KCP556SS8-16` (mismo texto descriptivo "KINGSTON
+  16GB DDR5 5600MT/S SODIMM", pero número de parte distinto al `KCP556SS8-15` de las 30 laptops
+  originales — revisión/lote de memoria distinto del proveedor). Se aplicó `-16` **solo** a estos
+  6 (`LAPLNV319`–`324`); las 30 laptops originales se dejaron intactas con `-15`. Si llega otra
+  entrega futura de este mismo modelo, validar siempre el número de parte real de la hoja de
+  entrega en vez de asumir que es igual al de lotes anteriores.
 - **Fecha de contrato — discrepancia detectada y resuelta**: este archivo nuevo traía arriba del
   segundo grupo *"8030028191 - Fecha Inicio: 6/10/2026 - Fecha Fin: 6/10/2031"*, distinta a la ya
   documentada ("vence 11/09/2031"). El usuario confirmó que fue un error de captura de su parte
