@@ -554,6 +554,21 @@ siguen en `SEED_DATA` y se re-agregarían solos si no se quitan explícitamente 
 **Importante**: esto deja a estos 3 equipos fuera del inventario desde ahora, antes de que el
 contrato realmente venza — es una decisión de negocio del usuario, no un error a corregir.
 
+### Panel del Tablero "Vencimiento y Renovación de Contratos 2027" — es una CADENA por año, no una ventana móvil
+
+Este panel (dentro de "Contratos Lenovo" en el Tablero, `index.html` + `renderContratosLenovo` en
+`app.js`) se llamaba "Contratos que vencen en 2027" y filtra por año calendario fijo
+(`fechaVenceEnAnio(f.fecha, 2027)`). Se intentó una vez reemplazarlo por una ventana móvil de 12
+meses (para que no quedara desactualizado) y el usuario la rechazó explícitamente — el diseño
+correcto es una **cadena de paneles por año**: "2027" se queda tal cual, mostrando únicamente los
+contratos que vencen en 2027, hasta que el ÚLTIMO contrato de ese año se renueve/desaparezca de
+ahí (el panel se va vaciando solo conforme eso pasa, es normal). **Solo cuando ya no quede ningún
+contrato venciendo en 2027**, hay que crear el siguiente panel de la cadena ("Vencimiento y
+Renovación de Contratos 2028", mismo patrón: filtro `fechaVenceEnAnio(f.fecha, 2028)`, puede ser
+un panel nuevo junto al de 2027, o renombrar este si el usuario prefiere no acumular paneles
+viejos vacíos). **No implementar de nuevo una ventana móvil/dinámica para esto** — ya se evaluó y
+el usuario la descartó a propósito.
+
 **Contrato 8030016807 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
 ("SmartUser Laptops": 13 ThinkPad E14 + 33 ThinkPad T14, vence 27/01/2027) un año después de
 la fecha que tenía el programa (27/01/2026) para los mismos 45 equipos (12 E14 + 33 T14) que ya
