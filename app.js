@@ -238,6 +238,7 @@ function fusionarContratosDesdeSeed() {
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
+  if (eliminarEquiposContrato8030028027NoRenovado()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
   if (corregirEmpresasMalCapturadas()) cambio = true;
@@ -285,6 +286,22 @@ function eliminarDuplicadoLAPGEN2025Cronograma() {
   equipos = equipos.filter((e) => e.id !== "cronograma-37");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("cronograma-37");
+  return cambio;
+}
+
+const IDS_CONTRATO_8030028027_NO_RENOVADO = ["seed-194", "seed-255", "seed-706"];
+
+function eliminarEquiposContrato8030028027NoRenovado() {
+  // Los 3 equipos en préstamo del contrato 8030028027 (LAPLNV102, LAPLNV196,
+  // PCLNV208) son equipos de GBM que hay que devolver — el usuario confirmó
+  // que ese contrato NO se va a renovar, así que deben desaparecer del
+  // tablero/inventario. Como los 3 siguen en SEED_DATA, hay que quitarlos
+  // explícitamente (mismo patrón que eliminarDuplicadoP025194/LAPGEN2025) o
+  // fusionarContratosDesdeSeed los vuelve a agregar.
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => !IDS_CONTRATO_8030028027_NO_RENOVADO.includes(e.id));
+  const cambio = equipos.length !== antes;
+  if (cambio) IDS_CONTRATO_8030028027_NO_RENOVADO.forEach((id) => sincronizarEliminacion(id));
   return cambio;
 }
 
@@ -967,6 +984,7 @@ function establecerEquiposDesdeSync(remotos) {
   equipos = combinados;
   eliminarDuplicadoP025194();
   eliminarDuplicadoLAPGEN2025Cronograma();
+  eliminarEquiposContrato8030028027NoRenovado();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
@@ -4450,6 +4468,7 @@ function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambioPurga = true;
+  if (eliminarEquiposContrato8030028027NoRenovado()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;

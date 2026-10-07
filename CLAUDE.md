@@ -541,6 +541,19 @@ descripción (modelo + cantidad) coincide con equipos ya existentes bajo un núm
 viejo — GBM puede renovar/regularizar contratos cambiándoles el número sin que eso signifique
 equipos nuevos.
 
+**Contrato 8030028027 NO se renueva — los 3 equipos se quitan del tablero (oct/2026)**: el
+usuario decidió no renovar este contrato de 3 equipos en préstamo (LAPLNV102, LAPLNV196,
+PCLNV208 — `seed-194`/`seed-255`/`seed-706`) cuando venza (31/12/2026) y pidió explícitamente
+quitarlos del tablero **ya, de inmediato** (se le preguntó si prefería esperar hasta la fecha de
+fin de contrato y confirmó que no, que los quite ahora mismo). Función
+`eliminarEquiposContrato8030028027NoRenovado()` en `app.js` (mismo patrón que
+`eliminarDuplicadoP025194`/`eliminarDuplicadoLAPGEN2025Cronograma`: filtra por los 3 ids y llama
+`sincronizarEliminacion` para cada uno), enganchada en los 3 call sites de siempre
+(`fusionarContratosDesdeSeed`, la fusión de sync en tiempo real, `renderTablero`) porque los 3
+siguen en `SEED_DATA` y se re-agregarían solos si no se quitan explícitamente en cada carga.
+**Importante**: esto deja a estos 3 equipos fuera del inventario desde ahora, antes de que el
+contrato realmente venza — es una decisión de negocio del usuario, no un error a corregir.
+
 **Contrato 8030016807 (oct/2026) — solo corrección de fecha**: GBM reportó este contrato
 ("SmartUser Laptops": 13 ThinkPad E14 + 33 ThinkPad T14, vence 27/01/2027) un año después de
 la fecha que tenía el programa (27/01/2026) para los mismos 45 equipos (12 E14 + 33 T14) que ya
