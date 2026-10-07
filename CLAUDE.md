@@ -1080,6 +1080,34 @@ necesitando ir directo a "Stock Tóner Bodega 2" (que sí busca por Toner) en ve
   stock aún bajo se ve el nav-item rojo+activo junto con el aviso detallado de arriba (el
   comportamiento exacto que pidió el usuario).
 
+### Bug real corregido — Salidas de Tóner pre-seleccionaba un color sin que el bodeguero lo notara
+
+El bodeguero reportó un caso real: generó un vale de salida para un Tóner a color, el campo
+"Toner" de la línea ya aparecía con un valor marcado cuando escribió el Serial directo (sin usar
+el buscador de sugerencias), dio clic en Guardar sin fijarse bien, y terminó descargando
+AMARILLO del stock en vez de CYAN (el color que de verdad necesitaba). **Causa raíz confirmada**:
+en `poblarCamposLineaSalidaToner` (`app.js`), al repoblar el `<select>` de Toner de esa línea con
+las 4 opciones de color de ese Serial, no se marcaba ningún valor explícito — el navegador, por
+defecto, deja seleccionada la PRIMERA opción de la lista (el orden depende de cómo vengan los
+documentos de `contadoresImpresorasData`, no de un orden de color fijo), así que el `<select>` ya
+"tenía algo" visualmente aunque nadie lo hubiera elegido a propósito. El flujo por buscador de
+sugerencias (`renderSugerenciasLineaSalidaToner`) sí pasaba el color exacto elegido
+(`tonerPreseleccionado`), por eso ese camino nunca tuvo el problema — el bug solo aparecía al
+escribir/pegar el Serial directo en el campo.
+
+**Fix**: `poblarCamposLineaSalidaToner` ahora antepone un placeholder vacío
+"-- Selecciona el color --" cuando hay 2+ opciones (Toner a color) y ninguna coincide ya con un
+valor explícito — nunca deja una opción real pre-marcada por defecto del navegador. Para Toner
+B/N (una sola opción, sin ambigüedad de color) se sigue auto-seleccionando igual que antes, ya
+que ahí no hay nada que elegir. Nueva función `filaSalidaTonerSinColorElegido(tbodyId)`,
+revisada en `onSubmitNuevaSalidaToner` y en el guardado de edición (antes de
+`lineasSalidaTonerCapturadas`, que ya descartaba en silencio cualquier línea sin Toner elegido) —
+si una línea tiene Serial y Cantidad pero el color quedó en el placeholder vacío, bloquea el
+guardado con una alerta indicando exactamente qué Serial falta, en vez de guardar el vale con
+menos líneas de las que el bodeguero capturó sin que se dé cuenta. El flujo de edición de un vale
+ya guardado no se ve afectado (el color real guardado siempre coincide con una opción exacta, así
+que nunca cae en el placeholder).
+
 ### Ingreso de Tóner (entregas de Canella, complementa a Salidas de Tóner)
 
 - **Un Ingreso = un documento con varias líneas**, a diferencia de una Salida (que es 1 vale = 1

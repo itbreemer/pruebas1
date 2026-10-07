@@ -1309,6 +1309,20 @@ function filaLineaSalidaTonerHTML(v = {}) {
 // sirven a esa impresora (una por color, o una sola si es B/N), mostrando su
 // stock. `tonerPreseleccionado` se usa al elegir una sugerencia del buscador
 // para dejar marcado exactamente el Toner/color que se buscó.
+//
+// Bug real reportado por el bodeguero (oct/2026): al escribir el Serial
+// directo (sin usar una sugerencia del buscador), este `<select>` se
+// repoblaba con las 4 opciones de color SIN ningún valor explícito marcado —
+// el navegador, por defecto, deja seleccionada la PRIMERA opción de la lista
+// (el orden depende de cómo vengan los documentos de `contadoresImpresorasData`,
+// no de un orden de color fijo). El bodeguero no se dio cuenta de que el
+// select ya traía "AMARILLO" marcado (en vez de "CYAN", el que quería) y
+// descargó el color equivocado. **Fix**: si hay 2+ opciones (toner a color) y
+// ninguna coincide ya con un valor explícito (`tonerPreseleccionado` o un
+// valor ya elegido antes), se antepone un placeholder vacío
+// "-- Selecciona el color --" y NO se deja ninguna opción real pre-marcada —
+// obliga a elegir activamente. Para Toner B/N (una sola opción, sin
+// ambigüedad de color) se sigue auto-seleccionando igual que antes.
 function poblarCamposLineaSalidaToner(fila, tonerPreseleccionado) {
   const serial = fila.querySelector(".ls-serial").value.trim();
   const claveSerial = normalizarTextoComparar(serial);
@@ -1319,10 +1333,13 @@ function poblarCamposLineaSalidaToner(fila, tonerPreseleccionado) {
   const opciones = contadoresImpresorasData.filter((c) => normalizarTextoComparar(c.serial) === claveSerial);
   const select = fila.querySelector(".ls-toner");
   const valorPrevio = tonerPreseleccionado ?? select.value;
+  const hayValorExplicito = opciones.some((c) => c.toner === valorPrevio);
+  const necesitaElegirColor = opciones.length > 1 && !hayValorExplicito;
+  const placeholder = necesitaElegirColor ? `<option value="">-- Selecciona el color --</option>` : "";
   select.innerHTML = opciones.length
-    ? opciones.map((c) => `<option value="${esc(c.toner)}">${esc(c.toner)} (stock: ${esc(c.stockActual || 0)})</option>`).join("")
+    ? placeholder + opciones.map((c) => `<option value="${esc(c.toner)}">${esc(c.toner)} (stock: ${esc(c.stockActual || 0)})</option>`).join("")
     : `<option value="">Sin Toner registrado para este Serial</option>`;
-  if (opciones.some((c) => c.toner === valorPrevio)) select.value = valorPrevio;
+  if (hayValorExplicito) select.value = valorPrevio;
 }
 
 // Buscador único de Serial/Modelo/Toner por línea — mismo patrón que el
@@ -1401,6 +1418,21 @@ function lineasSalidaTonerCapturadas(tbodyId) {
     .filter((l) => l.serial && l.toner && l.cantidad > 0);
 }
 
+// Antes de guardar: si una línea tiene Serial y Cantidad pero el Toner quedó
+// sin elegir (placeholder "-- Selecciona el color --" de
+// `poblarCamposLineaSalidaToner`), avisa cuál Serial falta en vez de
+// descartar esa línea en silencio — así nunca se guarda un vale con menos
+// líneas de las que el bodeguero capturó sin que se dé cuenta.
+function filaSalidaTonerSinColorElegido(tbodyId) {
+  const fila = [...document.querySelectorAll(`#${tbodyId} .fila-linea-salida-toner`)].find((f) => {
+    const serial = f.querySelector(".ls-serial").value.trim();
+    const cantidad = Number(f.querySelector(".ls-cantidad").value) || 0;
+    const toner = f.querySelector(".ls-toner").value;
+    return serial && cantidad > 0 && !toner;
+  });
+  return fila ? fila.querySelector(".ls-serial").value.trim() : null;
+}
+
 function renderSalidasToner() {
   const tbody = $("tbodySalidasToner");
   if (!tbody) return;
@@ -1433,6 +1465,11 @@ function onSubmitNuevaSalidaToner(e) {
   const fecha = $("svFecha").value;
   if (!noVale || !fecha) {
     alert("Indica el No. de Vale y la Fecha");
+    return;
+  }
+  const serialSinColor = filaSalidaTonerSinColorElegido("tbodyFormSalidaToner");
+  if (serialSinColor) {
+    alert(`Selecciona el color del Tóner en la línea del Serial ${serialSinColor} antes de guardar.`);
     return;
   }
   const lineas = lineasSalidaTonerCapturadas("tbodyFormSalidaToner");
@@ -1494,6 +1531,11 @@ function onSubmitEditarSalidaToner(e) {
   const fecha = $("esvFecha").value;
   if (!noVale || !fecha) {
     alert("Indica el No. de Vale y la Fecha");
+    return;
+  }
+  const serialSinColorEditar = filaSalidaTonerSinColorElegido("tbodyEditarSalidaToner");
+  if (serialSinColorEditar) {
+    alert(`Selecciona el color del Tóner en la línea del Serial ${serialSinColorEditar} antes de guardar.`);
     return;
   }
   const lineas = lineasSalidaTonerCapturadas("tbodyEditarSalidaToner");
