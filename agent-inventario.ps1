@@ -892,38 +892,63 @@ function Send-ToFirebase {
             "Content-Type" = "application/json"
         }
 
-        Log "Enviando inventario a Firebase: $url"
-
         # Se usa HttpClient en lugar de Invoke-WebRequest -Method PATCH:
         # en algunos parches de .NET Framework, Invoke-WebRequest falla al enviar
         # PATCH con un UriFormatException enganoso ("no se puede analizar el nombre de host")
         # debido al mecanismo interno (reflection) que usa para habilitar ese verbo.
         Add-Type -AssemblyName System.Net.Http -ErrorAction SilentlyContinue
 
-        $httpClient = [System.Net.Http.HttpClient]::new()
-        try {
-            $httpClient.Timeout = [TimeSpan]::FromSeconds(30)
-            $requestUri = "$url`?key=$apiKey"
-            $content = [System.Net.Http.StringContent]::new($body, [System.Text.Encoding]::UTF8, "application/json")
+        # Bug real encontrado (oct/2026, lote de 14 laptops ThinkPad P16V G3 corridas
+        # seguidas una tras otra): Firestore puede responder 429 "Quota exceeded" /
+        # RESOURCE_EXHAUSTED si llegan muchos envios en poco tiempo (varios equipos
+        # corriendo el agente casi al mismo tiempo). El reintento normal del final del
+        # script (Retry-SendInventory, siguiente corrida de la tarea programada) volvia
+        # a fallar porque pasaban solo un par de segundos, sin tiempo real para que la
+        # cuota se liberara. Fix: reintento con espera progresiva (5s, 15s, 30s) SOLO
+        # para 429 — otros codigos de error no se benefician de esperar y se devuelven
+        # de inmediato como antes.
+        $intentosMaximos = 4
+        $esperasSegundos = @(0, 5, 15, 30)
 
-            $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::new("PATCH"), $requestUri)
-            $request.Content = $content
-
-            $result = $httpClient.SendAsync($request).GetAwaiter().GetResult()
-
-            if ($result.IsSuccessStatusCode) {
-                LogSuccess "Inventario enviado a Firebase correctamente"
-                return $true
+        for ($intento = 0; $intento -lt $intentosMaximos; $intento++) {
+            if ($esperasSegundos[$intento] -gt 0) {
+                Log "Reintentando envio a Firebase tras cuota excedida (espera $($esperasSegundos[$intento])s)..."
+                Start-Sleep -Seconds $esperasSegundos[$intento]
             }
-            else {
+
+            Log "Enviando inventario a Firebase: $url"
+
+            $httpClient = [System.Net.Http.HttpClient]::new()
+            try {
+                $httpClient.Timeout = [TimeSpan]::FromSeconds(30)
+                $requestUri = "$url`?key=$apiKey"
+                $content = [System.Net.Http.StringContent]::new($body, [System.Text.Encoding]::UTF8, "application/json")
+
+                $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::new("PATCH"), $requestUri)
+                $request.Content = $content
+
+                $result = $httpClient.SendAsync($request).GetAwaiter().GetResult()
+
+                if ($result.IsSuccessStatusCode) {
+                    LogSuccess "Inventario enviado a Firebase correctamente"
+                    return $true
+                }
+
                 $responseBody = $result.Content.ReadAsStringAsync().GetAwaiter().GetResult()
                 LogWarning "Firebase respondio con codigo: $($result.StatusCode) - $responseBody"
-                return $false
+
+                if ($result.StatusCode -ne 429) {
+                    return $false
+                }
+                # 429: sigue al siguiente intento del loop (si quedan intentos)
+            }
+            finally {
+                $httpClient.Dispose()
             }
         }
-        finally {
-            $httpClient.Dispose()
-        }
+
+        LogWarning "Se agotaron los reintentos por cuota excedida (429)"
+        return $false
     }
     catch {
         LogError "Error enviando a Firebase: $_ (linea $($_.InvocationInfo.ScriptLineNumber))"

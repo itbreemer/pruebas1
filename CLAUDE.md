@@ -182,6 +182,22 @@ real de disco que Windows sí mostraba):
   usuario debe volver a correr el agente actualizado en `LAPLNV329` (y las otras 13 laptops P16V
   G3 cuando se le entregue a cada una) para confirmar que ahora reporta ~954GB en vez de 512 — el
   dato viejo ya quedó guardado en Firestore con el valor equivocado, el puente no lo corrige solo.
+- **Bug real encontrado y corregido — Firestore rechazaba el envío con 429 "Quota exceeded" al
+  correr el agente en varias de las 14 laptops P16V G3 seguidas una tras otra (oct/2026)**:
+  confirmado en el log de `LAPLNV108` (hardware y 178 programas de software recolectados bien,
+  pero `Send-ToFirebase` recibió `429 RESOURCE_EXHAUSTED` de Firestore) — y lo mismo le pasó a
+  `LAPLNV326`/`LAPLNV334` (no aparecían en absoluto en "Inventario Automático" tras correr el
+  agente). El agente ya guardaba el inventario localmente y reintentaba
+  (`Retry-SendInventory`), pero el reintento era casi inmediato (2 segundos después en el log
+  real) — sin tiempo real para que la cuota de Firestore se liberara, así que volvía a fallar
+  con el mismo 429. **Fix**: `Send-ToFirebase` ahora reintenta internamente con espera
+  progresiva (0s, 5s, 15s, 30s — hasta 4 intentos) **solo** cuando el código de respuesta es
+  429; cualquier otro código de error se sigue devolviendo de inmediato como antes (sin esperar,
+  ya que esperar no ayuda para otros tipos de error). **Importante**: para los equipos ya
+  afectados (`LAPLNV108`, `LAPLNV326`, `LAPLNV334`), el inventario quedó guardado localmente —
+  no se perdió nada, solo hay que volver a correr el agente actualizado manualmente en cada uno
+  (`& "C:\ProgramData\AgentInventario\bin\agent-inventario.ps1"`), espaciando las corridas unos
+  minutos entre equipo y equipo al probar varios de una vez para no volver a topar la cuota.
 - **Importante para el futuro**: si se agrega otra corrección forzada tipo
   `corregirInfoTecnicaLaptopsAlta8030028191` que también escriba en `soVersion`/`soNucleo`/
   `soSerial`/`firmwareInventario`/`tipoDisco`/`tamanoDisco`, su guardia de "ya tiene datos" debe revisar ESOS mismos campos
