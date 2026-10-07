@@ -228,6 +228,7 @@ function fusionarContratosDesdeSeed() {
 
   if (limpiarPendientesDuplicados()) cambio = true;
   if (corregirFechaContrato8030028059()) cambio = true;
+  if (corregirFechaVencimientoContrato8030028059GBM()) cambio = true;
   if (corregirSerialesTipeados()) cambio = true;
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
@@ -483,6 +484,31 @@ function corregirFechaContrato8030028059() {
       e.contratos = NUEVO;
       cambio = true;
     }
+  });
+  return cambio;
+}
+
+// Contrato 8030028059: GBM (el proveedor) reportó la fecha de vencimiento
+// real como 23/01/2027. Los 6 equipos de este contrato en el programa no
+// coincidían entre sí (5 con "01/01/2031", 1 con "27/01/2027") ni con el
+// dato de GBM — el usuario pidió corregirlos con el valor oficial de GBM.
+// Se corrige por nombreRed (no por id) porque LAPLNV284-288 solo existen
+// en Firestore (nunca se agregaron a SEED_DATA); esto sí se sincroniza a
+// Firestore, a diferencia de la mayoría de correcciones de esta función
+// que son solo en memoria. Se aplica una sola vez por equipo (si ya tiene
+// el valor de GBM, no vuelve a tocarlo).
+function corregirFechaVencimientoContrato8030028059GBM() {
+  const NOMBRES_RED = ["LAPLNV283", "LAPLNV284", "LAPLNV285", "LAPLNV286", "LAPLNV287", "LAPLNV288"];
+  const NUEVO = "8030028059 (vence 23/01/2027)";
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (!NOMBRES_RED.includes(e.nombreRed)) return;
+    const actual = (e.contratos || "").trim();
+    if (!actual.startsWith("8030028059") || actual === NUEVO) return;
+    e.contratos = NUEVO;
+    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+    sincronizarEquipo(e);
+    cambio = true;
   });
   return cambio;
 }

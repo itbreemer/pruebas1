@@ -498,6 +498,34 @@ se te olvida, el navegador puede seguir sirviendo una copia en caché sin los ú
 aunque el archivo en el repo ya esté actualizado. Antes de dar un cambio de `app.js`/`style.css`
 por publicado, confirmar que el `?v=` en `index.html` se subió también.
 
+## Validación de contratos contra el reporte de GBM (oct/2026)
+
+El usuario compartió capturas de un reporte del proveedor GBM (Lenovo) con 12 contratos en
+total (solo 6 recibidos hasta ahora), pidiendo **validar sin corregir nada** la fecha de
+vencimiento y el total de equipos (desktop/laptop) contra lo que tiene el programa. Hallazgo
+importante de metodología: comparar contra `data.js` (SEED_DATA, el dataset semilla del repo)
+**no es confiable** — la base de datos real y viva de la app es Firestore, que incluye equipos
+agregados después directo desde la UI y que nunca se escriben de vuelta a `data.js` (este
+entorno no tiene acceso a Firestore). Confirmado con el contrato 8030028059: `data.js` solo
+tiene 1 de los 6 equipos reales (`LAPLNV283`, id `seed-335`); `LAPLNV284`-`288` existen
+únicamente en Firestore. Para validar los otros 11 contratos restantes hay que pedirle al
+usuario capturas de la vista "Contratos" de la app (datos en vivo), no inferir desde `data.js`.
+
+**Corrección aplicada para el contrato 8030028059** (a diferencia de la tarea de validación en
+sí, esta sí fue un pedido explícito de corregir): los 6 equipos (`LAPLNV283`-`288`) tenían la
+fecha de vencimiento inconsistente entre sí (5 con "01/01/2031", 1 con "27/01/2027") y ninguna
+coincidía con el dato oficial de GBM ("23/01/2027"). Función `corregirFechaVencimientoContrato8030028059GBM()`
+en `app.js` (mismo patrón que `corregirEmpleadoLAPLNV315`/`corregirDpiLAPLNV304`: corrección
+forzada de un registro ya sincronizado a Firestore, que se vuelve a sincronizar) — **a
+diferencia de esos otros casos, aquí se matchea por `nombreRed`, no por `id`**, porque
+`LAPLNV284`-`288` no existen en `SEED_DATA` y por lo tanto no tienen un `id` conocido en este
+repo. Deja los 6 equipos en `"8030028059 (vence 23/01/2027)"`; guardia de "ya tiene el valor
+correcto" para no re-sincronizar si ya se aplicó. Un corrector más viejo
+(`corregirFechaContrato8030028059`, de "30/10/2029" a "01/01/2027") ya existía para este mismo
+contrato — este nuevo corrector es necesario porque, en algún momento posterior no documentado,
+el valor en Firestore cambió a "01/01/2031"/"27/01/2027" (probablemente edición manual directa
+en el programa), divergiendo del dato real de GBM.
+
 ## Alta masiva de equipos: contrato Lenovo 8030028191 (Tecnoelec)
 
 Primera vez que se dio de alta un contrato completo de equipos nuevos directo en el código
