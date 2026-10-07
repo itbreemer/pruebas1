@@ -238,7 +238,7 @@ function fusionarContratosDesdeSeed() {
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
-  if (eliminarEquiposContrato8030028027NoRenovado()) cambio = true;
+  if (restaurarEquiposContrato8030028027()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
   if (corregirEmpresasMalCapturadas()) cambio = true;
@@ -291,17 +291,27 @@ function eliminarDuplicadoLAPGEN2025Cronograma() {
 
 const IDS_CONTRATO_8030028027_NO_RENOVADO = ["seed-194", "seed-255", "seed-706"];
 
-function eliminarEquiposContrato8030028027NoRenovado() {
-  // Los 3 equipos en préstamo del contrato 8030028027 (LAPLNV102, LAPLNV196,
-  // PCLNV208) son equipos de GBM que hay que devolver — el usuario confirmó
-  // que ese contrato NO se va a renovar, así que deben desaparecer del
-  // tablero/inventario. Como los 3 siguen en SEED_DATA, hay que quitarlos
-  // explícitamente (mismo patrón que eliminarDuplicadoP025194/LAPGEN2025) o
-  // fusionarContratosDesdeSeed los vuelve a agregar.
-  const antes = equipos.length;
-  equipos = equipos.filter((e) => !IDS_CONTRATO_8030028027_NO_RENOVADO.includes(e.id));
-  const cambio = equipos.length !== antes;
-  if (cambio) IDS_CONTRATO_8030028027_NO_RENOVADO.forEach((id) => sincronizarEliminacion(id));
+// Se había quitado del tablero por confusión — el usuario aclaró después que
+// el criterio real es que estos 3 equipos (LAPLNV102, LAPLNV196, PCLNV208,
+// contrato 8030028027 en préstamo, no se renueva) deben SEGUIR apareciendo
+// en el inventario hasta que él mismo les dé de baja de equipo manualmente
+// (todavía no lo ha hecho) — no desaparecer solo porque el contrato no se
+// vaya a renovar. Como ya se habían borrado de Firestore
+// (`sincronizarEliminacion`), no basta con dejar de filtrarlos: hay que
+// volver a sincronizarlos. Función de un solo uso (guardia: si ya están en
+// `equipos`, no hace nada), igual que otras correcciones forzadas de esta
+// función.
+function restaurarEquiposContrato8030028027() {
+  const seedPorId = new Map(SEED_DATA.map((s) => [s.id, s]));
+  let cambio = false;
+  IDS_CONTRATO_8030028027_NO_RENOVADO.forEach((id) => {
+    if (equipos.some((e) => e.id === id)) return;
+    const seed = seedPorId.get(id);
+    if (!seed) return;
+    equipos.push({ ...seed });
+    sincronizarEquipo(seed);
+    cambio = true;
+  });
   return cambio;
 }
 
@@ -984,7 +994,6 @@ function establecerEquiposDesdeSync(remotos) {
   equipos = combinados;
   eliminarDuplicadoP025194();
   eliminarDuplicadoLAPGEN2025Cronograma();
-  eliminarEquiposContrato8030028027NoRenovado();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
@@ -4510,7 +4519,6 @@ function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambioPurga = true;
-  if (eliminarEquiposContrato8030028027NoRenovado()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;

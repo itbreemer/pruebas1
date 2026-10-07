@@ -557,18 +557,28 @@ descripción (modelo + cantidad) coincide con equipos ya existentes bajo un núm
 viejo — GBM puede renovar/regularizar contratos cambiándoles el número sin que eso signifique
 equipos nuevos.
 
-**Contrato 8030028027 NO se renueva — los 3 equipos se quitan del tablero (oct/2026)**: el
-usuario decidió no renovar este contrato de 3 equipos en préstamo (LAPLNV102, LAPLNV196,
-PCLNV208 — `seed-194`/`seed-255`/`seed-706`) cuando venza (31/12/2026) y pidió explícitamente
-quitarlos del tablero **ya, de inmediato** (se le preguntó si prefería esperar hasta la fecha de
-fin de contrato y confirmó que no, que los quite ahora mismo). Función
-`eliminarEquiposContrato8030028027NoRenovado()` en `app.js` (mismo patrón que
-`eliminarDuplicadoP025194`/`eliminarDuplicadoLAPGEN2025Cronograma`: filtra por los 3 ids y llama
-`sincronizarEliminacion` para cada uno), enganchada en los 3 call sites de siempre
-(`fusionarContratosDesdeSeed`, la fusión de sync en tiempo real, `renderTablero`) porque los 3
-siguen en `SEED_DATA` y se re-agregarían solos si no se quitan explícitamente en cada carga.
-**Importante**: esto deja a estos 3 equipos fuera del inventario desde ahora, antes de que el
-contrato realmente venza — es una decisión de negocio del usuario, no un error a corregir.
+**Contrato 8030028027 NO se renueva, pero los 3 equipos NO se quitan del tablero hasta que el
+usuario les dé de baja manualmente (oct/2026, corregido un malentendido)**: cuando el usuario
+dijo que este contrato de 3 equipos en préstamo (LAPLNV102, LAPLNV196, PCLNV208 —
+`seed-194`/`seed-255`/`seed-706`) no se iba a renovar y pidió "quítalo del tablero", se le
+preguntó si prefería esperar hasta la fecha de fin de contrato (31/12/2026) o quitarlos ya, y
+confirmó "quitarlos ahora" — se implementó `eliminarEquiposContrato8030028027NoRenovado()`
+(mismo patrón que `eliminarDuplicadoP025194`, eliminación forzada con `sincronizarEliminacion`).
+**El usuario aclaró después que esto no era lo que quería**: su criterio real, consistente con
+lo que ya había dicho para los otros contratos del reporte de GBM ("van a seguir hasta que yo
+les dé de baja de equipo"), es que estos 3 equipos deben **seguir apareciendo en el inventario**
+aunque el contrato no se vaya a renovar — solo desaparecen cuando él mismo haga el trámite de
+"baja de equipo" manualmente, cosa que todavía no ha hecho. **Fix**: se reemplazó esa función por
+`restaurarEquiposContrato8030028027()` — como los 3 ya se habían borrado de Firestore, no basta
+con dejar de filtrarlos: hay que volver a sincronizarlos (busca el seed por id en `SEED_DATA`, si
+el equipo no está ya en `equipos` lo agrega y lo sincroniza con `sincronizarEquipo()`). Se dejó
+un solo call site (dentro de `fusionarContratosDesdeSeed`, mismo patrón que otras correcciones
+forzadas de un solo uso) — no hacen falta los otros 2 call sites del patrón anti-resurrección de
+eliminación, porque ya no se está eliminando nada. **Importante para el futuro**: "el contrato no
+se va a renovar" por sí solo **no es motivo** para quitar un equipo del inventario — solo una
+baja de equipo explícita del usuario lo es. Si el usuario pide quitar equipos de un contrato que
+no se renueva, confirmar primero si se refiere a una baja real o solo a que el contrato cambie de
+estado/fecha.
 
 ### Panel del Tablero "Vencimiento y Renovación de Contratos 2027" — es una CADENA por año, no una ventana móvil
 
