@@ -808,6 +808,24 @@ los sube solos a Firestore sin necesidad de código nuevo):
   ficha técnica real de este modelo, hay que llenarlos a mano o pedirle al usuario los datos para
   agregarlos (mismo patrón "solo si sigue vacío" del resto de la app, no hace falta una función
   nueva para esto).
+  - **Bug real corregido (oct/2026) — las P16V G3 terminaron con la RAM del T14 Gen 6**: el
+    usuario detectó, en la Tarjeta de Responsabilidad impresa de Lester Daniel Yanes Morales
+    (`LAPLNV327`, P16V G3), que ya mostraba "KINGSTON 16GB DDR5 5600MT/S SODIMM" / `KCP556SS8-15`
+    — exactamente el módulo de las 30 laptops T14 Gen 6 (Core **Ultra 5**), cuando esta laptop es
+    Core **Ultra 9** (P16V G3) y su ficha técnica real todavía no está confirmada (debía seguir en
+    blanco, según el punto de arriba). Causa raíz: `corregirMemoriaRamLaptopsAlta8030028191()`
+    (`app.js`) filtraba solo por `id.startsWith("alta-8030028191-")` + `tipoEquipo === "Notebook"`
+    + campo vacío — ese mismo prefijo de id lo comparten las 30 T14 Gen 6 **y** las 14 P16V G3 (es
+    el mismo contrato), así que la guardia "solo si sigue vacío" terminó aplicándole a las P16V G3
+    el módulo del T14 Gen 6 por error. **Fix**: la función ahora usa la lista exacta de las 30
+    laptops T14 Gen 6 (`PLACAS_ORIGINALES_LAPTOPS_ALTA_8030028191`, por `nombreRed`) en vez del
+    prefijo de id genérico, y de paso revierte a vacío cualquier laptop que no esté en esa lista
+    pero ya haya quedado con el valor exacto del T14 Gen 6 (el caso ya confirmado real de
+    `LAPLNV327`). **Importante para el futuro**: cuando dos modelos distintos comparten el mismo
+    prefijo de id de una alta masiva, cualquier corrector de "solo si sigue vacío" debe filtrar por
+    la lista exacta de equipos de ESE modelo (por `nombreRed` o por `modelo`), nunca solo por el
+    prefijo de id + tipo de equipo — si no, un campo dejado vacío a propósito en un modelo
+    distinto puede terminar heredando el dato de otro.
 - **6 laptops más del mismo modelo ya conocido**: ThinkPad T14 Gen 6, Intel Core Ultra 5
   (`LAPLNV319`–`LAPLNV324`, continúa la numeración después de `LAPLNV317`/`318`) — todas
   "Sin Asignar" en el Excel. Como es el mismo modelo/config ya confirmado del primer lote, sí se

@@ -752,21 +752,50 @@ function corregirFechaIngresoAlta8030028191() {
   return cambio;
 }
 
-// Memoria RAM de las 30 laptops del alta del contrato Lenovo 8030028191:
-// mismo módulo en las 30 (KINGSTON 16GB DDR5 5600MT/S SODIMM, código
-// KCP556SS8-15), confirmado por el usuario contra la Tarjeta de
+// Memoria RAM de las 30 laptops T14 Gen 6 del alta del contrato Lenovo
+// 8030028191: mismo módulo en las 30 (KINGSTON 16GB DDR5 5600MT/S SODIMM,
+// código KCP556SS8-15), confirmado por el usuario contra la Tarjeta de
 // Responsabilidad impresa. Solo cambia el dato del empleado por equipo, la
 // RAM es igual en todas. Ya estaban publicadas sin este dato, se fuerza y
 // se vuelve a sincronizar.
+//
+// Bug real corregido (oct/2026): esta función filtraba por
+// id.startsWith("alta-8030028191-") + tipoEquipo Notebook, sin distinguir
+// modelo — ese mismo prefijo de id lo comparten también las 14 laptops
+// ThinkPad P16V G3 de la 2da entrega del mismo contrato (LAPLNV325-338),
+// cuya memoriaDescripcion/codigoRam se dejaron vacíos A PROPÓSITO (modelo
+// nuevo, ficha técnica aún sin confirmar — ver CLAUDE.md). Al tener el campo
+// vacío, la guardia "si sigue vacío" terminaba aplicándoles por error la RAM
+// del T14 Gen 6 — confirmado real en la Tarjeta de Responsabilidad impresa
+// de Lester Daniel Yanes Morales (LAPLNV327, P16V G3) mostrando
+// "KINGSTON 16GB DDR5 5600MT/S SODIMM" / "KCP556SS8-15" en vez de en blanco.
+// Fix: usar la lista exacta de las 30 laptops T14 Gen 6 originales
+// (PLACAS_ORIGINALES_LAPTOPS_ALTA_8030028191, mismas 30 del corrector de
+// Número de inventario) en vez del prefijo de id genérico, y limpiar de
+// vuelta a vacío cualquier P16V G3 que ya haya quedado con el valor
+// incorrecto del T14 Gen 6.
 function corregirMemoriaRamLaptopsAlta8030028191() {
   let cambio = false;
+  const nombresRedT14Gen6 = new Set(Object.keys(PLACAS_ORIGINALES_LAPTOPS_ALTA_8030028191));
   equipos.forEach((e) => {
-    if (!(e.id || "").startsWith("alta-8030028191-") || e.tipoEquipo !== "Notebook" || e.memoriaDescripcion) return;
-    e.memoriaDescripcion = "KINGSTON 16GB DDR5 5600MT/S SODIMM";
-    e.codigoRam = "KCP556SS8-15";
-    e.ultimaModificacion = new Date().toISOString().slice(0, 16);
-    sincronizarEquipo(e);
-    cambio = true;
+    if (!(e.id || "").startsWith("alta-8030028191-") || e.tipoEquipo !== "Notebook") return;
+    if (nombresRedT14Gen6.has(e.nombreRed)) {
+      if (e.memoriaDescripcion) return;
+      e.memoriaDescripcion = "KINGSTON 16GB DDR5 5600MT/S SODIMM";
+      e.codigoRam = "KCP556SS8-15";
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    } else if (e.memoriaDescripcion === "KINGSTON 16GB DDR5 5600MT/S SODIMM" && e.codigoRam === "KCP556SS8-15") {
+      // P16V G3 (u otro modelo) que quedó con el valor del T14 Gen 6 por el
+      // bug de arriba — se revierte a vacío, ya que su ficha técnica real
+      // todavía no está confirmada.
+      e.memoriaDescripcion = "";
+      e.codigoRam = "";
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    }
   });
   return cambio;
 }
