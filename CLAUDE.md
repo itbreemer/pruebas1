@@ -848,6 +848,46 @@ los sube solos a Firestore sin necesidad de código nuevo):
   tocó `numeroInventario` (se dejó vacío desde el inicio, no hubo Placa a limpiar después como en
   el primer lote). `SEED_DATA`: 865 → 885 elementos (20 nuevos).
 
+## Validación de equipos activos de RIOLSA contra el archivo de la empresa (oct/2026)
+
+El usuario pidió validar, **sin duplicar**, 2 grupos de equipos de RIOLSA (`Equipos_Riolsa_1.xlsx`,
+hoja "COMPUTADORAS": 16 Desktops + 9 Laptops) contra lo que ya tiene el programa. Metodología:
+cruzar cada fila por `nombreRed` (case-insensitive) y, si no calzaba, por nombre de empleado
+(porque algunos nombres de red en el programa no coinciden exactamente con el texto del Excel —
+mayúsculas/minúsculas distintas, un dígito de más/menos, o un error de dedo en el apellido).
+
+**Resultado de la validación — los 25 equipos ya existen, ninguno hacía falta agregar**, con estas
+notas puntuales (ninguna requirió acción, solo quedan documentadas por si se repite la confusión):
+- `RIOLSA02` (Excel, Jorge Vasquez) vs `riolsa012` (programa) — un dígito de diferencia; es el
+  mismo empleado, se asume el mismo equipo, no se tocó (no hay forma de confirmar sin ver el
+  equipo físico cuál número es el correcto).
+- `URAMBROSIO` (Excel, Rene Ambrocio) vs `urambrocio` (programa) — mismo nombre con una letra
+  distinta ("brocio" vs "brosio"), mismo caso que el de arriba.
+- `PCRIOLSA007`: el Excel dice "Juan Ortiz" pero el programa tiene "Selvin Mendoza" — el equipo ya
+  existe, solo parece que el Excel de RIOLSA no refleja la reasignación más reciente; no se
+  corrigió nada (no es un duplicado, es una discrepancia de a quién está asignado hoy).
+- "Usuario Bascula1 (Saulo Rendon)" sigue sin Nombre en Red (el Excel original tampoco lo traía) —
+  ya existe como alta pendiente (`pendiente-bascula1`) desde una validación anterior (ago/2026),
+  sigue igual de pendiente.
+
+**Bug real encontrado y corregido — `PCRIOLSA005` estaba duplicado**: al validar por `nombreRed`
+aparecieron 2 documentos distintos con el mismo nombre de red — `seed-737` (el registro real y
+completo, Edgar Alvarado, con serial/modelo/etc.) y `pendiente-pcriolsa005` (un stub vacío,
+agregado en una validación de RIOLSA de agosto/2026 cuando el equipo real **todavía no existía**
+en el sistema — ver commit `4a4c855`). Cuando el registro completo se agregó después, nadie limpió
+el stub viejo, y la función de limpieza existente (`limpiarPendientesDuplicados`) no lo detectaba
+porque esa función solo reconoce duplicados cuyo `nombreRed` empieza con el prefijo
+`"PENDIENTE-"` (comparando por número de serie) — este stub ya tenía un `nombreRed` real
+(`"PCRIOLSA005"`, no `"PENDIENTE-..."`), así que quedó fuera de ese chequeo indefinidamente.
+**Fix**: se quitó `pendiente-pcriolsa005` de `SEED_DATA` (`data.js`) y se agregó
+`eliminarDuplicadoPCRIOLSA005()` en `app.js` (mismo patrón que `eliminarDuplicadoP025194`/
+`eliminarDuplicadoLAPGEN2025Cronograma`: filtra el id y llama a `sincronizarEliminacion` para
+limpiarlo también de cualquier navegador/Firestore donde ya se hubiera sincronizado). **Importante
+para el futuro**: si se agrega una alta pendiente temporal (`pendiente-...`) porque un equipo
+"todavía no existe" en el sistema, y ese equipo real aparece después con su propio `id` (seed o
+alta), hay que recordar limpiar el stub viejo explícitamente — `limpiarPendientesDuplicados()`
+**no** lo hace solo a menos que el `nombreRed` del stub todavía tenga el prefijo `"PENDIENTE-"`.
+
 ## Mejoras recientes a la app web principal (index.html / app.js)
 
 ### Monitor vinculado al Catálogo de Monitores

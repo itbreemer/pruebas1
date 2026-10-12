@@ -238,6 +238,7 @@ function fusionarContratosDesdeSeed() {
   if (sincronizarComentariosCronograma()) cambio = true;
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
+  if (eliminarDuplicadoPCRIOLSA005()) cambio = true;
   if (restaurarEquiposContrato8030028027()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
@@ -286,6 +287,22 @@ function eliminarDuplicadoLAPGEN2025Cronograma() {
   equipos = equipos.filter((e) => e.id !== "cronograma-37");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("cronograma-37");
+  return cambio;
+}
+
+function eliminarDuplicadoPCRIOLSA005() {
+  // "pendiente-pcriolsa005" se agregó (ago/2026) como alta pendiente de un
+  // equipo activo de RIOLSA que entonces no existía en el sistema — pero el
+  // registro real ("PCRIOLSA005", seed-737, Edgar Alvarado, con serial/modelo
+  // completos) se agregó después sin limpiar el stub viejo. Confirmado real
+  // al validar de nuevo el archivo de equipos activos RIOLSA: PCRIOLSA005
+  // existía duplicado (2 documentos distintos con el mismo nombreRed). Se
+  // quitó de SEED_DATA; esto limpia el duplicado en los navegadores/Firestore
+  // que ya lo tuvieran sincronizado.
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => e.id !== "pendiente-pcriolsa005");
+  const cambio = equipos.length !== antes;
+  if (cambio) sincronizarEliminacion("pendiente-pcriolsa005");
   return cambio;
 }
 
