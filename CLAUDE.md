@@ -1336,3 +1336,20 @@ otras computadoras; hay que recargar la página). El patrón correcto (el que si
 y `impresoras-sync.js`) es que los nombres de función en `app.js` coincidan exactamente con los
 que el `-sync.js` busca en `window`. Si se retoma este bug, comparar contra
 `obtenerImpresorasActuales`/`establecerImpresorasDesdeSync` como referencia de lo correcto.
+
+### Contador "N equipo(s)" del header quitado (oct/2026)
+
+El usuario preguntó a qué se refería el número junto al breadcrumb del header (ej. "892
+equipo(s)") y, al explicarle que en el Tablero era simplemente `equipos.length` sin ningún
+filtro (total crudo de la colección, incluye servidores/chatarra/en revisión/duplicados sin
+limpiar), pidió quitarlo por no serle útil. Se quitó el `<span id="contadorTotal">` del header
+(`index.html`) — era un elemento **compartido** entre 3 vistas distintas (Tablero: total crudo;
+Computadoras: conteo filtrado de la lista; y las listas genéricas de `crearVistaLista`: conteo
+de resultados), así que se quitaron las 3 asignaciones correspondientes en `app.js` en vez de
+solo ocultarlo. Para no perder información real en la vista Computadoras (la única de las 3 que
+no mostraba ya el conteo en otro lado), se agregó el conteo a su propio pie de página
+(`infoPagina`, ahora "Página X de Y — N equipo(s)", mismo formato que ya usan las listas
+genéricas en `infoPagina_<prefix>`). Las listas genéricas no perdieron nada (ya mostraban el
+mismo conteo en `infoPagina_<prefix>`, era una duplicación). También se quitó `"contadorTotal"`
+de `IDS_BOTONES_HEADER_SOLO_IT` (el elemento ya no existe, esa lista solo oculta botones del
+header para el rol Bodeguero).

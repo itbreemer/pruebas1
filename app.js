@@ -115,7 +115,7 @@ function esCorreoBodega(correo) {
 // oculta aquí aunque vive dentro de la vista "Impresoras" (no en el header):
 // el bodeguero solo puede buscar en ese catálogo, no crear/editar (ver
 // "esSesionBodega" y `abrirModalImpresora`).
-const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "contadorTotal", "btnNuevaImpresora"];
+const IDS_BOTONES_HEADER_SOLO_IT = ["btnGenerarActa", "btnNuevoIngreso", "btnDashboard", "btnNuevo", "btnNuevaImpresora"];
 
 // "impresoras" se agregó a pedido del usuario: el bodeguero a veces solo
 // tiene el nombre del Tóner (ej. "GPR52") sin el Serial del equipo que lo
@@ -3276,10 +3276,7 @@ function render() {
     });
   }
 
-  if ($("vista-computadoras").classList.contains("vista-active")) {
-    $("contadorTotal").textContent = `${filtrados.length} equipo(s)`;
-  }
-  $("infoPagina").textContent = `Página ${paginaActual} de ${totalPaginas}`;
+  $("infoPagina").textContent = `Página ${paginaActual} de ${totalPaginas} — ${filtrados.length} equipo(s)`;
   $("btnPrimero").disabled = paginaActual === 1;
   $("btnAnterior").disabled = paginaActual === 1;
   $("btnSiguiente").disabled = paginaActual === totalPaginas;
@@ -4582,10 +4579,6 @@ function renderTablero() {
   const propiosEnRevision = propios.filter(esEnRevisionCronograma).length;
   const equiposPropios = propios.length - propiosEnRevision;
 
-  if ($("vista-tablero").classList.contains("vista-active")) {
-    $("contadorTotal").textContent = `${equipos.length} equipo(s)`;
-  }
-
   const impresoras = impresorasData;
 
   $("statCards").innerHTML =
@@ -4720,10 +4713,6 @@ function crearVistaLista({ prefix, columnas, obtenerFilas, filtrar, alClicFila }
     }
 
     $(`infoPagina_${prefix}`).textContent = `Página ${pagina} de ${totalPag} — ${filtradas.length} registro(s)`;
-    const vistaAsociada = $(`vista-${prefix}`);
-    if (vistaAsociada && vistaAsociada.classList.contains("vista-active")) {
-      $("contadorTotal").textContent = `${filtradas.length} registro(s)`;
-    }
     $(`btnPrimero_${prefix}`).disabled = pagina === 1;
     $(`btnAnterior_${prefix}`).disabled = pagina === 1;
     $(`btnSiguiente_${prefix}`).disabled = pagina === totalPag;
