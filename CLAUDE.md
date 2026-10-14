@@ -1412,3 +1412,28 @@ excluirlo de los cronogramas). Se quitó de `SEED_DATA` (`data.js`) y se agregó
 que también se borre de Firestore/otros navegadores que ya lo tuvieran sincronizado), enganchada
 en los 3 lugares donde corre ese patrón (`fusionarContratosDesdeSeed`, la fusión de sync en
 tiempo real, y `renderTablero`).
+
+## Bug real corregido — sugerencias de datalist (Status, Dominio, etc.) desaparecían al elegirlas (oct/2026)
+
+El usuario reportó: al escribir en un campo con sugerencias (ej. "Status", "Dominio" — cualquier
+`<input list="dl-...">`), la opción que iba a elegir se desaparecía o no dejaba seleccionarla.
+**Causa raíz**: `equipos` se sincroniza en vivo con Firestore (`onSnapshot`, puede dispararse en
+cualquier momento por un cambio de OTRO equipo hecho en OTRA computadora, no solo el que el
+usuario está editando) — cada sync llama a `poblarFiltrosYDatalists()` (`app.js`), que
+reconstruía **cada** `<datalist>` del sistema con `innerHTML = ""` + re-agregar `<option>`, sin
+importar si el usuario tenía el desplegable nativo de sugerencias de ESE campo abierto justo en
+ese momento. Reconstruir las `<option>` mientras esa lista está abierta hace que el navegador la
+cierre o descarte el clic antes de registrar la selección — mismo patrón de fondo que otros bugs
+de este sistema donde una sincronización en tiempo real interfiere con una interacción en curso
+del usuario (ver bugs de "en revisión"/duplicados resucitados en otras secciones de este archivo).
+**Fix**: nueva función `datalistEnUsoActivo(dlId)` — busca el `<input list="dlId">` correspondiente
+y revisa si es `document.activeElement`; si el usuario está enfocado ahí mismo, `poblarFiltrosYDatalists()`
+salta la reconstrucción de ESE datalist puntual (los demás sí se actualizan normal). El datalist
+saltado se actualiza solo en el próximo sync, una vez el usuario mueva el foco a otro campo — no
+hace falta ningún otro disparador. Aplica a los ~30 campos con sugerencias del modal de editar
+equipo (Status, Dominio, Ubicaciones, Empresa, Departamento, Fabricante, Modelo, Serial, etc.) y
+también a los de Impresoras y los de nombreRed de Acta/Ingreso. **Importante para el futuro**: si
+se agrega un `<input list="dl-nuevo-campo">` nuevo en cualquier formulario de esta app, mientras
+su `<datalist>` se puebla dentro de `poblarFiltrosYDatalists()` (o cualquier función que se
+dispare por sync en tiempo real), hay que llamar `datalistEnUsoActivo(dlId)` igual que los demás
+— si no, va a tener el mismo bug.
