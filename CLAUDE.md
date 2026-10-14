@@ -1353,3 +1353,50 @@ genéricas en `infoPagina_<prefix>`). Las listas genéricas no perdieron nada (y
 mismo conteo en `infoPagina_<prefix>`, era una duplicación). También se quitó `"contadorTotal"`
 de `IDS_BOTONES_HEADER_SOLO_IT` (el elemento ya no existe, esa lista solo oculta botones del
 header para el rol Bodeguero).
+
+## Cronograma de Mantenimiento: "Cronograma GBM" y "Cronograma Unidad de Negocio" (oct/2026)
+
+Nueva sección dentro de "Mantenimiento de Equipos" (2 nav-items nuevos: `cronogramaGbm` y
+`cronogramaUnidadNegocio`), implementada a partir de 2 mockups de Artifact validados antes con
+el usuario (GBM y "equipos propios"/"Unidad de Sociedades"/nombre final "Unidad de Negocio").
+Mismo mecanismo en ambas, filtro opuesto:
+
+- **Cronograma GBM**: equipos con `fabricante === "LENOVO"` y `contratos` no vacío — el mismo
+  criterio exacto que ya usa `actualizarUsuarioEquipoMantenimiento` para auto-asignar "Técnico
+  GBM" (función `esLenovoEnRentaCronograma`, `app.js`).
+- **Cronograma Unidad de Negocio**: equipos propios de la empresa — `!esServidor(e) &&
+  !nonEmpty(e.contratos)` (función `esUnidadNegocioCronograma`), el mismo criterio que ya usa
+  `renderTablero()` para la tarjeta "Equipos propios" del Tablero.
+
+Campos nuevos por equipo (colección `equipos`, se sincronizan con `sincronizarEquipo()` igual
+que cualquier otro campo): `cronogramaFechaIni` (fecha, se captura a mano), `cronogramaEstado`
+(`sinempezar`/`proceso`/`atrasado`/`completado`), `cronogramaFechaFin` y `cronogramaNDias`.
+**Estos últimos dos NO se capturan a mano** — se calculan solos (`diasHabilesEntre`, días
+hábiles sin sáb/dom) en el momento que el técnico marca el equipo "Completado" en el `<select>`
+de la tabla (`manejarCambioCronograma`) — a propósito, para no repetir el problema real ya
+documentado arriba (21 seriales con fecha desfasada a mano en el archivo de GBM de oct/2026). Si
+se revierte el estado de "Completado" a otro, se limpian `cronogramaFechaFin`/`cronogramaNDias`
+(no debe quedar un cierre calculado que ya no aplica). Los KPI de arriba de cada tabla (Total/Sin
+empezar/En proceso/Atrasado/Completado/Avance) se recalculan en cada cambio (`renderStatsCronograma`).
+Columna "Observaciones" reutiliza `equipo.comentarios` (mismo patrón que la propuesta validada
+en el mockup, ya usado en otras partes del sistema — no se creó un campo nuevo).
+
+**Pendiente/no implementado todavía — Rol aislado para GBM**: el usuario pidió que, cuando le
+dé acceso a personal de GBM, esa cuenta solo pueda ver "Cronograma GBM" y nada más del sistema
+— mismo mecanismo que el Rol Bodeguero (`EMAILS_BODEGA`/`VISTAS_PERMITIDAS_BODEGA` más arriba en
+este archivo). Se dejó el scaffold ya listo en `app.js`: `EMAILS_GBM` (array vacío a propósito),
+`esCorreoGbm()`, `VISTAS_PERMITIDAS_GBM = ["cronogramaGbm"]`, `esSesionGbm`, y la lógica ya
+integrada dentro de `window.aplicarRestriccionesPorRol()` (oculta todos los `.nav-item` salvo
+`cronogramaGbm`, oculta los botones de `IDS_BOTONES_HEADER_SOLO_IT`, y entra directo a esa vista).
+**Falta solo**: (1) el correo real de la cuenta genérica que el usuario le va a dar a GBM —
+todavía no lo ha decidido ("después pienso que cuenta generarle") — y crear esa cuenta en
+Firebase → Authentication (igual que `bodega2@liztex.com`); (2) agregar ese correo al array
+`EMAILS_GBM` cuando exista. En cuanto se haga eso, el rol queda activo solo, sin más cambios de
+código. **Importante, igual que ya aplica para Bodega**: esto es solo de interfaz, no seguridad
+real de Firestore — la colección `equipos` sigue con `allow read, write: if request.auth !=
+null;`, así que esa cuenta técnicamente podría leer/escribir cualquier cosa si abre las DevTools.
+Al ser un proveedor externo (no alguien que el usuario ya conoce en persona, a diferencia de
+Bodega), conviene reconsiderar esto antes de distribuir la cuenta en producción — separar los
+campos del cronograma en su propia colección de Firestore con una regla de seguridad específica
+para esa cuenta sería el único blindaje real, y todavía no se ha decidido si vale la pena ese
+trabajo adicional.

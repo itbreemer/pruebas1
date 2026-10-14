@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario de Equipos de Cómputo - TI</title>
-<link rel="stylesheet" href="style.css?v=20260923b">
+<link rel="stylesheet" href="style.css?v=20261014a">
 </head>
 <body>
 
@@ -36,6 +36,8 @@
       <button type="button" class="nav-item" data-vista="ingresoToner" data-titulo="Ingreso Tóner Bodega">📥 Ingreso Tóner Bodega</button>
       <button type="button" class="nav-item" data-vista="ticketsGarantia" data-titulo="Tickets de Garantía">🎫 Tickets de Garantía</button>
       <button type="button" class="nav-item" data-vista="mantenimientoEquipos" data-titulo="Mantenimiento de Equipos">🔧 Mantenimiento de Equipos</button>
+      <button type="button" class="nav-item" data-vista="cronogramaGbm" data-titulo="Cronograma GBM">🗓️ Cronograma GBM</button>
+      <button type="button" class="nav-item" data-vista="cronogramaUnidadNegocio" data-titulo="Cronograma Unidad de Negocio">🗓️ Cronograma Unidad de Negocio</button>
       <!-- Oculto a pedido del usuario (2026-09-17): sección en pausa, sin uso activo.
            El agente sigue recolectando/enviando datos a equiposTI_v2 igual; esto solo
            oculta el acceso desde el menú. Quitar el style="display:none" para reactivarlo. -->
@@ -651,6 +653,60 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- Cronograma GBM (equipos Lenovo en renta) -->
+      <section id="vista-cronogramaGbm" class="vista">
+        <p class="acta-estado">Plan de mantenimiento de los equipos Lenovo en renta (mismo criterio que ya usa el sistema para auto-asignar "Técnico GBM": fabricante Lenovo + contrato activo). Fecha Inicio y Estado los captura GBM o IT; Nº de Días y Fecha Fin se calculan solos al marcar "Completado".</p>
+        <div id="statCardsCronogramaGbm" class="stat-cards"></div>
+        <section class="toolbar">
+          <input type="text" id="buscador_cronogramaGbm" placeholder="Buscar por hostname, serial, usuario o ubicación...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>No. Serie</th><th>Placa</th><th>Hostname</th><th>Usuario</th><th>Ubicación</th>
+                <th>Observaciones</th><th>Fecha Ini</th><th>Nº Días</th><th>Fecha Fin</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_cronogramaGbm"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_cronogramaGbm">&laquo;</button>
+          <button id="btnAnterior_cronogramaGbm">&lsaquo;</button>
+          <span id="infoPagina_cronogramaGbm"></span>
+          <button id="btnSiguiente_cronogramaGbm">&rsaquo;</button>
+          <button id="btnUltimo_cronogramaGbm">&raquo;</button>
+        </section>
+      </section>
+
+      <!-- Cronograma Unidad de Negocio (equipos propios, sin contrato Lenovo) -->
+      <section id="vista-cronogramaUnidadNegocio" class="vista">
+        <p class="acta-estado">Plan de mantenimiento de los equipos propiedad de la empresa (sin contrato de renta activo, excluyendo servidores). Lo ejecuta el técnico interno de IT, no GBM. Nº de Días y Fecha Fin se calculan solos al marcar "Completado".</p>
+        <div id="statCardsCronogramaUnidadNegocio" class="stat-cards"></div>
+        <section class="toolbar">
+          <input type="text" id="buscador_cronogramaUnidadNegocio" placeholder="Buscar por hostname, serial, usuario o ubicación...">
+        </section>
+        <section class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>No. Serie</th><th>Placa</th><th>Hostname</th><th>Usuario</th><th>Ubicación</th>
+                <th>Observaciones</th><th>Fecha Ini</th><th>Nº Días</th><th>Fecha Fin</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody_cronogramaUnidadNegocio"></tbody>
+          </table>
+        </section>
+        <section class="paginacion">
+          <button id="btnPrimero_cronogramaUnidadNegocio">&laquo;</button>
+          <button id="btnAnterior_cronogramaUnidadNegocio">&lsaquo;</button>
+          <span id="infoPagina_cronogramaUnidadNegocio"></span>
+          <button id="btnSiguiente_cronogramaUnidadNegocio">&rsaquo;</button>
+          <button id="btnUltimo_cronogramaUnidadNegocio">&raquo;</button>
+        </section>
       </section>
 
       <!-- Dispositivos -->
@@ -1679,7 +1735,7 @@
 <script src="impresoras.js"></script>
 <script src="codigos-impresion.js"></script>
 <script src="firmas.js"></script>
-<script src="app.js?v=20261013a"></script>
+<script src="app.js?v=20261014a"></script>
 <script type="module" src="auth.js"></script>
 <script type="module" src="firestore-sync.js?v=20260820c"></script>
 <script type="module" src="impresoras-sync.js?v=20260820c"></script>

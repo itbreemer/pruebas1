@@ -169,6 +169,13 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 .stat-cards.animar .stat-card:nth-child(5) { animation-delay: 0.2s; }
 .stat-cards.animar .stat-card:nth-child(6) { animation-delay: 0.25s; }
 .stat-cards.animar .stat-card:nth-child(7) { animation-delay: 0.3s; }
+/* Color de fondo del <select> de Estado en el Cronograma GBM / Unidad de Negocio */
+.cronograma-estado { border-radius: 99px; font-size: 11px; font-weight: 700; padding: 3px 8px; border: 1px solid #d0d5e2; }
+.pill-cronograma-sinempezar { background: #eceff5; color: #5b6584; }
+.pill-cronograma-proceso { background: #fff3d9; color: #8a5a00; }
+.pill-cronograma-completado { background: #e4f7ee; color: #1c7a50; }
+.pill-cronograma-atrasado { background: #fde8e7; color: #b23b36; }
+
 @keyframes statCardIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

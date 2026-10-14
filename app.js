@@ -149,7 +149,39 @@ window.aplicarRestriccionesPorRol = (correo) => {
   const bloqueCodigos = $("bloqueCodigosUsuario");
   if (bloqueCodigos) bloqueCodigos.style.display = esBodega ? "none" : "";
   if (esBodega) cambiarVista("contadoresImpresoras");
+
+  const esGbm = esCorreoGbm(correo);
+  esSesionGbm = esGbm;
+  if (esGbm) {
+    document.querySelectorAll(".nav-item").forEach((btn) => {
+      if (!VISTAS_PERMITIDAS_GBM.includes(btn.dataset.vista)) btn.style.display = "none";
+    });
+    IDS_BOTONES_HEADER_SOLO_IT.forEach((id) => {
+      const el = $(id);
+      if (el) el.style.display = "none";
+    });
+    cambiarVista("cronogramaGbm");
+  }
 };
+
+// Rol aislado para personal de GBM (proveedor externo, no empleado propio):
+// pidió el usuario (oct/2026) que esta cuenta solo pueda ver/editar el
+// Cronograma GBM y nada más del sistema -- mismo mecanismo que el Rol
+// Bodeguero de arriba (solo de interfaz, ver advertencia de seguridad real
+// en CLAUDE.md), pero más estricto: una sola vista permitida, ninguna otra.
+// EMAILS_GBM queda vacío a propósito: el usuario aún no decide qué cuenta
+// genérica le va a dar a GBM -- cuando la tenga, basta con agregar el
+// correo aquí (crearlo antes en Firebase → Authentication, igual que
+// "bodega2@liztex.com") para que el rol entre en vigor solo.
+const EMAILS_GBM = [];
+
+function esCorreoGbm(correo) {
+  return EMAILS_GBM.includes((correo || "").trim().toLowerCase());
+}
+
+const VISTAS_PERMITIDAS_GBM = ["cronogramaGbm"];
+
+let esSesionGbm = false;
 
 const FIELD_IDS = [
   "id", "nombreRed", "ubicaciones", "entidad", "empresa", "nombreEmpleado",
@@ -4133,6 +4165,14 @@ function cambiarVista(nombre) {
   }
   else if (nombre === "ingresoToner") renderFormularioIngresoToner();
   else if (nombre === "equiposTIv2") vistaEquiposTIv2.render();
+  else if (nombre === "cronogramaGbm") {
+    vistaCronogramaGbm.render();
+    renderStatsCronograma("cronogramaGbm");
+  }
+  else if (nombre === "cronogramaUnidadNegocio") {
+    vistaCronogramaUnidadNegocio.render();
+    renderStatsCronograma("cronogramaUnidadNegocio");
+  }
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -5396,6 +5436,166 @@ const vistaMantenimientoEquipos = crearVistaLista({
   },
   alClicFila: (r) => abrirModalMantenimientoEquipos(r.registro),
 });
+
+/* ---------- Cronograma de Mantenimiento (GBM / Unidad de Negocio) ---------- */
+// Dos listas con el mismo mecanismo, filtro opuesto: GBM = equipos Lenovo en
+// renta (mismo criterio que ya usa `actualizarUsuarioEquipoMantenimiento` para
+// auto-asignar "Técnico GBM"); Unidad de Negocio = equipos propios de la
+// empresa, sin contrato activo, excluyendo servidores/VMs (`esServidor`, ya
+// usado por el Tablero para "Equipos propios"). Fecha Ini y Estado se
+// capturan a mano en la tabla; Nº Días y Fecha Fin se calculan solos al
+// marcar "Completado" (días hábiles entre Fecha Ini y hoy, sin sáb/dom) -- a
+// propósito, para no repetir el problema de un Excel con fechas desfasadas
+// a mano (ver CLAUDE.md, validación del archivo de GBM de oct/2026).
+
+function esLenovoEnRentaCronograma(e) {
+  return (e.fabricante || "").trim().toUpperCase() === "LENOVO" && nonEmpty(e.contratos);
+}
+
+function esUnidadNegocioCronograma(e) {
+  return !esServidor(e) && !nonEmpty(e.contratos);
+}
+
+function diasHabilesEntre(isoIni, isoFin) {
+  const ini = new Date(isoIni);
+  const fin = new Date(isoFin);
+  if (isNaN(ini) || isNaN(fin) || fin < ini) return "";
+  let dias = 0;
+  const cursor = new Date(ini);
+  while (cursor <= fin) {
+    const dow = cursor.getDay();
+    if (dow !== 0 && dow !== 6) dias++;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias || 1;
+}
+
+function hoyIso() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const ESTADOS_CRONOGRAMA = [
+  { valor: "sinempezar", etiqueta: "Sin empezar" },
+  { valor: "proceso", etiqueta: "En proceso" },
+  { valor: "atrasado", etiqueta: "Atrasado" },
+  { valor: "completado", etiqueta: "Completado" },
+];
+
+function opcionesEstadoCronograma(seleccionado) {
+  return ESTADOS_CRONOGRAMA.map(
+    (e) => `<option value="${e.valor}"${e.valor === (seleccionado || "sinempezar") ? " selected" : ""}>${e.etiqueta}</option>`
+  ).join("");
+}
+
+function obtenerFilasCronograma(filtroFn) {
+  return equipos
+    .filter(filtroFn)
+    .filter((e) => nonEmpty(e.nombreRed) || nonEmpty(e.numeroSerial))
+    .map((e) => {
+      const estado = e.cronogramaEstado || "sinempezar";
+      return {
+        equipo: e,
+        celdas: `
+          <td>${esc(e.numeroSerial)}</td>
+          <td>${esc(e.numeroInventario)}</td>
+          <td><b>${esc(e.nombreRed)}</b></td>
+          <td>${esc(e.nombreEmpleado)}</td>
+          <td>${esc(e.ubicaciones)}</td>
+          <td>${nonEmpty(e.comentarios) ? esc(e.comentarios) : "—"}</td>
+          <td><input type="date" class="cronograma-fecha-ini" data-id="${esc(e.id)}" value="${esc(e.cronogramaFechaIni || "")}"></td>
+          <td style="text-align:center">${e.cronogramaNDias || ""}</td>
+          <td>${e.cronogramaFechaFin ? formatearFechaSimple(e.cronogramaFechaFin) : "—"}</td>
+          <td><select class="cronograma-estado pill-cronograma-${estado}" data-id="${esc(e.id)}">${opcionesEstadoCronograma(estado)}</select></td>
+        `,
+      };
+    });
+}
+
+function actualizarCronogramaEquipo(id, cambios) {
+  const equipo = equipos.find((e) => e.id === id);
+  if (!equipo) return;
+  Object.assign(equipo, cambios);
+  equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
+  guardarDatos();
+  sincronizarEquipo(equipo);
+}
+
+function manejarCambioCronograma(ev, vista) {
+  const id = ev.target.dataset.id;
+  if (!id) return;
+  const equipo = equipos.find((e) => e.id === id);
+  if (!equipo) return;
+
+  if (ev.target.classList.contains("cronograma-fecha-ini")) {
+    actualizarCronogramaEquipo(id, { cronogramaFechaIni: ev.target.value });
+    return;
+  }
+
+  if (ev.target.classList.contains("cronograma-estado")) {
+    const nuevoEstado = ev.target.value;
+    const cambios = { cronogramaEstado: nuevoEstado };
+    if (nuevoEstado === "completado" && !equipo.cronogramaFechaFin) {
+      const fin = hoyIso();
+      cambios.cronogramaFechaFin = fin;
+      cambios.cronogramaNDias = equipo.cronogramaFechaIni ? diasHabilesEntre(equipo.cronogramaFechaIni, fin) : 1;
+    } else if (nuevoEstado !== "completado") {
+      // Si se revierte de "Completado" a otro estado, se limpia lo calculado
+      // -- no debe quedar una Fecha Fin/Nº Días de un cierre que ya no aplica.
+      cambios.cronogramaFechaFin = "";
+      cambios.cronogramaNDias = "";
+    }
+    actualizarCronogramaEquipo(id, cambios);
+    vista.render();
+    renderStatsCronograma(vista === vistaCronogramaGbm ? "cronogramaGbm" : "cronogramaUnidadNegocio");
+    return;
+  }
+}
+
+function renderStatsCronograma(prefix) {
+  const filtroFn = prefix === "cronogramaGbm" ? esLenovoEnRentaCronograma : esUnidadNegocioCronograma;
+  const lista = equipos.filter(filtroFn).filter((e) => nonEmpty(e.nombreRed) || nonEmpty(e.numeroSerial));
+  const total = lista.length;
+  const porEstado = (v) => lista.filter((e) => (e.cronogramaEstado || "sinempezar") === v).length;
+  const sinEmpezar = porEstado("sinempezar");
+  const enProceso = porEstado("proceso");
+  const atrasado = porEstado("atrasado");
+  const completado = porEstado("completado");
+  const avance = total ? Math.round((completado / total) * 100) : 0;
+
+  $(`statCardsCronograma${prefix === "cronogramaGbm" ? "Gbm" : "UnidadNegocio"}`).innerHTML =
+    construirStatCard(total, "Equipos total", { claseColor: "color-azul" }) +
+    construirStatCard(sinEmpezar, "Sin empezar", { claseColor: "color-slate" }) +
+    construirStatCard(enProceso, "En proceso", { claseColor: "color-fucsia" }) +
+    construirStatCard(atrasado, "Atrasado", { claseColor: "color-teal" }) +
+    construirStatCard(completado, "Completado", { claseColor: "color-verde" }) +
+    construirStatCard(`${avance}%`, "Avance", { claseColor: "color-indigo" });
+}
+
+const vistaCronogramaGbm = crearVistaLista({
+  prefix: "cronogramaGbm",
+  columnas: 10,
+  obtenerFilas: () => obtenerFilasCronograma(esLenovoEnRentaCronograma),
+  filtrar: (r, t) =>
+    [r.equipo.nombreRed, r.equipo.numeroSerial, r.equipo.nombreEmpleado, r.equipo.ubicaciones]
+      .join(" ")
+      .toLowerCase()
+      .includes(t),
+});
+$("tbody_cronogramaGbm").addEventListener("change", (ev) => manejarCambioCronograma(ev, vistaCronogramaGbm));
+
+const vistaCronogramaUnidadNegocio = crearVistaLista({
+  prefix: "cronogramaUnidadNegocio",
+  columnas: 10,
+  obtenerFilas: () => obtenerFilasCronograma(esUnidadNegocioCronograma),
+  filtrar: (r, t) =>
+    [r.equipo.nombreRed, r.equipo.numeroSerial, r.equipo.nombreEmpleado, r.equipo.ubicaciones]
+      .join(" ")
+      .toLowerCase()
+      .includes(t),
+});
+$("tbody_cronogramaUnidadNegocio").addEventListener("change", (ev) => manejarCambioCronograma(ev, vistaCronogramaUnidadNegocio));
 
 function generarReporteMantenimiento() {
   const porTecnico = {};
