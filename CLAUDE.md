@@ -1437,3 +1437,34 @@ se agrega un `<input list="dl-nuevo-campo">` nuevo en cualquier formulario de es
 su `<datalist>` se puebla dentro de `poblarFiltrosYDatalists()` (o cualquier función que se
 dispare por sync en tiempo real), hay que llamar `datalistEnUsoActivo(dlId)` igual que los demás
 — si no, va a tener el mismo bug.
+
+## Bug real corregido — "Imprimir acta" del modal "Editar equipo" no guardaba antes de imprimir (oct/2026)
+
+El usuario reportó un caso confuso y real: volvió a llenar los datos de `LAPLNV305` (Ubicaciones,
+Usuario de Dominio, Número de inventario, etc. — los mismos campos documentados arriba como
+pendientes de la alta del contrato 8030028191) y mandó a imprimir la hoja — la hoja salió
+perfecta, con todo lo capturado. Pero al validar después en el programa, el equipo seguía
+apareciendo con esos campos vacíos, como si nunca se hubiera guardado.
+
+**Causa raíz confirmada**: el botón **"Imprimir acta"** de arriba del modal "Editar equipo"
+(`btnImprimirDesdeModal`, distinto del botón "Guardar" que está al final del formulario) llama a
+`imprimirDesdeEdicion()` — esta función solo leía los valores del formulario (`FIELD_IDS.forEach(f
+=> equipo[f] = $(f).value)`) para armar el PDF con `renderActa()`, pero **nunca llamaba a
+`guardarDatos()` ni a `sincronizarEquipo()`**. El usuario llenó el formulario y le dio clic
+directo a "Imprimir acta" (sin pasar primero por "Guardar", que está más abajo, fuera de la vista
+inicial del modal) — la hoja impresa reflejaba los datos reales que había escrito, pero nada de
+eso se persistía: ni a `localStorage` ni a Firestore. **Es el mismo patrón de bug ya documentado
+arriba para "Generar Acta"** (`generarEImprimirActa`, la vista separada de Mantenimiento) — ese
+fix nunca se replicó acá porque `imprimirDesdeEdicion()` es un camino de código completamente
+distinto (vive dentro del modal normal de "Editar equipo", no en la vista de Actas).
+
+**Fix**: se extrajo la lógica de guardado de `onSubmit()` (el handler del botón "Guardar") a una
+función nueva `guardarEquipoDesdeFormulario()` — misma validación de nombre duplicado, mismo
+`guardarDatos()` + `sincronizarEquipo()` + refresco de vistas. `imprimirDesdeEdicion()` ahora
+llama a `guardarEquipoDesdeFormulario()` primero y solo imprime si el guardado fue exitoso,
+usando el objeto ya guardado (no los valores crudos del formulario) para armar la Acta. Si el
+guardado falla (ej. nombre en red duplicado), no imprime nada — mismo comportamiento que ya
+tenía "Guardar". **Importante para el futuro**: si se agrega otro botón que lea
+`FIELD_IDS`/`$(f).value` directo del formulario de "Editar equipo" para hacer algo con esos
+datos (imprimir, exportar, etc.), debe pasar primero por `guardarEquipoDesdeFormulario()` — nunca
+leer el formulario "al vuelo" sin persistir, o va a repetir este mismo bug.
