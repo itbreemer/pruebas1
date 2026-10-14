@@ -271,6 +271,7 @@ function fusionarContratosDesdeSeed() {
   if (eliminarDuplicadoP025194()) cambio = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
   if (eliminarDuplicadoPCRIOLSA005()) cambio = true;
+  if (eliminarEquipoLAPSPARE002()) cambio = true;
   if (restaurarEquiposContrato8030028027()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
@@ -335,6 +336,22 @@ function eliminarDuplicadoPCRIOLSA005() {
   equipos = equipos.filter((e) => e.id !== "pendiente-pcriolsa005");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("pendiente-pcriolsa005");
+  return cambio;
+}
+
+// El usuario pidió quitar LAPSPARE002 (seed-369) del programa (oct/2026): no
+// es un equipo en renta Lenovo (aunque fabricante="LENOVO" y no tenía
+// contrato, lo que lo hacía aparecer en el Cronograma Unidad de Negocio en
+// vez del Cronograma GBM al validar los 495 equipos Lenovo del Tablero) sino
+// un equipo de repuesto para casos de emergencia, sin usuario asignado — no
+// debe aparecer en ningún cronograma de mantenimiento ni en el inventario.
+// Se quitó de SEED_DATA; esto limpia el equipo en los navegadores/Firestore
+// que ya lo tuvieran sincronizado (mismo patrón que `eliminarDuplicadoPCRIOLSA005`).
+function eliminarEquipoLAPSPARE002() {
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => e.id !== "seed-369");
+  const cambio = equipos.length !== antes;
+  if (cambio) sincronizarEliminacion("seed-369");
   return cambio;
 }
 
@@ -1072,6 +1089,7 @@ function establecerEquiposDesdeSync(remotos) {
   equipos = combinados;
   eliminarDuplicadoP025194();
   eliminarDuplicadoLAPGEN2025Cronograma();
+  eliminarEquipoLAPSPARE002();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
@@ -4602,6 +4620,7 @@ function renderTablero() {
   let cambioPurga = false;
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambioPurga = true;
+  if (eliminarEquipoLAPSPARE002()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;

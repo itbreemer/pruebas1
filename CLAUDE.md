@@ -1400,3 +1400,15 @@ Bodega), conviene reconsiderar esto antes de distribuir la cuenta en producción
 campos del cronograma en su propia colección de Firestore con una regla de seguridad específica
 para esa cuenta sería el único blindaje real, y todavía no se ha decidido si vale la pena ese
 trabajo adicional.
+
+**Equipo quitado del programa — `LAPSPARE002` (oct/2026)**: al validar el conteo de "495 Equipos
+Lenovo" del Tablero contra el filtro del Cronograma GBM (Lenovo + contrato activo), apareció 1
+Lenovo real sin contrato en el dataset de este entorno: `LAPSPARE002` (`seed-369`, ThinkPad E14
+Gen 2, sin usuario asignado). El usuario confirmó que no es un equipo en renta — es un equipo de
+**repuesto para casos de emergencia** y pidió quitarlo del programa por completo (no solo
+excluirlo de los cronogramas). Se quitó de `SEED_DATA` (`data.js`) y se agregó
+`eliminarEquipoLAPSPARE002()` en `app.js` (mismo patrón que `eliminarDuplicadoPCRIOLSA005`/
+`eliminarDuplicadoLAPGEN2025Cronograma`: filtra el id y llama a `sincronizarEliminacion` para
+que también se borre de Firestore/otros navegadores que ya lo tuvieran sincronizado), enganchada
+en los 3 lugares donde corre ese patrón (`fusionarContratosDesdeSeed`, la fusión de sync en
+tiempo real, y `renderTablero`).
