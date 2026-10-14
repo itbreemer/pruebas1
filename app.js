@@ -3181,6 +3181,7 @@ function poblarFiltrosYDatalists() {
     "dl-memoriaDescripcion": "memoriaDescripcion",
   };
   Object.entries(datalistMap).forEach(([dlId, campo]) => {
+    if (datalistEnUsoActivo(dlId)) return;
     const dl = $(dlId);
     dl.innerHTML = "";
     valoresUnicos(campo).forEach((v) => {
@@ -3199,6 +3200,7 @@ function poblarFiltrosYDatalists() {
     "dl-impresorasSerialCatalogo": "serial",
   };
   Object.entries(datalistMapImpresoras).forEach(([dlId, campo]) => {
+    if (datalistEnUsoActivo(dlId)) return;
     const dl = $(dlId);
     dl.innerHTML = "";
     valoresUnicosImpresoras(campo).forEach((v) => {
@@ -3209,6 +3211,7 @@ function poblarFiltrosYDatalists() {
   });
 
   ["dl-nombreRedActa", "dl-nombreRedIngreso"].forEach((dlId) => {
+    if (datalistEnUsoActivo(dlId)) return;
     const dlNombreRed = $(dlId);
     dlNombreRed.innerHTML = "";
     valoresUnicos("nombreRed").forEach((v) => {
@@ -3217,6 +3220,24 @@ function poblarFiltrosYDatalists() {
       dlNombreRed.appendChild(opt);
     });
   });
+}
+
+// Bug real reportado por el usuario: al escribir en un campo con sugerencias
+// (ej. "Status", "Dominio" -- <input list="dl-...">), la opción que iba a
+// elegir "desaparecía" o no dejaba seleccionarla. Causa raíz: `equipos`
+// se sincroniza en vivo con Firestore (onSnapshot, puede dispararse en
+// cualquier momento por un cambio de OTRO equipo en OTRA computadora), y
+// cada sync llama a `poblarFiltrosYDatalists()`, que antes borraba y volvía
+// a armar CADA <datalist> con `innerHTML = ""` sin importar si el usuario
+// tenía el desplegable nativo de sugerencias abierto en ese momento --
+// reconstruir las <option> mientras esa lista está abierta hace que el
+// navegador la cierre o descarte el clic antes de que registre la selección.
+// Fix: no reconstruir el datalist cuyo <input list="..."> está actualmente
+// enfocado (`document.activeElement`) -- se actualiza solo con el próximo
+// sync, una vez el usuario mueva el foco a otro campo.
+function datalistEnUsoActivo(dlId) {
+  const input = document.querySelector(`input[list="${dlId}"]`);
+  return !!input && document.activeElement === input;
 }
 
 function esc(v) {
