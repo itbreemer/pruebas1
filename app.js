@@ -3418,14 +3418,25 @@ function onCambioNombreRedEquipo() {
   }
 }
 
-function onSubmit(e) {
-  e.preventDefault();
+// Guarda el equipo que esté abierto en el formulario de edición -- extraído de
+// onSubmit() para que "Imprimir acta" (imprimirDesdeEdicion) también pueda
+// guardar antes de imprimir. Bug real reportado por el usuario: llenaba el
+// formulario, le daba clic a "Imprimir acta" (el botón de arriba del modal,
+// no al "Guardar" de más abajo) y la hoja salía perfecta con todo lo
+// capturado -- pero nada de eso se guardaba (ni Firestore ni localStorage),
+// porque imprimirDesdeEdicion solo leía los valores del formulario para
+// imprimir, nunca llamaba a guardarDatos()/sincronizarEquipo(). Al validar
+// después, el equipo seguía con los datos viejos (vacíos). Mismo patrón de
+// bug que ya se había corregido una vez para "Generar Acta" (la vista
+// separada, generarEImprimirActa) pero nunca se replicó en este botón del
+// modal de edición, que es un camino de código distinto.
+function guardarEquipoDesdeFormulario() {
   const data = {};
   FIELD_IDS.forEach((f) => (data[f] = $(f).value.trim()));
 
   if (equipoDuplicadoPorNombreRed(data.nombreRed, data.id)) {
     alert("Ya existe otro equipo con este Nombre en Red. Cambia el nombre o busca y edita el equipo existente en vez de crear uno duplicado.");
-    return;
+    return null;
   }
 
   data.ultimaModificacion = new Date().toISOString().slice(0, 16);
@@ -3442,10 +3453,17 @@ function onSubmit(e) {
   }
   guardarDatos();
   sincronizarEquipo(guardado);
-  cerrarModal();
   poblarFiltrosYDatalists();
   render();
   refrescarVistasSecundarias();
+  return guardado;
+}
+
+function onSubmit(e) {
+  e.preventDefault();
+  const guardado = guardarEquipoDesdeFormulario();
+  if (!guardado) return;
+  cerrarModal();
 }
 
 function eliminarActual() {
@@ -3798,14 +3816,14 @@ function renderActa(equipo, transaccion) {
 }
 
 function imprimirDesdeEdicion() {
-  const equipo = {};
-  FIELD_IDS.forEach((f) => (equipo[f] = $(f).value.trim()));
-  renderActa(equipo, {
-    accion: (equipo.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
-    declarante: equipo.nombreEmpleado,
+  const guardado = guardarEquipoDesdeFormulario();
+  if (!guardado) return;
+  renderActa(guardado, {
+    accion: (guardado.status || "").toLowerCase().includes("devol") ? "Devolucion" : "Entrega",
+    declarante: guardado.nombreEmpleado,
     tecnico: TECNICO_ACTUAL || "Sin identificar",
     jefe: "Gustavo A. García Avila",
-    observaciones: equipo.comentarios || "",
+    observaciones: guardado.comentarios || "",
     numeroForma: siguienteNumeroForma(),
   });
 }
