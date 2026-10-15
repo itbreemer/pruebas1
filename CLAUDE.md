@@ -1468,3 +1468,38 @@ tenía "Guardar". **Importante para el futuro**: si se agrega otro botón que le
 `FIELD_IDS`/`$(f).value` directo del formulario de "Editar equipo" para hacer algo con esos
 datos (imprimir, exportar, etc.), debe pasar primero por `guardarEquipoDesdeFormulario()` — nunca
 leer el formulario "al vuelo" sin persistir, o va a repetir este mismo bug.
+
+## Autocompletado masivo de Código de empleado faltante por nombre único del padrón (oct/2026)
+
+El usuario notó que muchos equipos tienen "Nombre de empleado" capturado pero nunca se les llenó
+el "Código de empleado" — sin ese código, el autocompletado manual existente
+(`autocompletarEmpleadoPorCodigo`, ver sección de más arriba) no tiene nada que buscar, así que
+"Puesto"/"Departamento"/"DPI"/"Empresa" se quedan vacíos aunque el padrón de RRHH ya tenga esos
+datos para esa persona. Validado con el usuario a mano contra `LAPLNV0003` (Edwin Roberto Ayala
+Manrique) antes de aplicarlo en bloque: sin código, Puesto/DPI vacíos; con el código `10004536`
+puesto a mano, se autocompletan solos ("Director legal" / DPI real).
+
+**Análisis previo** (sobre el dataset de este entorno, `data.js`): 663 equipos con
+`nombreEmpleado` pero sin `codigoEmpleado`. De esos, **551 matchean por nombre contra el padrón de
+forma ÚNICA** (cero casos ambiguos de 2+ personas con el mismo nombre — se verificó explícitamente
+antes de aplicar nada, porque el matcheo por nombre ya había demostrado ser ambiguo en el pasado,
+ver alta del contrato 8030028191, Jose Jimenez). Los otros 112 no tienen match en el padrón
+(cuentas genéricas como "Gerencia"/"TI"/"Resguardo En TI", o personas que no están en el padrón) y
+se quedan intactos a propósito — no se inventó ningún match. También se validó que ninguno de los
+551 tenía status "Nuevo > Sin Asignar" (es decir, ninguno es un equipo recién dado de alta sin
+usuario real todavía) — las 6 laptops `LAPLNV319`–`324` (sin asignar, ver segunda entrega del
+contrato 8030028191) quedan fuera del todo porque no tienen `nombreEmpleado` capturado.
+
+**Implementación** (`app.js`): `construirIndicePadronPorNombre()` arma un índice
+`nombre normalizado → [candidatos]` del `PADRON_EMPLEADOS`; `corregirCodigosEmpleadoPorNombrePadron()`
+recorre `equipos`, y por cada uno con `nombreEmpleado` pero sin `codigoEmpleado`, busca candidatos
+por nombre — **si hay más de uno, no toca nada** (misma guardia de ambigüedad que ya se decidió
+antes para el Código de empleado como llave única). Si hay exactamente un candidato, llena
+`codigoEmpleado`/`puesto`/`departamento`/`dpi`/`empresa`/`unidadNegocio` **solo los campos que
+sigan vacíos** (mismo patrón que `autocompletarEmpleadoPorCodigo`, nunca pisa una edición manual),
+y sincroniza a Firestore. Corre una sola vez por equipo (una vez que `codigoEmpleado` queda
+lleno, deja de aplicar) — enganchada en `fusionarContratosDesdeSeed()`, se aplica sola la primera
+vez que cualquier usuario autenticado cargue la app actualizada. **Importante para el futuro**: si
+se actualiza el padrón (`empleados.js`) con nombres nuevos, esta función seguirá completando
+automáticamente cualquier equipo que tenga ese nombre exacto capturado y siga sin código — no hace
+falta re-ejecutar nada a mano.
