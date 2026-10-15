@@ -282,6 +282,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirDpiLAPLNV304()) cambio = true;
   if (corregirEmpleadoLAPLNV292()) cambio = true;
   if (corregirCodigosEmpleadoAlta8030028191()) cambio = true;
+  if (corregirCodigosEmpleadoPorNombrePadron()) cambio = true;
   if (corregirFechaIngresoAlta8030028191()) cambio = true;
   if (corregirMemoriaRamLaptopsAlta8030028191()) cambio = true;
   if (corregirNumeroInventarioLaptopsAlta8030028191()) cambio = true;
@@ -798,6 +799,61 @@ function corregirCodigosEmpleadoAlta8030028191() {
     equipo.ultimaModificacion = new Date().toISOString().slice(0, 16);
     sincronizarEquipo(equipo);
     cambio = true;
+  });
+  return cambio;
+}
+
+// Corrección forzada (oct/2026): el usuario detectó que muchos equipos tienen
+// Nombre de empleado capturado pero nunca se les llenó el Código de empleado
+// -- sin ese código, el autocompletado manual (autocompletarEmpleadoPorCodigo)
+// no tiene nada que buscar, así que Puesto/Departamento/DPI/Empresa se quedan
+// vacíos aunque el padrón ya tenga esos datos. Análisis previo (fuera de este
+// archivo, sobre el dataset de este entorno): 663 equipos con nombreEmpleado
+// sin código; de esos, 551 matchean por nombre contra el padrón de forma
+// ÚNICA (cero casos ambiguos de 2+ personas con el mismo nombre); los otros
+// 112 no tienen match (cuentas genéricas tipo "Gerencia"/"TI", o personas que
+// no están en el padrón) y se quedan intactos a propósito. A diferencia del
+// autocompletado por código (llave exacta, sin ambigüedad posible), este sí
+// matchea por nombre -- por eso la guardia exige candidato ÚNICO: si dos o
+// más personas del padrón comparten el mismo nombre, no se toca ese equipo
+// (mismo problema de ambigüedad ya documentado para la alta del contrato
+// 8030028191, Jose Jimenez). Llena cada campo SOLO si sigue vacío, igual que
+// autocompletarEmpleadoPorCodigo() -- nunca pisa una edición manual.
+function construirIndicePadronPorNombre() {
+  const mapa = new Map();
+  (typeof PADRON_EMPLEADOS !== "undefined" ? PADRON_EMPLEADOS : []).forEach((p) => {
+    const clave = (p.nombre || "").trim().toLowerCase().replace(/\s+/g, " ");
+    if (!mapa.has(clave)) mapa.set(clave, []);
+    mapa.get(clave).push(p);
+  });
+  return mapa;
+}
+
+function corregirCodigosEmpleadoPorNombrePadron() {
+  if (typeof PADRON_EMPLEADOS === "undefined") return false;
+  const indice = construirIndicePadronPorNombre();
+  let cambio = false;
+  equipos.forEach((e) => {
+    if (nonEmpty(e.codigoEmpleado) || !nonEmpty(e.nombreEmpleado)) return;
+    const clave = e.nombreEmpleado.trim().toLowerCase().replace(/\s+/g, " ");
+    const candidatos = indice.get(clave);
+    if (!candidatos || candidatos.length !== 1) return;
+    const p = candidatos[0];
+    let tocado = false;
+    if (!nonEmpty(e.codigoEmpleado) && nonEmpty(p.codigo)) { e.codigoEmpleado = p.codigo; tocado = true; }
+    if (!nonEmpty(e.puesto) && nonEmpty(p.puesto)) { e.puesto = p.puesto; tocado = true; }
+    if (!nonEmpty(e.departamento) && nonEmpty(p.departamento)) { e.departamento = p.departamento; tocado = true; }
+    if (!nonEmpty(e.dpi) && nonEmpty(p.dpi)) { e.dpi = p.dpi; tocado = true; }
+    if (!nonEmpty(e.empresa) && nonEmpty(p.empresa)) { e.empresa = p.empresa; tocado = true; }
+    if (!nonEmpty(e.unidadNegocio) && EMPRESA_A_UNIDAD_NEGOCIO[p.empresa]) {
+      e.unidadNegocio = EMPRESA_A_UNIDAD_NEGOCIO[p.empresa];
+      tocado = true;
+    }
+    if (tocado) {
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    }
   });
   return cambio;
 }
