@@ -1545,3 +1545,16 @@ con cualquiera de los otros 4 equipos de esa misma tabla (`LAPDELLGENESTER`, `LA
 `PCCLONPRESTAMO`, `PCLNV139`) u otro equipo cualquiera, replicar este mismo patrón — buscar su
 `id` en `SEED_DATA`, quitarlo de ahí, y agregar una función `eliminarEquipoXXX()` enganchada en
 los 3 call sites ya establecidos.
+
+## Panel "Por Status" del Tablero ampliado de top-8 a top-15 (oct/2026)
+
+El usuario notó que "Asignada > Equipo en Prestamo" (solo 5 equipos) no aparecía como fila propia
+en el panel "Por Status" del Tablero y preguntó si se había eliminado — **no era una eliminación**:
+el panel (`renderTablero()`, `pintarPanelConDona`) ya limitaba a los 8 status más frecuentes desde
+el origen del proyecto (`datosTop: statusSinServidores.slice(0, 8)`), agrupando el resto dentro de
+"Otros" solo en el Total de la dona, sin fila individual. Con 13 status distintos en el dataset
+real, cualquiera fuera del top 8 (como "Equipo en Prestamo", con pocos equipos) quedaba sin fila
+propia aunque seguía contado en el Total. **Fix**: se amplió el límite a 15 (`slice(0, 15)`),
+suficiente para mostrar todos los status actuales como fila individual. Si en el futuro aparecen
+más de 15 status distintos, el patrón "Otros" vuelve a aplicar para los que sobren — no hace falta
+tocar nada más salvo subir el número si se necesita.

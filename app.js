@@ -4783,7 +4783,7 @@ function renderTablero() {
   const totalStatusSinServidores = statusSinServidores.reduce((s, [, c]) => s + c, 0);
   pintarPanelConDona({
     idDona: "tableroStatusDona", idLista: "tableroStatus", campo: "status",
-    datosTop: statusSinServidores.slice(0, 8), total: totalStatusSinServidores, hex: "#1c3d6e", modo: "A",
+    datosTop: statusSinServidores.slice(0, 15), total: totalStatusSinServidores, hex: "#1c3d6e", modo: "A",
   });
   $("tableroStatus").innerHTML += totalHtml(totalStatusSinServidores);
 
