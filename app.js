@@ -272,6 +272,7 @@ function fusionarContratosDesdeSeed() {
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambio = true;
   if (eliminarDuplicadoPCRIOLSA005()) cambio = true;
   if (eliminarEquipoLAPSPARE002()) cambio = true;
+  if (eliminarEquipoLAPDELL024()) cambio = true;
   if (restaurarEquiposContrato8030028027()) cambio = true;
   if (eliminarChatarraConfirmada()) cambio = true;
   if (quitarMarcaRevisionConfirmados()) cambio = true;
@@ -353,6 +354,20 @@ function eliminarEquipoLAPSPARE002() {
   equipos = equipos.filter((e) => e.id !== "seed-369");
   const cambio = equipos.length !== antes;
   if (cambio) sincronizarEliminacion("seed-369");
+  return cambio;
+}
+
+// LAPDELL024 (seed-84): el usuario lo eliminó desde la app (equipo de préstamo
+// "Asignada > Equipo en Prestamo") pero seguía existiendo en SEED_DATA, así que
+// fusionarContratosDesdeSeed() lo resucitaba en cada carga/sync (mismo patrón ya
+// documentado para eliminarDuplicadoP025194/LAPGEN2025/PCRIOLSA005/LAPSPARE002).
+// Se quitó de SEED_DATA; esto limpia el equipo en los navegadores/Firestore que
+// ya lo tuvieran sincronizado.
+function eliminarEquipoLAPDELL024() {
+  const antes = equipos.length;
+  equipos = equipos.filter((e) => e.id !== "seed-84");
+  const cambio = equipos.length !== antes;
+  if (cambio) sincronizarEliminacion("seed-84");
   return cambio;
 }
 
@@ -1146,6 +1161,7 @@ function establecerEquiposDesdeSync(remotos) {
   eliminarDuplicadoP025194();
   eliminarDuplicadoLAPGEN2025Cronograma();
   eliminarEquipoLAPSPARE002();
+  eliminarEquipoLAPDELL024();
   eliminarChatarraConfirmada();
   quitarMarcaRevisionConfirmados();
   corregirEmpresasMalCapturadas();
@@ -4722,6 +4738,7 @@ function renderTablero() {
   if (eliminarDuplicadoP025194()) cambioPurga = true;
   if (eliminarDuplicadoLAPGEN2025Cronograma()) cambioPurga = true;
   if (eliminarEquipoLAPSPARE002()) cambioPurga = true;
+  if (eliminarEquipoLAPDELL024()) cambioPurga = true;
   if (eliminarChatarraConfirmada()) cambioPurga = true;
   if (quitarMarcaRevisionConfirmados()) cambioPurga = true;
   if (corregirEmpresasMalCapturadas()) cambioPurga = true;

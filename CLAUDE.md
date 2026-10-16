@@ -1525,3 +1525,23 @@ concreto a 2 años porque apareció un contrato de 2026 que quedaba huérfano, n
 dinámica de 12 meses. Si en el futuro aparece otro contrato de un año distinto (2025, 2028, etc.)
 que el usuario quiera ver en algún panel, **confirmar con él** si quiere seguir ensanchando este
 mismo panel, crear uno nuevo (ej. "2028"), o volver al diseño de un año por panel — no asumir.
+
+## Bug real corregido — equipo eliminado (`LAPDELL024`) volvía a aparecer tras actualizar (oct/2026)
+
+El usuario reportó, con una tabla de 5 equipos en status "Asignada > Equipo en Prestamo"
+(`LAPDELLGENESTER`, `LAPLNV207`, `PCCLONPRESTAMO`, `PCLNV139`, `LAPDELL024`), que al eliminar uno
+de ellos (`LAPDELL024`, confirmado por el usuario) volvía a aparecer solo después de darle
+"Actualizar" (recargar la página). **Mismo patrón de fondo ya documentado varias veces en este
+archivo** (`eliminarDuplicadoP025194`, `eliminarDuplicadoLAPGEN2025Cronograma`,
+`eliminarDuplicadoPCRIOLSA005`, `eliminarEquipoLAPSPARE002`): `LAPDELL024` (`id: "seed-84"`)
+seguía existiendo en `SEED_DATA` (`data.js`), y `fusionarContratosDesdeSeed()` lo volvía a agregar
+automáticamente al estado local cada vez que corre (carga de página, guardado de otro equipo, sync
+en tiempo real), sin saber que el usuario ya lo había eliminado a propósito desde la app. **Fix**:
+se quitó el objeto de `SEED_DATA` y se agregó `eliminarEquipoLAPDELL024()` en `app.js` (mismo
+patrón exacto que `eliminarEquipoLAPSPARE002`: filtra el id y llama a `sincronizarEliminacion`),
+enganchada en los 3 lugares de siempre (`fusionarContratosDesdeSeed`, la fusión de sync en tiempo
+real, y `renderTablero`). **Importante para el futuro**: si el usuario reporta el mismo problema
+con cualquiera de los otros 4 equipos de esa misma tabla (`LAPDELLGENESTER`, `LAPLNV207`,
+`PCCLONPRESTAMO`, `PCLNV139`) u otro equipo cualquiera, replicar este mismo patrón — buscar su
+`id` en `SEED_DATA`, quitarlo de ahí, y agregar una función `eliminarEquipoXXX()` enganchada en
+los 3 call sites ya establecidos.
