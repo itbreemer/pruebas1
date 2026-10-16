@@ -444,6 +444,9 @@ const IDS_CONFIRMADOS_ACTIVOS = [
   // LAPLNV283: confirmado activo, es una de las 5 laptops LAPLNV283-287
   // entregadas y ya sincronizadas desde la computadora de la oficina
   "seed-335",
+  // PCCLONPRESTAMO: tiene usuario real asignado (Emerick Geovanni Canizales
+  // Henry), claramente sigue en uso -- confirmado activo
+  "seed-463",
 ];
 
 function quitarMarcaRevisionConfirmados() {

@@ -1558,3 +1558,20 @@ propia aunque seguía contado en el Total. **Fix**: se amplió el límite a 15 (
 suficiente para mostrar todos los status actuales como fila individual. Si en el futuro aparecen
 más de 15 status distintos, el patrón "Otros" vuelve a aplicar para los que sobren — no hace falta
 tocar nada más salvo subir el número si se necesita.
+
+## `PCCLONPRESTAMO` quitado de "en revisión" — ya contaba en el inventario pero no en el panel (oct/2026)
+
+El usuario notó que, de los 3 equipos "Asignada > Equipo en Prestamo" visibles en el listado,
+el panel "Por Status" del Tablero solo contaba 2. Causa: `PCCLONPRESTAMO` (`seed-463`) tenía en
+`comentarios` la marca `"Pendiente validar: no aparece en el cronograma de migracion AD 2026;
+posible equipo sin dar de baja."` (`esEnRevisionCronograma`), que el panel excluye a propósito
+(`contarPor(..., { excluirEnRevision: true })`) por tratarse de equipos pendientes de confirmar —
+pero el listado normal de equipos no aplica ese filtro, así que sí lo mostraba. No es un bug: es
+la misma lógica de "en revisión" ya documentada para otras secciones de este archivo.
+
+Como `PCCLONPRESTAMO` tiene un usuario real asignado (Emerick Geovanni Canizales Henry, Hidroeléctrica
+CuevaMaria), confirma que sigue en uso. **Fix**: se agregó `"seed-463"` a `IDS_CONFIRMADOS_ACTIVOS`
+(mismo mecanismo ya existente, `quitarMarcaRevisionConfirmados()`) — le quita la marca de "en
+revisión" sin tocar el resto del comentario, solo en memoria (no se empuja a Firestore a
+propósito, mismo criterio que el resto de esa lista). Con esto ya cuenta normal en el panel
+"Por Status" y en cualquier otro conteo que excluya "en revisión".
