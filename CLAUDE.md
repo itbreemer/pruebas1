@@ -1503,3 +1503,25 @@ vez que cualquier usuario autenticado cargue la app actualizada. **Importante pa
 se actualiza el padrón (`empleados.js`) con nombres nuevos, esta función seguirá completando
 automáticamente cualquier equipo que tenga ese nombre exacto capturado y siga sin código — no hace
 falta re-ejecutar nada a mano.
+
+## Panel "Vencimiento y Renovación de Contratos" ensanchado a "2026 - 2027" (oct/2026)
+
+El usuario preguntó cuántos equipos vencen este año con el contrato `8030028027` (los 3 equipos
+de préstamo — `LAPLNV102`, `LAPLNV196`, `PCLNV208`, vence 31/12/2026 — ver "Alta masiva... /
+Validación de contratos contra el reporte de GBM" más arriba) y pidió agregarlos al panel del
+Tablero. **No hizo falta tocar ningún dato de equipos** — `construirContratosLenovo()` (`app.js`)
+ya agrupa automáticamente por lo que diga `equipo.contratos`, así que en cuanto ese contrato
+existe en Firestore (ya corre vía `corregirContratoRenovado8030028027`), aparece solo en la tabla
+"Contratos Lenovo" general. Lo único que hacía falta era **ensanchar el panel de vencimientos**
+(antes solo mostraba 2027) para que también incluyera 2026.
+
+**Fix**: `renderContratosLenovo()` — el filtro `fechaVenceEnAnio(f.fecha, 2027)` ahora es
+`fechaVenceEnAnio(f.fecha, 2026) || fechaVenceEnAnio(f.fecha, 2027)`; título del panel
+(`index.html`) renombrado de "Vencimiento y Renovación de Contratos 2027" a
+"Vencimiento y Renovación de Contratos 2026 - 2027". **Importante — esto es una EXCEPCIÓN
+puntual, no cambia el diseño ya documentado arriba** ("es una CADENA por año, no una ventana
+móvil", explícitamente evaluado y descartado antes): acá el usuario pidió ensanchar ESTE panel en
+concreto a 2 años porque apareció un contrato de 2026 que quedaba huérfano, no pidió una ventana
+dinámica de 12 meses. Si en el futuro aparece otro contrato de un año distinto (2025, 2028, etc.)
+que el usuario quiera ver en algún panel, **confirmar con él** si quiere seguir ensanchando este
+mismo panel, crear uno nuevo (ej. "2028"), o volver al diseño de un año por panel — no asumir.

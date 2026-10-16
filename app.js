@@ -4402,8 +4402,14 @@ function renderContratosLenovo(equiposValidados) {
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
 
+  // El usuario pidió ensanchar este panel a "2026 - 2027" (oct/2026) para que
+  // incluya el contrato 8030028027 (3 equipos de préstamo: LAPLNV102, LAPLNV196,
+  // PCLNV208 -- vence 31/12/2026, ver CLAUDE.md), que vencía este año y quedaba
+  // fuera del panel "2027". A diferencia de la cadena de paneles por año ya
+  // documentada (no reabrir esa discusión sin que el usuario lo pida de nuevo),
+  // esto es un pedido explícito puntual, no una ventana móvil automática.
   const filasVence2027 = contratosLenovoFilas
-    .filter((f) => fechaVenceEnAnio(f.fecha, 2027))
+    .filter((f) => fechaVenceEnAnio(f.fecha, 2026) || fechaVenceEnAnio(f.fecha, 2027))
     .sort((a, b) => ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
   const totalVence2027 = filasVence2027.reduce((s, f) => s + f.total, 0);
   pintarPanelConDona({
