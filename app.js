@@ -4543,8 +4543,8 @@ function renderListaContratosRam(idLista, filas, hex) {
 
   let html = `<div class="grupos-ram" style="grid-template-columns:${gridTemplate}">
     <span></span><span></span><span></span><span></span><span></span><span></span>
-    <span class="grupo-ram-laptop grupo-inicio" style="grid-column: span ${ramLaptop.length}">Laptop (GB)</span>
-    <span class="grupo-ram-desktop grupo-inicio grupo-inicio-desktop" style="grid-column: span ${ramDesktop.length}">Desktop (GB)</span>
+    <span class="grupo-ram-laptop grupo-inicio" style="grid-column: span ${ramLaptop.length}">Laptop</span>
+    <span class="grupo-ram-desktop grupo-inicio grupo-inicio-desktop" style="grid-column: span ${ramDesktop.length}">Desktop</span>
   </div>`;
   html += `<div class="fila-dona-header" style="display:grid; grid-template-columns:${gridTemplate}">
     <span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span>
