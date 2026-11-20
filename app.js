@@ -4537,16 +4537,16 @@ function renderListaContratosRam(idLista, filas, hex) {
   const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
   const ramLaptop = valoresRamDeContratos(filas, "ramLaptop");
   const ramDesktop = valoresRamDeContratos(filas, "ramDesktop");
-  const gridTemplate = `8px 70px 42px 36px 36px 36px ${ramLaptop.map(() => "26px").join(" ")} ${ramDesktop.map(() => "26px").join(" ")}`;
+  const gridTemplate = `8px 90px 55px 52px 48px 48px ${ramLaptop.map(() => "34px").join(" ")} ${ramDesktop.map(() => "34px").join(" ")}`;
   const celdaRamLaptop = (i) => `grupo-ram-laptop${i === 0 ? " grupo-inicio" : ""}`;
   const celdaRamDesktop = (i) => `grupo-ram-desktop${i === 0 ? " grupo-inicio grupo-inicio-desktop" : ""}`;
 
-  let html = `<div class="grupos-ram" style="grid-template-columns:${gridTemplate}; gap:6px">
+  let html = `<div class="grupos-ram" style="grid-template-columns:${gridTemplate}">
     <span></span><span></span><span></span><span></span><span></span><span></span>
     <span class="grupo-ram-laptop grupo-inicio" style="grid-column: span ${ramLaptop.length}">RAM Laptop (GB)</span>
     <span class="grupo-ram-desktop grupo-inicio grupo-inicio-desktop" style="grid-column: span ${ramDesktop.length}">RAM Desktop (GB)</span>
   </div>`;
-  html += `<div class="fila-dona-header" style="display:grid; grid-template-columns:${gridTemplate}; gap:6px">
+  html += `<div class="fila-dona-header" style="display:grid; grid-template-columns:${gridTemplate}">
     <span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span>
     ${ramLaptop.map((v, i) => `<span class="${celdaRamLaptop(i)}">${v}</span>`).join("")}
     ${ramDesktop.map((v, i) => `<span class="${celdaRamDesktop(i)}">${v}</span>`).join("")}
@@ -4563,7 +4563,7 @@ function renderListaContratosRam(idLista, filas, hex) {
     const rl = ramLaptop.map((v, i) => `<span class="valor ${celdaRamLaptop(i)}">${f.ramLaptop[v] || 0}</span>`).join("");
     const rd = ramDesktop.map((v, i) => `<span class="valor ${celdaRamDesktop(i)}">${f.ramDesktop[v] || 0}</span>`).join("");
     html += `
-      <div class="tablero-fila fila-dona clickable" style="display:grid; grid-template-columns:${gridTemplate}; gap:6px" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+      <div class="tablero-fila fila-dona clickable" style="display:grid; grid-template-columns:${gridTemplate}" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
         <span class="punto-dona" style="background:${paleta[i]}"></span>
         <span class="nombre-dona">${esc(f.numero)}</span>
         <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
@@ -4581,7 +4581,7 @@ function renderListaContratosRam(idLista, filas, hex) {
   const trl = ramLaptop.map((v, i) => `<span class="valor ${celdaRamLaptop(i)}">${filas.reduce((s, f) => s + (f.ramLaptop[v] || 0), 0)}</span>`).join("");
   const trd = ramDesktop.map((v, i) => `<span class="valor ${celdaRamDesktop(i)}">${filas.reduce((s, f) => s + (f.ramDesktop[v] || 0), 0)}</span>`).join("");
   html += `
-    <div class="tablero-fila fila-dona fila-dona-total-contrato" style="display:grid; grid-template-columns:${gridTemplate}; gap:6px">
+    <div class="tablero-fila fila-dona fila-dona-total-contrato" style="display:grid; grid-template-columns:${gridTemplate}">
       <span></span><span class="nombre-dona">Total general</span><span></span>
       <span class="valor">${totalDesktop}</span><span class="valor">${totalLaptop}</span><span class="valor">${totalEquipos}</span>
       ${trl}${trd}
