@@ -330,7 +330,7 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 #tableroContratoRam .grupos-ram { min-width: max-content; gap: 8px; }
 .grupo-ram-laptop { background: color-mix(in srgb, #7c3aed 8%, transparent); }
 .grupo-ram-desktop { background: color-mix(in srgb, var(--azul) 8%, transparent); }
-.grupo-inicio { border-left: 2px solid #7c3aed !important; padding-left: 8px !important; margin-left: 2px; }
+.grupo-inicio { border-left: 2px solid #7c3aed !important; padding-left: 4px !important; margin-left: 0; }
 .grupo-inicio-desktop { border-left: 2px solid var(--azul) !important; }
 
 @media (max-width: 860px) {
