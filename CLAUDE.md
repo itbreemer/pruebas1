@@ -1575,3 +1575,25 @@ CuevaMaria), confirma que sigue en uso. **Fix**: se agregó `"seed-463"` a `IDS_
 revisión" sin tocar el resto del comentario, solo en memoria (no se empuja a Firestore a
 propósito, mismo criterio que el resto de esa lista). Con esto ya cuenta normal en el panel
 "Por Status" y en cualquier otro conteo que excluya "en revisión".
+
+## Panel "Vencimiento y Renovación de Contratos 2026 - 2027" ahora desglosa por año (nov/2026)
+
+El usuario notó que, tras ensanchar este panel a 2 años (ver sección de más arriba), la lista de
+contratos mezclaba 2026 y 2027 sin distinguirlos — en particular el contrato `8030028027`
+(renovación, vence 2026) se veía igual que los demás, sin indicar que es del año "viejo" de la
+cadena. Pidió separar los totales de equipos por año dentro del mismo panel (mismo diseño visual,
+sin tocar la dona ni el resto del Tablero).
+
+**Fix**: nueva función `anioDeFecha(fecha)` (extrae el año del texto `"DD/MM/AAAA"`, mismo patrón
+que `fechaVenceEnAnio`). `renderContratosLenovo()` ahora ordena `filasVence2027` primero por año y
+luego por mes (antes solo por mes); nueva función `renderListaContratosPorAnio()` (reemplaza la
+llamada a `renderListaContratosConMes` solo para este panel) agrupa las filas ya ordenadas bajo un
+encabezado `"Vence en 2026 — N equipo(s)"` / `"Vence en 2027 — N equipo(s)"` con el subtotal de esa
+agrupación, antes de listar sus contratos — mismo patrón de fila que ya usaba (número de contrato,
+mes, cantidad), solo se intercala el encabezado de año cuando cambia. Clase CSS nueva
+`.fila-dona-anio` en `style.css` (fondo gris claro, texto en negrita). `renderListaContratosConMes`
+se dejó intacta (ya no tiene más call sites, pero no se eliminó por si se reutiliza en el futuro
+para un panel de un solo año). **Importante para el futuro**: si se retoma la idea de volver a un
+diseño de un panel por año (la cadena original ya documentada arriba), este desglose por año deja
+de ser necesario — pero mientras el panel siga ensanchado a 2+ años, replicar este mismo patrón de
+agrupación si se agrega otro año más.

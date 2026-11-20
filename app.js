@@ -4380,6 +4380,11 @@ function fechaVenceEnAnio(fecha, anio) {
   return !!m && m[1] === String(anio);
 }
 
+function anioDeFecha(fecha) {
+  const m = /\/(\d{4})\s*$/.exec(String(fecha || "").trim());
+  return m ? m[1] : "";
+}
+
 function ordenMesDia(fecha) {
   const m = /^(\d{1,2})\/(\d{1,2})\/\d{4}\s*$/.exec(String(fecha || "").trim());
   if (!m) return 9999;
@@ -4411,6 +4416,36 @@ function renderListaContratosConMes(idLista, filas, hex) {
   $(idLista).innerHTML = encabezado + filasHtml;
 }
 
+// El usuario pidió poder distinguir, dentro del panel ensanchado "2026 - 2027",
+// cuántos equipos vencen en cada año por separado (no solo la lista mezclada
+// por mes) -- notó que el contrato 8030028027 (renovación, vence 2026) se veía
+// igual que los demás sin indicar que es del año "viejo" de la cadena. Agrupa
+// las filas (ya vienen ordenadas por año y luego por mes) bajo un encabezado
+// de año con el subtotal de equipos de ESE año, antes de listar sus contratos.
+function renderListaContratosPorAnio(idLista, filas, hex) {
+  const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
+  const encabezado = `<div class="fila-dona-header"><span></span><span>Contrato</span><span>Mes</span><span>Equipos</span></div>`;
+  let html = encabezado;
+  let anioActual = null;
+  filas.forEach((f, i) => {
+    const anio = anioDeFecha(f.fecha) || "Sin año";
+    if (anio !== anioActual) {
+      anioActual = anio;
+      const totalAnio = filas.filter((x) => (anioDeFecha(x.fecha) || "Sin año") === anio).reduce((s, x) => s + x.total, 0);
+      html += `<div class="fila-dona-anio">Vence en ${esc(anio)} — ${totalAnio} equipo(s)</div>`;
+    }
+    html += `
+      <div class="tablero-fila fila-dona fila-dona-mes clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+        <span class="punto-dona" style="background:${paleta[i]}"></span>
+        <span class="nombre-dona">${esc(f.numero)}</span>
+        <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
+        <span class="valor">${f.total}</span>
+      </div>
+    `;
+  });
+  $(idLista).innerHTML = html;
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4427,16 +4462,20 @@ function renderContratosLenovo(equiposValidados) {
   // fuera del panel "2027". A diferencia de la cadena de paneles por año ya
   // documentada (no reabrir esa discusión sin que el usuario lo pida de nuevo),
   // esto es un pedido explícito puntual, no una ventana móvil automática.
+  // Ordenado primero por año y luego por mes, para que renderListaContratosPorAnio
+  // pueda agrupar visualmente "Vence en 2026" separado de "Vence en 2027" con su
+  // propio subtotal de equipos -- el usuario pidió ver ese desglose por año
+  // (antes se mezclaban ambos años en una sola lista sin distinguirlos).
   const filasVence2027 = contratosLenovoFilas
     .filter((f) => fechaVenceEnAnio(f.fecha, 2026) || fechaVenceEnAnio(f.fecha, 2027))
-    .sort((a, b) => ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
+    .sort((a, b) => (anioDeFecha(a.fecha) || "").localeCompare(anioDeFecha(b.fecha) || "") || ordenMesDia(a.fecha) - ordenMesDia(b.fecha));
   const totalVence2027 = filasVence2027.reduce((s, f) => s + f.total, 0);
   pintarPanelConDona({
     idDona: "tableroContratoVence2027Dona", idLista: "tableroContratoVence2027", campo: "contratoLenovo",
     atributoCampo: "data-campo-contrato-lenovo",
     datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#dc2626", modo: "B",
   });
-  renderListaContratosConMes("tableroContratoVence2027", filasVence2027, "#dc2626");
+  renderListaContratosPorAnio("tableroContratoVence2027", filasVence2027, "#dc2626");
 
   $("contratoLenovoDetalleWrap").style.display = "none";
 }

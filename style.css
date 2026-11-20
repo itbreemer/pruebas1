@@ -273,6 +273,12 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 }
 .fila-dona-header span:nth-child(3) { text-align: center; }
 .fila-dona-header span:nth-child(4) { text-align: right; }
+.fila-dona-anio {
+  font-size: 0.74rem; font-weight: 700; color: var(--texto);
+  background: #f3f4f6; border-radius: 5px; padding: 4px 8px;
+  margin: 8px 0 4px;
+}
+.fila-dona-anio:first-child { margin-top: 0; }
 
 @media (max-width: 860px) {
   .panel-cuerpo { flex-direction: column; align-items: center; }
