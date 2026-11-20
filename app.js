@@ -4422,9 +4422,16 @@ function renderListaContratosConMes(idLista, filas, hex) {
 // igual que los demás sin indicar que es del año "viejo" de la cadena. Agrupa
 // las filas (ya vienen ordenadas por año y luego por mes) bajo un encabezado
 // de año con el subtotal de equipos de ESE año, antes de listar sus contratos.
+//
+// Extensión (nov/2026): el usuario pidió además ver cuántos son Desktop y
+// cuántos Laptop por cada contrato, más un total general de cada tipo. Los
+// datos ya existían en cada fila (f.desktop/f.laptop, calculados por
+// construirContratosLenovo -- el mismo dato que ya usa mostrarDetalleContratoLenovo),
+// solo faltaba mostrarlos aquí. Se agregan 2 columnas y una fila de total
+// general al final (suma de TODOS los contratos del panel, sin importar el año).
 function renderListaContratosPorAnio(idLista, filas, hex) {
   const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
-  const encabezado = `<div class="fila-dona-header"><span></span><span>Contrato</span><span>Mes</span><span>Equipos</span></div>`;
+  const encabezado = `<div class="fila-dona-header fila-dona-contrato"><span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span></div>`;
   let html = encabezado;
   let anioActual = null;
   filas.forEach((f, i) => {
@@ -4435,14 +4442,29 @@ function renderListaContratosPorAnio(idLista, filas, hex) {
       html += `<div class="fila-dona-anio">Vence en ${esc(anio)} — ${totalAnio} equipo(s)</div>`;
     }
     html += `
-      <div class="tablero-fila fila-dona fila-dona-mes clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+      <div class="tablero-fila fila-dona fila-dona-contrato clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
         <span class="punto-dona" style="background:${paleta[i]}"></span>
         <span class="nombre-dona">${esc(f.numero)}</span>
         <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
-        <span class="valor">${f.total}</span>
+        <span class="valor">${f.desktop}</span>
+        <span class="valor">${f.laptop}</span>
+        <span class="valor"><strong>${f.total}</strong></span>
       </div>
     `;
   });
+  const totalDesktop = filas.reduce((s, f) => s + f.desktop, 0);
+  const totalLaptop = filas.reduce((s, f) => s + f.laptop, 0);
+  const totalEquipos = filas.reduce((s, f) => s + f.total, 0);
+  html += `
+    <div class="tablero-fila fila-dona fila-dona-contrato fila-dona-total-contrato">
+      <span></span>
+      <span class="nombre-dona">Total general</span>
+      <span></span>
+      <span class="valor">${totalDesktop}</span>
+      <span class="valor">${totalLaptop}</span>
+      <span class="valor">${totalEquipos}</span>
+    </div>
+  `;
   $(idLista).innerHTML = html;
 }
 

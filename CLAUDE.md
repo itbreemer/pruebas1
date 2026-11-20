@@ -1597,3 +1597,18 @@ para un panel de un solo año). **Importante para el futuro**: si se retoma la i
 diseño de un panel por año (la cadena original ya documentada arriba), este desglose por año deja
 de ser necesario — pero mientras el panel siga ensanchado a 2+ años, replicar este mismo patrón de
 agrupación si se agrega otro año más.
+
+## Panel "Vencimiento y Renovación de Contratos 2026-2027" ahora muestra Desktop/Laptop por contrato (nov/2026)
+
+El usuario pidió ver, dentro de este mismo panel, cuántos equipos de cada contrato son Desktop y
+cuántos son Laptop, más un total general de cada tipo. El dato ya existía en cada fila
+(`f.desktop`/`f.laptop`, calculados por `construirContratosLenovo()` — el mismo que ya usaba
+`mostrarDetalleContratoLenovo` al hacer clic en un contrato), solo faltaba mostrarlo en la lista.
+
+**Fix**: `renderListaContratosPorAnio()` ahora arma una fila de 6 columnas (antes 4): punto,
+Contrato, Mes, Desktop, Laptop, Total — y al final agrega una fila fija "Total general" con la
+suma de Desktop/Laptop/Total de **todos** los contratos del panel (sin importar el año, ya que el
+usuario pidió "un valor total" único, no uno por año). Clase CSS nueva `.fila-dona-contrato` (grid
+de 6 columnas) y `.fila-dona-total-contrato` (fila final en negrita con borde superior) en
+`style.css`. `renderListaContratosConMes()` (la función vieja de 4 columnas) se dejó intacta, sin
+tocar — sigue sin call sites, solo por si se reutiliza en el futuro para un panel distinto.
