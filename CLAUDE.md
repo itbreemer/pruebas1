@@ -1612,3 +1612,17 @@ usuario pidió "un valor total" único, no uno por año). Clase CSS nueva `.fila
 de 6 columnas) y `.fila-dona-total-contrato` (fila final en negrita con borde superior) en
 `style.css`. `renderListaContratosConMes()` (la función vieja de 4 columnas) se dejó intacta, sin
 tocar — sigue sin call sites, solo por si se reutiliza en el futuro para un panel distinto.
+
+## Bug recurrente — se olvidó subir el `?v=` de cache-busting en varios publishes seguidos (nov/2026)
+
+El usuario reportó "aun no se ve" el desglose Desktop/Laptop recién publicado, aunque el deploy
+de GitHub Pages ya había terminado exitosamente (confirmado vía `actions_list`). Causa: el
+parámetro `?v=` de `index.html` para `style.css`/`app.js` llevaba desde **2026-10-14** sin
+subirse, a pesar de varios commits posteriores que sí tocaron esos archivos (LAPDELL024, panel
+Por Status, PCCLONPRESTAMO, desglose por año, Desktop/Laptop) — y `data.js?v=` llevaba desde
+2026-10-12 (sin subir tras el fix de LAPDELL024, que sí tocó `data.js`). Exactamente el bug ya
+documentado arriba ("Otra causa real de números viejos en pantalla") que advierte subir el `?v=`
+manualmente con cada cambio de esos archivos — se me pasó en varios publishes seguidos de esta
+sesión. **Fix**: se subieron los 3 a `20261120a`. **Importante para el futuro**: en cada publish
+que toque `app.js`, `style.css` o `data.js`, subir también su `?v=` en `index.html` en el MISMO
+commit — no asumir que el deploy exitoso de Pages implica que el usuario ya ve el cambio.
