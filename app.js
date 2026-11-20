@@ -4468,6 +4468,40 @@ function renderListaContratosPorAnio(idLista, filas, hex) {
   $(idLista).innerHTML = html;
 }
 
+// El usuario pidió el mismo desglose Desktop/Laptop/Total (ya agregado al panel
+// de vencimientos) también en el panel general "Por Contrato (todos)" -- aquí no
+// hay Mes ni agrupación por año (son TODOS los contratos, sin filtrar por fecha),
+// así que la fila queda en 4 columnas: punto, Contrato, Desktop, Laptop, Total.
+function renderListaContratosConDesktopLaptop(idLista, filas, hex) {
+  const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
+  const encabezado = `<div class="fila-dona-header fila-dona-contrato-simple"><span></span><span>Contrato</span><span>Desktop</span><span>Laptop</span><span>Total</span></div>`;
+  let html = encabezado;
+  filas.forEach((f, i) => {
+    html += `
+      <div class="tablero-fila fila-dona fila-dona-contrato-simple clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+        <span class="punto-dona" style="background:${paleta[i]}"></span>
+        <span class="nombre-dona">${esc(f.numero)}</span>
+        <span class="valor">${f.desktop}</span>
+        <span class="valor">${f.laptop}</span>
+        <span class="valor"><strong>${f.total}</strong></span>
+      </div>
+    `;
+  });
+  const totalDesktop = filas.reduce((s, f) => s + f.desktop, 0);
+  const totalLaptop = filas.reduce((s, f) => s + f.laptop, 0);
+  const totalEquipos = filas.reduce((s, f) => s + f.total, 0);
+  html += `
+    <div class="tablero-fila fila-dona fila-dona-contrato-simple fila-dona-total-contrato">
+      <span></span>
+      <span class="nombre-dona">Total general</span>
+      <span class="valor">${totalDesktop}</span>
+      <span class="valor">${totalLaptop}</span>
+      <span class="valor">${totalEquipos}</span>
+    </div>
+  `;
+  $(idLista).innerHTML = html;
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4477,6 +4511,7 @@ function renderContratosLenovo(equiposValidados) {
     atributoCampo: "data-campo-contrato-lenovo",
     datosTop: datosDona, total: totalGeneral, hex: "#7c3aed", modo: "B",
   });
+  renderListaContratosConDesktopLaptop("tableroContrato", contratosLenovoFilas, "#7c3aed");
 
   // El usuario pidió ensanchar este panel a "2026 - 2027" (oct/2026) para que
   // incluya el contrato 8030028027 (3 equipos de préstamo: LAPLNV102, LAPLNV196,

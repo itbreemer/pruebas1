@@ -1626,3 +1626,13 @@ manualmente con cada cambio de esos archivos — se me pasó en varios publishes
 sesión. **Fix**: se subieron los 3 a `20261120a`. **Importante para el futuro**: en cada publish
 que toque `app.js`, `style.css` o `data.js`, subir también su `?v=` en `index.html` en el MISMO
 commit — no asumir que el deploy exitoso de Pages implica que el usuario ya ve el cambio.
+
+## Panel "Contratos Lenovo" → "Por Contrato (todos)" también con desglose Desktop/Laptop/Total (nov/2026)
+
+Mismo pedido que el panel de vencimientos, pero para el panel general "Por Contrato (todos)" (el
+que lista TODOS los contratos Lenovo sin filtrar por año de vencimiento). Nueva función
+`renderListaContratosConDesktopLaptop()` — igual patrón que `renderListaContratosPorAnio()` pero
+sin columna "Mes" ni agrupación por año (este panel no filtra por fecha): 5 columnas (punto,
+Contrato, Desktop, Laptop, Total) + fila final "Total general". Se llama justo después de
+`pintarPanelConDona()` para `tableroContrato`, sobrescribiendo su lista genérica de solo
+nombre+total. Clase CSS `.fila-dona-contrato-simple` en `style.css`.
