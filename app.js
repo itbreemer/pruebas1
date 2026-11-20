@@ -4348,6 +4348,14 @@ function extraerFechaVenceContrato(valor) {
   return m ? m[1].trim() : "";
 }
 
+// Parsea el campo libre `memoria` (ej. "16 Gb", "40 Gb", mayúsculas inconsistentes)
+// a un número de GB. Devuelve null si está vacío o no calza con el formato esperado
+// (nunca se adivina un valor).
+function ramGBDeEquipo(e) {
+  const m = /^(\d+)\s*gb$/i.exec(String(e.memoria || "").trim());
+  return m ? parseInt(m[1], 10) : null;
+}
+
 function construirContratosLenovo(equiposValidados) {
   const porContrato = {};
   equiposValidados
@@ -4355,7 +4363,7 @@ function construirContratosLenovo(equiposValidados) {
     .forEach((e) => {
       const numero = soloNumeroContrato(e.contratos) || "Sin número";
       const fecha = extraerFechaVenceContrato(e.contratos);
-      if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0 };
+      if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0, ramLaptop: {}, ramDesktop: {} };
       if (fecha && !porContrato[numero].fecha) porContrato[numero].fecha = fecha;
 
       // "Desktop" en este reporte agrupa todos los factores de forma de escritorio
@@ -4363,14 +4371,30 @@ function construirContratosLenovo(equiposValidados) {
       // literal "Desktop" - de lo contrario Mini PC/Mini Tower caian en "Otros".
       const tipo = ALIAS_TIPO_EQUIPO[e.tipoEquipo] || e.tipoEquipo || "";
       const esDesktopFamilia = ["Desktop", "Mini PC", "Mini Tower", "Low Profile Desktop"].includes(tipo);
-      if (esDesktopFamilia) porContrato[numero].desktop++;
-      else if (tipo === "Notebook") porContrato[numero].laptop++;
-      else porContrato[numero].otros++;
+      const ramGB = ramGBDeEquipo(e);
+      if (esDesktopFamilia) {
+        porContrato[numero].desktop++;
+        if (ramGB != null) porContrato[numero].ramDesktop[ramGB] = (porContrato[numero].ramDesktop[ramGB] || 0) + 1;
+      } else if (tipo === "Notebook") {
+        porContrato[numero].laptop++;
+        if (ramGB != null) porContrato[numero].ramLaptop[ramGB] = (porContrato[numero].ramLaptop[ramGB] || 0) + 1;
+      } else {
+        porContrato[numero].otros++;
+      }
     });
 
   return Object.entries(porContrato)
     .map(([numero, d]) => ({ numero, ...d, total: d.desktop + d.laptop + d.otros }))
     .sort((a, b) => b.total - a.total);
+}
+
+// Recolecta todos los valores de RAM (GB) presentes en `campo` (ramLaptop/ramDesktop)
+// a través de todos los contratos, ordenados ascendente -- para generar columnas
+// dinámicas sin hardcodear valores específicos (nuevos valores de RAM aparecen solos).
+function valoresRamDeContratos(filas, campo) {
+  const set = new Set();
+  filas.forEach((f) => Object.keys(f[campo] || {}).forEach((k) => set.add(parseInt(k, 10))));
+  return [...set].sort((a, b) => a - b);
 }
 
 let contratosLenovoFilas = [];
@@ -4502,6 +4526,70 @@ function renderListaContratosConDesktopLaptop(idLista, filas, hex) {
   $(idLista).innerHTML = html;
 }
 
+// Panel NUEVO y SEPARADO (nov/2026, a pedido explícito del usuario, validado con
+// Artifact antes de implementar) -- muestra, para cada contrato del panel de
+// vencimientos (2026-2027), cuántas Laptop y cuántas Desktop hay por cada valor
+// real de RAM (GB) presente en los datos. Columnas dinámicas e independientes por
+// tipo de equipo (si ningún laptop usa cierto valor, ese valor no aparece del lado
+// de Laptop aunque Desktop sí lo use, y viceversa) -- con scroll horizontal si no
+// caben. No modifica el panel de vencimientos existente, es un panel aparte debajo.
+function renderListaContratosRam(idLista, filas, hex) {
+  const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
+  const ramLaptop = valoresRamDeContratos(filas, "ramLaptop");
+  const ramDesktop = valoresRamDeContratos(filas, "ramDesktop");
+  const gridTemplate = `8px 90px 55px 52px 48px 48px ${ramLaptop.map(() => "34px").join(" ")} ${ramDesktop.map(() => "34px").join(" ")}`;
+  const celdaRamLaptop = (i) => `grupo-ram-laptop${i === 0 ? " grupo-inicio" : ""}`;
+  const celdaRamDesktop = (i) => `grupo-ram-desktop${i === 0 ? " grupo-inicio grupo-inicio-desktop" : ""}`;
+
+  let html = `<div class="grupos-ram" style="grid-template-columns:${gridTemplate}">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <span class="grupo-ram-laptop grupo-inicio" style="grid-column: span ${ramLaptop.length}">RAM Laptop (GB)</span>
+    <span class="grupo-ram-desktop grupo-inicio grupo-inicio-desktop" style="grid-column: span ${ramDesktop.length}">RAM Desktop (GB)</span>
+  </div>`;
+  html += `<div class="fila-dona-header" style="display:grid; grid-template-columns:${gridTemplate}">
+    <span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span>
+    ${ramLaptop.map((v, i) => `<span class="${celdaRamLaptop(i)}">${v}</span>`).join("")}
+    ${ramDesktop.map((v, i) => `<span class="${celdaRamDesktop(i)}">${v}</span>`).join("")}
+  </div>`;
+
+  let anioActual = null;
+  filas.forEach((f, i) => {
+    const anio = anioDeFecha(f.fecha) || "Sin año";
+    if (anio !== anioActual) {
+      anioActual = anio;
+      const totalAnio = filas.filter((x) => (anioDeFecha(x.fecha) || "Sin año") === anio).reduce((s, x) => s + x.total, 0);
+      html += `<div class="fila-dona-anio">Vence en ${esc(anio)} — ${totalAnio} equipo(s)</div>`;
+    }
+    const rl = ramLaptop.map((v, i) => `<span class="valor ${celdaRamLaptop(i)}">${f.ramLaptop[v] || 0}</span>`).join("");
+    const rd = ramDesktop.map((v, i) => `<span class="valor ${celdaRamDesktop(i)}">${f.ramDesktop[v] || 0}</span>`).join("");
+    html += `
+      <div class="tablero-fila fila-dona clickable" style="display:grid; grid-template-columns:${gridTemplate}" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+        <span class="punto-dona" style="background:${paleta[i]}"></span>
+        <span class="nombre-dona">${esc(f.numero)}</span>
+        <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
+        <span class="valor">${f.desktop}</span>
+        <span class="valor">${f.laptop}</span>
+        <span class="valor"><strong>${f.total}</strong></span>
+        ${rl}${rd}
+      </div>
+    `;
+  });
+
+  const totalDesktop = filas.reduce((s, f) => s + f.desktop, 0);
+  const totalLaptop = filas.reduce((s, f) => s + f.laptop, 0);
+  const totalEquipos = filas.reduce((s, f) => s + f.total, 0);
+  const trl = ramLaptop.map((v, i) => `<span class="valor ${celdaRamLaptop(i)}">${filas.reduce((s, f) => s + (f.ramLaptop[v] || 0), 0)}</span>`).join("");
+  const trd = ramDesktop.map((v, i) => `<span class="valor ${celdaRamDesktop(i)}">${filas.reduce((s, f) => s + (f.ramDesktop[v] || 0), 0)}</span>`).join("");
+  html += `
+    <div class="tablero-fila fila-dona fila-dona-total-contrato" style="display:grid; grid-template-columns:${gridTemplate}">
+      <span></span><span class="nombre-dona">Total general</span><span></span>
+      <span class="valor">${totalDesktop}</span><span class="valor">${totalLaptop}</span><span class="valor">${totalEquipos}</span>
+      ${trl}${trd}
+    </div>
+  `;
+  $(idLista).innerHTML = html;
+}
+
 function renderContratosLenovo(equiposValidados) {
   contratosLenovoFilas = construirContratosLenovo(equiposValidados);
   const totalGeneral = contratosLenovoFilas.reduce((s, f) => s + f.total, 0);
@@ -4533,6 +4621,13 @@ function renderContratosLenovo(equiposValidados) {
     datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#dc2626", modo: "B",
   });
   renderListaContratosPorAnio("tableroContratoVence2027", filasVence2027, "#dc2626");
+
+  pintarPanelConDona({
+    idDona: "tableroContratoRamDona", idLista: "tableroContratoRam", campo: "contratoLenovo",
+    atributoCampo: "data-campo-contrato-lenovo",
+    datosTop: filasVence2027.map((f) => [f.numero, f.total]), total: totalVence2027, hex: "#7c3aed", modo: "B",
+  });
+  renderListaContratosRam("tableroContratoRam", filasVence2027, "#7c3aed");
 
   $("contratoLenovoDetalleWrap").style.display = "none";
 }

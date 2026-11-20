@@ -304,6 +304,31 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
 }
 .fila-dona-total-contrato .nombre-dona { color: var(--texto); }
 
+/* Panel NUEVO "RAM (Desktop / Laptop)" (nov/2026) -- desglose de RAM por
+   contrato, separado para Laptop y Desktop, con columnas dinámicas (una por
+   valor real de RAM presente en los datos). Reutiliza .fila-dona-contrato como
+   base (mismas 6 primeras columnas); las columnas de RAM se agregan vía
+   grid-template-columns inline (el número de columnas varía). */
+.eyebrow-ram {
+  display: block; font-size: 0.68rem; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; color: #7c3aed; margin-bottom: 3px;
+}
+.panel-cuerpo .lista-scroll { overflow-x: auto; flex: 1; min-width: 0; padding-bottom: 4px; }
+.grupos-ram {
+  display: grid; align-items: center; gap: 8px; min-width: max-content;
+  font-size: 0.68rem; font-weight: 700; color: #7c3aed; text-transform: uppercase;
+  letter-spacing: .03em; padding-top: 2px;
+}
+.grupos-ram span { text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 3px; }
+#tableroContratoRam.tablero-lista { overflow-x: auto; padding-bottom: 4px; }
+#tableroContratoRam .fila-dona-header,
+#tableroContratoRam .fila-dona,
+#tableroContratoRam .grupos-ram { min-width: max-content; gap: 8px; }
+.grupo-ram-laptop { background: color-mix(in srgb, #7c3aed 8%, transparent); }
+.grupo-ram-desktop { background: color-mix(in srgb, var(--azul) 8%, transparent); }
+.grupo-inicio { border-left: 2px solid #7c3aed !important; padding-left: 8px !important; margin-left: 2px; }
+.grupo-inicio-desktop { border-left: 2px solid var(--azul) !important; }
+
 @media (max-width: 860px) {
   .panel-cuerpo { flex-direction: column; align-items: center; }
   .app-shell { flex-direction: column; }
