@@ -4348,16 +4348,6 @@ function extraerFechaVenceContrato(valor) {
   return m ? m[1].trim() : "";
 }
 
-// Extrae la capacidad de RAM en GB del campo libre `memoria` (ej. "16 Gb",
-// "40 Gb", "16 GB" -- mayúscula inconsistente en los datos capturados a lo
-// largo del tiempo). Devuelve null si el campo está vacío o no calza con el
-// patrón "<número> Gb" (ej. texto libre viejo tipo "4 GB DDR3" no debería
-// pasar aquí porque el campo de este sistema es solo el número + unidad).
-function ramGBDeEquipo(e) {
-  const m = /^(\d+)\s*gb$/i.exec(String(e.memoria || "").trim());
-  return m ? parseInt(m[1], 10) : null;
-}
-
 function construirContratosLenovo(equiposValidados) {
   const porContrato = {};
   equiposValidados
@@ -4365,7 +4355,7 @@ function construirContratosLenovo(equiposValidados) {
     .forEach((e) => {
       const numero = soloNumeroContrato(e.contratos) || "Sin número";
       const fecha = extraerFechaVenceContrato(e.contratos);
-      if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0, ramLaptop: {}, ramDesktop: {} };
+      if (!porContrato[numero]) porContrato[numero] = { fecha, desktop: 0, laptop: 0, otros: 0 };
       if (fecha && !porContrato[numero].fecha) porContrato[numero].fecha = fecha;
 
       // "Desktop" en este reporte agrupa todos los factores de forma de escritorio
@@ -4373,34 +4363,14 @@ function construirContratosLenovo(equiposValidados) {
       // literal "Desktop" - de lo contrario Mini PC/Mini Tower caian en "Otros".
       const tipo = ALIAS_TIPO_EQUIPO[e.tipoEquipo] || e.tipoEquipo || "";
       const esDesktopFamilia = ["Desktop", "Mini PC", "Mini Tower", "Low Profile Desktop"].includes(tipo);
-      const ramGB = ramGBDeEquipo(e);
-      if (esDesktopFamilia) {
-        porContrato[numero].desktop++;
-        if (ramGB) porContrato[numero].ramDesktop[ramGB] = (porContrato[numero].ramDesktop[ramGB] || 0) + 1;
-      } else if (tipo === "Notebook") {
-        porContrato[numero].laptop++;
-        if (ramGB) porContrato[numero].ramLaptop[ramGB] = (porContrato[numero].ramLaptop[ramGB] || 0) + 1;
-      } else {
-        porContrato[numero].otros++;
-      }
+      if (esDesktopFamilia) porContrato[numero].desktop++;
+      else if (tipo === "Notebook") porContrato[numero].laptop++;
+      else porContrato[numero].otros++;
     });
 
   return Object.entries(porContrato)
     .map(([numero, d]) => ({ numero, ...d, total: d.desktop + d.laptop + d.otros }))
     .sort((a, b) => b.total - a.total);
-}
-
-// Junta todos los valores de RAM (GB) que aparezcan en cualquier contrato de
-// `filas`, ordenados de menor a mayor -- usado para armar las columnas de RAM
-// del panel de contratos sin tener que hardcodear los valores (8/16/24/32/40/64
-// hoy, pero se adapta solo si aparece un valor nuevo en el futuro).
-function valoresRamOrdenados(filas) {
-  const set = new Set();
-  filas.forEach((f) => {
-    Object.keys(f.ramLaptop || {}).forEach((k) => set.add(parseInt(k, 10)));
-    Object.keys(f.ramDesktop || {}).forEach((k) => set.add(parseInt(k, 10)));
-  });
-  return [...set].sort((a, b) => a - b);
 }
 
 let contratosLenovoFilas = [];
@@ -4459,42 +4429,9 @@ function renderListaContratosConMes(idLista, filas, hex) {
 // construirContratosLenovo -- el mismo dato que ya usa mostrarDetalleContratoLenovo),
 // solo faltaba mostrarlos aquí. Se agregan 2 columnas y una fila de total
 // general al final (suma de TODOS los contratos del panel, sin importar el año).
-// El usuario pidió además poder ver, por contrato, cuántas Laptop y cuántas
-// Desktop son de cada capacidad de RAM (ej. 16/32/40 GB) -- los valores reales
-// encontrados en los datos son 8/16/24/32/40/64 GB (`valoresRamOrdenados`), así
-// que las columnas se arman dinámicamente en vez de hardcodear solo 3. Como
-// esto agrega 2 columnas por cada valor de RAM (una para Laptop, otra para
-// Desktop), la fila se ensancha bastante -- se usan anchos fijos en px (no
-// fr) para que la tabla se desborde con scroll horizontal en vez de
-// comprimir las columnas existentes hasta ilegibles, y esas columnas
-// existentes (Contrato/Mes/Desktop/Laptop/Total) se angostaron un poco para
-// dejar más espacio a las nuevas (a pedido del usuario: "si se ancha puedes
-// reducir aca").
-function gridTemplateContratosConRam(valoresRam) {
-  const base = "8px 72px 44px 42px 42px 42px";
-  const colsRam = valoresRam.map(() => "34px").join(" ");
-  return `${base} ${colsRam} ${colsRam}`;
-}
-
 function renderListaContratosPorAnio(idLista, filas, hex) {
   const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
-  const valoresRam = valoresRamOrdenados(filas);
-  const gridTemplate = gridTemplateContratosConRam(valoresRam);
-  const colspanRam = Math.max(valoresRam.length, 1);
-  const gruposRam = valoresRam.length
-    ? `<div class="fila-dona-grupos-ram" style="grid-template-columns:${gridTemplate}">
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-        <span style="grid-column: span ${colspanRam}">RAM Laptop (GB)</span>
-        <span style="grid-column: span ${colspanRam}">RAM Desktop (GB)</span>
-      </div>`
-    : "";
-  const encabezado = `
-    ${gruposRam}
-    <div class="fila-dona-header fila-dona-contrato" style="grid-template-columns:${gridTemplate}">
-      <span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span>
-      ${valoresRam.map((v) => `<span>${v}</span>`).join("")}
-      ${valoresRam.map((v) => `<span>${v}</span>`).join("")}
-    </div>`;
+  const encabezado = `<div class="fila-dona-header fila-dona-contrato"><span></span><span>Contrato</span><span>Mes</span><span>Desktop</span><span>Laptop</span><span>Total</span></div>`;
   let html = encabezado;
   let anioActual = null;
   filas.forEach((f, i) => {
@@ -4504,36 +4441,28 @@ function renderListaContratosPorAnio(idLista, filas, hex) {
       const totalAnio = filas.filter((x) => (anioDeFecha(x.fecha) || "Sin año") === anio).reduce((s, x) => s + x.total, 0);
       html += `<div class="fila-dona-anio">Vence en ${esc(anio)} — ${totalAnio} equipo(s)</div>`;
     }
-    const celdasRamLaptop = valoresRam.map((v) => `<span class="valor">${f.ramLaptop[v] || 0}</span>`).join("");
-    const celdasRamDesktop = valoresRam.map((v) => `<span class="valor">${f.ramDesktop[v] || 0}</span>`).join("");
     html += `
-      <div class="tablero-fila fila-dona fila-dona-contrato clickable" style="grid-template-columns:${gridTemplate}" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
+      <div class="tablero-fila fila-dona fila-dona-contrato clickable" data-idx="${i}" data-campo-contrato-lenovo="contratoLenovo" data-valor="${esc(f.numero)}">
         <span class="punto-dona" style="background:${paleta[i]}"></span>
         <span class="nombre-dona">${esc(f.numero)}</span>
         <span class="mes-dona">${esc(nombreMesDeFecha(f.fecha))}</span>
         <span class="valor">${f.desktop}</span>
         <span class="valor">${f.laptop}</span>
         <span class="valor"><strong>${f.total}</strong></span>
-        ${celdasRamLaptop}
-        ${celdasRamDesktop}
       </div>
     `;
   });
   const totalDesktop = filas.reduce((s, f) => s + f.desktop, 0);
   const totalLaptop = filas.reduce((s, f) => s + f.laptop, 0);
   const totalEquipos = filas.reduce((s, f) => s + f.total, 0);
-  const totalRamLaptop = valoresRam.map((v) => `<span class="valor">${filas.reduce((s, f) => s + (f.ramLaptop[v] || 0), 0)}</span>`).join("");
-  const totalRamDesktop = valoresRam.map((v) => `<span class="valor">${filas.reduce((s, f) => s + (f.ramDesktop[v] || 0), 0)}</span>`).join("");
   html += `
-    <div class="tablero-fila fila-dona fila-dona-contrato fila-dona-total-contrato" style="grid-template-columns:${gridTemplate}">
+    <div class="tablero-fila fila-dona fila-dona-contrato fila-dona-total-contrato">
       <span></span>
       <span class="nombre-dona">Total general</span>
       <span></span>
       <span class="valor">${totalDesktop}</span>
       <span class="valor">${totalLaptop}</span>
       <span class="valor">${totalEquipos}</span>
-      ${totalRamLaptop}
-      ${totalRamDesktop}
     </div>
   `;
   $(idLista).innerHTML = html;
