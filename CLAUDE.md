@@ -1636,3 +1636,50 @@ sin columna "Mes" ni agrupación por año (este panel no filtra por fecha): 5 co
 Contrato, Desktop, Laptop, Total) + fila final "Total general". Se llama justo después de
 `pintarPanelConDona()` para `tableroContrato`, sobrescribiendo su lista genérica de solo
 nombre+total. Clase CSS `.fila-dona-contrato-simple` en `style.css`.
+
+## Panel nuevo "RAM (Desktop / Laptop)" por contrato (nov/2026)
+
+El usuario pidió validar, dentro de cada contrato Lenovo, cuántas Laptop y cuántas Desktop hay
+por cada valor real de RAM (GB) presente en los datos. Antes de tocar código, se iteró el diseño
+completo con varios previews de Artifact (datos reales del contrato, columnas dinámicas por
+valor de RAM, separación visual entre grupos Laptop/Desktop, estilo calcado del real `style.css`)
+hasta validar con el usuario — a petición explícita, el resultado final es un panel **nuevo y
+separado**, que NO modifica el panel existente "Vencimiento y Renovación de Contratos 2026 -
+2027", colocado a ancho completo justo debajo de la fila de los 2 paneles ya existentes
+("Por Contrato (todos)" y "Vencimiento y Renovación...").
+
+- **`ramGBDeEquipo(e)`** (`app.js`): parsea el campo libre `memoria` (ej. "16 Gb", "40 Gb") a un
+  número de GB vía regex `/^(\d+)\s*gb$/i`; devuelve `null` si no calza (nunca se adivina).
+- **`construirContratosLenovo()`**: ahora también acumula `ramLaptop`/`ramDesktop` (diccionario
+  GB→cantidad) por contrato, usando el mismo criterio de clasificación Desktop/Laptop ya
+  existente (familia de factor de forma vs. tipo "Notebook").
+- **`valoresRamDeContratos(filas, campo)`**: recolecta todos los valores de RAM distintos
+  presentes en todos los contratos (para `ramLaptop` y `ramDesktop` por separado), ordenados
+  ascendente — las columnas de la tabla se generan solas a partir de esto, sin hardcodear
+  valores específicos; si aparece un valor de RAM nuevo en el futuro, su columna aparece sola.
+- **`renderListaContratosRam(idLista, filas, hex)`**: arma la tabla con 6 columnas fijas (punto,
+  Contrato, Mes, Desktop, Laptop, Total, igual que el panel de vencimientos) + columnas
+  dinámicas de RAM — **independientes por tipo de equipo**: si ningún laptop usa cierto valor de
+  RAM, esa columna no aparece del lado de Laptop aunque Desktop sí la use, y viceversa (ej. hoy
+  ninguna laptop usa 8GB, pero sí hay Desktops de 8GB). El ancho de columnas se arma vía
+  `grid-template-columns` inline (varía según cuántos valores de RAM existan). Mismo agrupado por
+  año que ya tiene el panel de vencimientos (`anioDeFecha`). Las celdas de cada grupo llevan una
+  clase de fondo tenue y la primera columna de cada grupo lleva un borde grueso de su color
+  (`.grupo-ram-laptop`/`.grupo-ram-desktop`, `.grupo-inicio`/`.grupo-inicio-desktop` en
+  `style.css`) — separa visualmente "RAM Laptop" de "RAM Desktop" dentro de la misma tabla.
+- **`index.html`**: nuevo `<div class="tablero-grid" style="margin-top:16px">` con un único
+  `.tablero-panel` a ancho completo (`grid-column: 1 / -1`), título con una pequeña etiqueta
+  "eyebrow" arriba (`<span class="eyebrow-ram">RAM (Desktop / Laptop)</span>`) seguida del mismo
+  título que el panel de vencimientos, para dar contexto sin repetir un título largo nuevo.
+- **Scroll horizontal**: como el número de columnas de RAM varía (hoy hasta 5-6 valores
+  distintos entre Laptop y Desktop juntos), la lista (`#tableroContratoRam`) tiene
+  `overflow-x: auto` — si no caben todas las columnas, aparece scroll horizontal dentro del
+  panel en vez de romper el layout o encimarse con la dona.
+- Se llama justo después de `renderListaContratosPorAnio` dentro de `renderContratosLenovo()`,
+  reutilizando el mismo `filasVence2027` ya calculado (mismo filtro de año 2026-2027, misma
+  dona — hex `#7c3aed`, igual que "Por Contrato (todos)").
+- **Importante para el futuro**: si se agrega un nuevo valor de RAM a los datos (ej. equipos de
+  64GB), no hace falta tocar este código — `valoresRamDeContratos` lo detecta solo y le genera su
+  columna. Si se necesita el mismo desglose en el panel "Por Contrato (todos)" (todos los
+  contratos, no solo 2026-2027), replicar el mismo patrón con
+  `renderListaContratosConDesktopLaptop` como base en vez de `renderListaContratosPorAnio`.
