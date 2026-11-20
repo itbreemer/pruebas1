@@ -319,7 +319,7 @@ main { padding: 20px 24px 60px; flex: 1; width: 100%; }
   font-size: 0.68rem; font-weight: 700; color: #7c3aed; text-transform: uppercase;
   letter-spacing: .03em; padding-top: 2px;
 }
-.grupos-ram span { text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 3px; }
+.grupos-ram span:not(:empty) { text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 3px; }
 #tableroContratoRam.tablero-lista { overflow-x: auto; padding-bottom: 4px; }
 #tableroContratoRam .fila-dona-header,
 #tableroContratoRam .fila-dona,
