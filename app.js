@@ -263,6 +263,7 @@ function fusionarContratosDesdeSeed() {
   if (corregirFechaVencimientoContrato8030028059GBM()) cambio = true;
   if (corregirContratoRenovado8030028027()) cambio = true;
   if (corregirFechaVencimientoContrato8030016807GBM()) cambio = true;
+  if (corregirMemoriaLaptop8GBContrato8030016807()) cambio = true;
   if (corregirFechaVencimientoContrato8030016507GBM()) cambio = true;
   if (corregirFechaVencimientoContrato8030017599GBM()) cambio = true;
   if (corregirFechaVencimientoContrato8030018389GBM()) cambio = true;
@@ -649,6 +650,27 @@ function corregirFechaVencimientoContrato8030016807GBM() {
   equipos.forEach((e) => {
     if ((e.contratos || "").trim() === VIEJO) {
       e.contratos = NUEVO;
+      e.ultimaModificacion = new Date().toISOString().slice(0, 16);
+      sincronizarEquipo(e);
+      cambio = true;
+    }
+  });
+  return cambio;
+}
+
+// El usuario confirmó que en el contrato 8030016807 no existen laptops de
+// 8GB de RAM -- un equipo quedó mal capturado con "8 Gb" en Memoria (visible
+// en el panel "RAM (Desktop / Laptop)" del Tablero, que arma sus columnas
+// dinámicamente a partir del dato real). Corrige ese valor a "16 Gb" (el
+// mismo que ya usan los demás equipos de este contrato) para que la columna
+// de 8GB deje de aparecer sola, al no quedar ya ningún laptop con ese valor.
+function corregirMemoriaLaptop8GBContrato8030016807() {
+  let cambio = false;
+  equipos.forEach((e) => {
+    const esDeEsteContrato = (e.contratos || "").includes("8030016807");
+    const esNotebook = (ALIAS_TIPO_EQUIPO[e.tipoEquipo] || e.tipoEquipo) === "Notebook";
+    if (esDeEsteContrato && esNotebook && /^8\s*gb$/i.test((e.memoria || "").trim())) {
+      e.memoria = "16 Gb";
       e.ultimaModificacion = new Date().toISOString().slice(0, 16);
       sincronizarEquipo(e);
       cambio = true;
