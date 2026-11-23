@@ -4559,7 +4559,7 @@ function renderListaContratosRam(idLista, filas, hex) {
   const paleta = generarPaletaDona(hex, Math.max(filas.length, 1));
   const ramLaptop = valoresRamDeContratos(filas, "ramLaptop");
   const ramDesktop = valoresRamDeContratos(filas, "ramDesktop");
-  const gridTemplate = `8px 90px 55px 52px 48px 48px ${ramLaptop.map(() => "34px").join(" ")} ${ramDesktop.map(() => "34px").join(" ")}`;
+  const gridTemplate = `8px 90px 72px 52px 48px 48px ${ramLaptop.map(() => "34px").join(" ")} ${ramDesktop.map(() => "34px").join(" ")}`;
   const celdaRamLaptop = (i) => `grupo-ram-laptop${i === 0 ? " grupo-inicio" : ""}`;
   const celdaRamDesktop = (i) => `grupo-ram-desktop${i === 0 ? " grupo-inicio grupo-inicio-desktop" : ""}`;
 
